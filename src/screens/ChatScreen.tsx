@@ -21,7 +21,8 @@ export function ChatScreen({
 }: {
   scenario: Scenario
   safety: number
-  onReply: (delta: number) => void
+  /** delta: 안전도 증감 · gave: 이 턴에서 넘겨준 것(거절했으면 null) */
+  onReply: (delta: number, gave: string | null) => void
   onFinish: () => void
 }) {
   const [turn, setTurn] = useState(0)
@@ -51,15 +52,36 @@ export function ChatScreen({
     const value = text.trim()
     if (!canType || value.length === 0) return
 
+    const current = scenario.turns[turn]
+    const judged = judgeReply(value)
+
+    // 거절하지 않았으면 이 턴에서 무언가를 넘긴 것입니다
+    const gave = judged.kind === 'safe' ? null : (current.gave ?? null)
+
     setBubbles((prev) => [...prev, { from: 'me', text: value }])
-    onReply(judgeReply(value).delta)
+    onReply(judged.delta, gave)
     setText('')
     setCanType(false)
 
-    window.setTimeout(() => {
-      if (turn + 1 < scenario.turns.length) setTurn(turn + 1)
-      else onFinish()
-    }, 800)
+    // 내가 쓴 답에 상대가 바로 받아칩니다 (API 없이 '반응했다'고 느끼게 하는 장치)
+    const react = current.react?.[judged.kind]
+    const last = turn + 1 >= scenario.turns.length
+
+    if (react) {
+      window.setTimeout(() => setTyping(true), 500)
+      window.setTimeout(() => {
+        setBubbles((prev) => [...prev, { from: 'them', text: react }])
+        setTyping(false)
+      }, 1100)
+    }
+
+    window.setTimeout(
+      () => {
+        if (!last) setTurn(turn + 1)
+        else onFinish()
+      },
+      react ? 2100 : 900,
+    )
   }
 
   const visible = bubbles.slice(-4)

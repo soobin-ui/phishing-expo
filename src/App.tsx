@@ -6,7 +6,7 @@ import { MenuScreen } from './screens/MenuScreen'
 import { ChatScreen } from './screens/ChatScreen'
 import { CaughtScreen } from './screens/CaughtScreen'
 import { FindScreen } from './screens/FindScreen'
-import { ResultScreen } from './screens/ResultScreen'
+import { ActionScreen } from './screens/ActionScreen'
 import { AdminScreen } from './screens/AdminScreen'
 import { fill, scenarioFor, ui } from './lib/content'
 import { useIdleTimer } from './lib/useIdleTimer'
@@ -19,7 +19,7 @@ const ACT_OF: Record<Step, Act> = {
   chat: 'dark',
   caught: 'dark',
   find: 'counter',
-  result: 'counter',
+  action: 'counter',
   admin: 'dark',
 }
 
@@ -35,6 +35,8 @@ export default function App() {
   const [situation, setSituation] = useState('')
   const [safety, setSafety] = useState(100)
   const [found, setFound] = useState(0)
+  /** 대화 중 넘겨준 것들 — 당한 직후 '이걸 넘겼습니다'로 보여줍니다 */
+  const [gave, setGave] = useState<string[]>([])
   const [todayCount, setTodayCount] = useState(() => todayRecords().length)
 
   const sessionRef = useRef({ id: newSessionId(), startedAt: Date.now() })
@@ -51,13 +53,14 @@ export default function App() {
     setSituation('')
     setSafety(100)
     setFound(0)
+    setGave([])
     setTodayCount(todayRecords().length)
     setStep('menu')
   }, [])
 
   // 채팅 중에는 타이핑하느라 화면을 안 건드릴 수 있어 자동 리셋을 걸지 않습니다
   const idleRemaining = useIdleTimer({
-    enabled: step !== 'menu' && step !== 'admin' && step !== 'result' && step !== 'chat',
+    enabled: step !== 'menu' && step !== 'admin' && step !== 'action' && step !== 'chat',
     onReset: reset,
   })
 
@@ -86,7 +89,7 @@ export default function App() {
       })
     }
     setFound(foundCount)
-    setStep('result')
+    setStep('action')
   }
 
   return (
@@ -105,19 +108,22 @@ export default function App() {
           <ChatScreen
             scenario={scenario}
             safety={safety}
-            onReply={(delta) => setSafety((v) => Math.max(0, Math.min(100, v + delta)))}
+            onReply={(delta, item) => {
+              setSafety((v) => Math.max(0, Math.min(100, v + delta)))
+              if (item) setGave((prev) => (prev.includes(item) ? prev : [...prev, item]))
+            }}
             onFinish={() => setStep('caught')}
           />
         )}
 
         {step === 'caught' && (
-          <CaughtScreen defended={defended} onNext={() => setStep('find')} />
+          <CaughtScreen defended={defended} gave={gave} onNext={() => setStep('find')} />
         )}
 
         {step === 'find' && <FindScreen scenario={scenario} onDone={finish} />}
 
-        {step === 'result' && (
-          <ResultScreen
+        {step === 'action' && (
+          <ActionScreen
             found={found}
             total={scenario.redFlags.length}
             safety={safety}

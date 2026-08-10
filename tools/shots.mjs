@@ -64,18 +64,22 @@ await reload()
 // [0] 첫 화면 — 받아볼 문자 고르기
 await shot('menu')
 
-// 산학연 시나리오로 진행합니다 (클라이언트 요구 지점)
 await tapText('연구실 · 산학협력')
-await wait(1800)
+await wait(1900)
 await shot('chat-turn1')
 
 /** 관람객처럼 한 글자씩 직접 쳐 넣습니다 */
 const typeReply = async (text) => {
+  // 입력창이 열릴 때까지 기다립니다(열리기 전에 치면 글자가 씹힙니다)
+  await page.waitForFunction(() => {
+    const el = document.querySelector('input')
+    return el && !el.disabled
+  }, { timeout: 8000 })
   await page.click('input')
-  await page.type('input', text, { delay: 22 })
+  await page.type('input', text, { delay: 20 })
 }
 
-// 5턴을 실제로 다 쳐서 넘어갑니다
+// 5턴을 다 칩니다. 상대가 매번 받아치므로 실제로는 9번 오갑니다.
 const replies = [
   '네 확인했습니다',
   '한빛대학교 김OO 입니다',
@@ -85,29 +89,30 @@ const replies = [
 ]
 for (let i = 0; i < replies.length; i += 1) {
   await typeReply(replies[i])
-  if (i === 0) await shot('chat-typed')
   await tapText('보내기')
-  await wait(2300)
-  if (i === 2) await shot('chat-turn4')
+  await wait(3200)
+  if (i === 1) await shot('chat-react')
+  if (i === 3) await shot('chat-turn5')
 }
 
-await wait(1200)
+// 넘긴 것 목록
+await wait(2600)
 await shot('caught')
 
-// 방금 그 문자에서 수상한 곳 찾기
-await wait(2200)
+await tapText('어디서 알아챌')
+await wait(1500)
 await shot('find')
 await page.evaluate(() => {
   document.querySelectorAll('span.cursor-pointer').forEach((el) => el.click())
   const header = document.querySelector('button.mb-3')
   if (header) header.click()
 })
-await wait(1000)
+await wait(1200)
 await shot('find-found')
 
 await tapText('결과 보기')
-await wait(900)
-await shot('result')
+await wait(2200)
+await shot('action')
 
 await browser.close()
 console.log('완료 →', OUT)
