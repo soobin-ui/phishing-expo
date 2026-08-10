@@ -62,7 +62,7 @@ export function ChatScreen({
     }, 800)
   }
 
-  const visible = bubbles.slice(-3)
+  const visible = bubbles.slice(-4)
 
   return (
     <div className="flex h-full w-full flex-col">

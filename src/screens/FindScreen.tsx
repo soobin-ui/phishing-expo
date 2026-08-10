@@ -5,7 +5,7 @@ import { splitByFlags } from '../lib/highlight'
 import { fill, ui } from '../lib/content'
 import type { RedFlag, Scenario } from '../types'
 
-const TIME_LIMIT = 40 // 초
+const TIME_LIMIT = 60 // 초 — 대화가 5턴이라 읽을 글이 많습니다
 
 /** 글자가 한 줄씩 밀려 올라오는 공통 동작 */
 const rise = {
@@ -14,14 +14,14 @@ const rise = {
 } as const
 
 /**
- * [3] 방금 받은 그 문자에서 수상한 곳 3군데를 찾습니다.
+ * [3] 방금 받은 그 문자에서 수상한 곳을 찾습니다. 개수는 시나리오마다 다릅니다.
  *
  * ★ 이 화면은 반드시 '직접 당해본 다음'에 와야 합니다.
  *   처음 보는 문자에서 찾게 하면 그냥 퀴즈지만,
  *   방금 자기가 답장한 문자를 다시 놓고 찾게 하면 남습니다.
  *
- * ★ 메시지 안에 수상한 지점이 정확히 3개만 있어야 합니다.
- *   4개째를 넣으면 관람객이 맞는 곳을 눌러도 '틀렸다'고 흔들립니다.
+ * ★ redFlags 에 없는데 수상해 보이는 문장을 메시지에 두지 마세요.
+ *   관람객이 그걸 누르면 맞는데도 '틀렸다'고 흔들립니다.
  */
 export function FindScreen({
   scenario,
@@ -39,6 +39,7 @@ export function FindScreen({
     [messageText, scenario],
   )
   const headerFlag = scenario.redFlags.find((f) => f.match === scenario.sender.number)
+  const total = scenario.redFlags.length
 
   const [found, setFound] = useState<string[]>([])
   const [miss, setMiss] = useState(false)
@@ -90,10 +91,10 @@ export function FindScreen({
           transition={{ duration: 0.4 }}
           className="mt-0 text-[36px] leading-snug font-extrabold whitespace-pre-line text-white"
         >
-          {done ? ui.find.timeUp : ui.find.title}
+          {done ? ui.find.timeUp : fill(ui.find.title, { n: total })}
         </motion.h2>
         <motion.p variants={rise} className="mt-3 text-[25px] font-semibold text-blue-300 tabular-nums">
-          {fill(ui.find.found, { n: found.length })}
+          {fill(ui.find.found, { n: found.length, total })}
           {!done && (
             <span className="ml-3 text-white/40">{fill(ui.find.hintTime, { n: left })}</span>
           )}
@@ -105,7 +106,7 @@ export function FindScreen({
         initial={{ opacity: 0, y: 20 }}
         animate={miss ? { opacity: 1, y: 0, x: [0, -6, 6, -4, 4, 0] } : { opacity: 1, y: 0, x: 0 }}
         transition={{ duration: 0.35, delay: 0.2 }}
-        className="mt-4 max-h-[48%] shrink-0 overflow-auto border-2 border-white/15 bg-white/[0.05] p-4"
+        className="mt-4 max-h-[52%] shrink-0 overflow-auto border-2 border-white/15 bg-white/[0.05] p-4"
       >
         <button
           type="button"

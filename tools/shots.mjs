@@ -75,20 +75,26 @@ const typeReply = async (text) => {
   await page.type('input', text, { delay: 22 })
 }
 
-await typeReply('네 알겠습니다 등록하겠습니다')
-await wait(300)
-await shot('chat-typed')
-await tapText('보내기')
-await wait(2400)
-await shot('chat-turn2')
+// 5턴을 실제로 다 쳐서 넘어갑니다
+const replies = [
+  '네 확인했습니다',
+  '한빛대학교 김OO 입니다',
+  '지금 접속해볼게요',
+  '하나 210-889-334512 입니다',
+  '알겠습니다 바로 하겠습니다',
+]
+for (let i = 0; i < replies.length; i += 1) {
+  await typeReply(replies[i])
+  if (i === 0) await shot('chat-typed')
+  await tapText('보내기')
+  await wait(2300)
+  if (i === 2) await shot('chat-turn4')
+}
 
-// 계좌번호를 그대로 적어버리는 최악의 경우
-await typeReply('하나 210-889-334512 입니다')
-await tapText('보내기')
-await wait(1400)
+await wait(1200)
 await shot('caught')
 
-// 방금 그 문자에서 3곳 찾기
+// 방금 그 문자에서 수상한 곳 찾기
 await wait(2200)
 await shot('find')
 await page.evaluate(() => {
@@ -102,13 +108,6 @@ await shot('find-found')
 await tapText('결과 보기')
 await wait(900)
 await shot('result')
-
-// 다른 상황도 한 번 — 학회 논문
-await tapText('처음으로')
-await wait(900)
-await tapText('학회 · 논문')
-await wait(1800)
-await shot('journal-turn1')
 
 await browser.close()
 console.log('완료 →', OUT)
