@@ -6,7 +6,7 @@ import { MenuScreen } from './screens/MenuScreen'
 import { AgeScreen } from './screens/AgeScreen'
 import { ChatScreen } from './screens/ChatScreen'
 import { CaughtScreen } from './screens/CaughtScreen'
-import { RedFlagScreen } from './screens/RedFlagScreen'
+import { DebriefScreen } from './screens/DebriefScreen'
 import { QuizFindScreen } from './screens/QuizFindScreen'
 import { ResultScreen } from './screens/ResultScreen'
 import { AdminScreen } from './screens/AdminScreen'
@@ -21,7 +21,7 @@ const ACT_OF: Record<Step, Act> = {
   age: 'bright',
   chat: 'dark',
   caught: 'dark',
-  redflag: 'counter',
+  debrief: 'counter',
   quiz: 'counter',
   result: 'counter',
   admin: 'dark',
@@ -40,6 +40,9 @@ export default function App() {
   const savedRef = useRef(false)
 
   const scenario = useMemo(() => scenarioFor(ageGroup), [ageGroup])
+
+  /** 안전도 60 이상이면 넘어가지 않은 것으로 봅니다 */
+  const defended = safety >= 60
 
   /** 찾아야 할 개수 — 시나리오는 3개, 퀴즈는 문제 수 × 3개 */
   const flagsTotal =
@@ -60,7 +63,7 @@ export default function App() {
   }, [])
 
   const idleRemaining = useIdleTimer({
-    enabled: step !== 'menu' && step !== 'admin' && step !== 'result',
+    enabled: step !== 'menu' && step !== 'admin' && step !== 'result' && step !== 'chat',
     onReset: reset,
   })
 
@@ -86,7 +89,7 @@ export default function App() {
         scenarioId: track === 'chat' ? scenario.id : 'quiz',
         flagsFound: foundCount,
         flagsTotal: total,
-        defended: safety >= 60,
+        defended,
       })
     }
     setFound(foundCount)
@@ -119,19 +122,20 @@ export default function App() {
           <ChatScreen
             scenario={scenario}
             safety={safety}
-            onChoice={(delta) => setSafety((v) => Math.max(0, Math.min(100, v + delta)))}
+            onReply={(delta) => setSafety((v) => Math.max(0, Math.min(100, v + delta)))}
             onFinish={() => setStep('caught')}
           />
         )}
 
-        {step === 'caught' && <CaughtScreen onNext={() => setStep('redflag')} />}
+        {step === 'caught' && (
+          <CaughtScreen defended={defended} onNext={() => setStep('debrief')} />
+        )}
 
-        {step === 'redflag' && (
-          <RedFlagScreen
+        {step === 'debrief' && (
+          <DebriefScreen
             scenario={scenario}
-            safety={safety}
-            onFound={() => setSafety((v) => Math.min(100, v + 15))}
-            onNext={(count) => finish(count, scenario.redFlags.length)}
+            defended={defended}
+            onNext={() => finish(0, scenario.redFlags.length)}
           />
         )}
 
@@ -153,7 +157,13 @@ export default function App() {
         )}
 
         {step === 'result' && (
-          <ResultScreen track={track} found={found} total={flagsTotal} onReset={reset} />
+          <ResultScreen
+            track={track}
+            found={found}
+            total={flagsTotal}
+            safety={safety}
+            onReset={reset}
+          />
         )}
 
         {step === 'admin' && <AdminScreen onExit={reset} />}

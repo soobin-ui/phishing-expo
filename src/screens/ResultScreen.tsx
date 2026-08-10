@@ -11,11 +11,13 @@ export function ResultScreen({
   track,
   found,
   total,
+  safety,
   onReset,
 }: {
   track: Track
   found: number
   total: number
+  safety: number
   onReset: () => void
 }) {
   const r = ui.result
@@ -35,9 +37,14 @@ export function ResultScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const ratio = total > 0 ? found / total : 0
+  // 시나리오 쪽은 '무엇을 답했는가'(안전도), 퀴즈 쪽은 '몇 개 찾았는가'로 판정합니다.
+  const ratio = track === 'chat' ? safety / 100 : total > 0 ? found / total : 0
   const grade = ratio >= 0.8 ? r.gradeHigh : ratio >= 0.4 ? r.gradeMid : r.gradeLow
-  const score = fill(track === 'chat' ? r.scoreChat : r.scoreQuiz, { found, total })
+  const score = fill(track === 'chat' ? r.scoreChat : r.scoreQuiz, {
+    found,
+    total,
+    safety: Math.round(safety),
+  })
 
   return (
     <div className="flex h-full w-full flex-col px-10 py-14">

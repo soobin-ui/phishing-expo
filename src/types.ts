@@ -9,7 +9,7 @@ export type Step =
   | 'age' // [A-1] 연령대 고르기
   | 'chat' // [A-2] 피싱 메시지 대화
   | 'caught' // [A-3] 당함 연출
-  | 'redflag' // [A-4] 위험 신호 찾기
+  | 'debrief' // [A-4] 복기 — 방금 받은 문자를 되짚어 보여줌
   | 'quiz' // [B-1] 산학연 피싱 문자에서 3곳 찾기 (2문제)
   | 'result' // 마무리
   | 'admin' // 운영자 화면
@@ -33,15 +33,10 @@ export interface RedFlag {
   explain: string
 }
 
-export interface ScenarioChoice {
-  text: string
-  riskDelta: number
-  typeWeight: Record<string, number>
-}
-
 export interface ScenarioTurn {
   message: string
-  choices: ScenarioChoice[]
+  /** 입력창 위에 뜨는 안내 — 관람객이 직접 답장을 타이핑합니다 */
+  hint: string
 }
 
 export interface Scenario {

@@ -70,38 +70,35 @@ await wait(700)
 await shot('age')
 
 await tapText('40 · 50대')
-await wait(1400)
+await wait(1800)
 await shot('chat-turn1')
 
-// 첫 선택 → 두 번째 문자
-await page.evaluate(() => {
-  const btns = [...document.querySelectorAll('button')].filter((b) => b.innerText.trim().length > 4)
-  btns[1]?.click()
-})
-await wait(2000)
+/** 관람객처럼 한 글자씩 직접 쳐 넣습니다 */
+const typeReply = async (text) => {
+  await page.click('input')
+  await page.type('input', text, { delay: 25 })
+}
+
+// 첫 답장 — 넘어가는 쪽
+await typeReply('알겠어 어떻게 하면 돼?')
+await wait(300)
+await shot('chat-typed')
+await tapText('보내기')
+await wait(2400)
 await shot('chat-turn2')
 
-// 두 번째 선택 → 당함 → 위험 신호 찾기
-await page.evaluate(() => {
-  const btns = [...document.querySelectorAll('button')].filter((b) => b.innerText.trim().length > 4)
-  btns[0]?.click()
-})
-await wait(1200)
+// 두 번째 답장 — 계좌번호를 그대로 적어버리는 최악의 경우
+await typeReply('국민 110-234-567890 으로 보낼게')
+await tapText('보내기')
+await wait(1400)
 await shot('caught')
-await wait(2000)
-await shot('redflag')
-
-// 정답 3개를 눌러본다
-await page.evaluate(() => {
-  document.querySelectorAll('span.cursor-pointer').forEach((el) => el.click())
-  const header = document.querySelector('.border-b button, button.mb-3')
-  if (header) header.click()
-})
-await wait(900)
-await shot('redflag-found')
+await wait(2200)
+await shot('debrief')
+await wait(2600)
+await shot('debrief-full')
 
 await tapText('다음')
-await wait(800)
+await wait(900)
 await shot('result-chat')
 
 // ── B. 피싱 찾기 퀴즈 ────────────────────────────
