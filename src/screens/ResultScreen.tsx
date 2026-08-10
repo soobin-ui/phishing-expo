@@ -40,30 +40,58 @@ export function ResultScreen({
   const score = fill(track === 'chat' ? r.scoreChat : r.scoreQuiz, { found, total })
 
   return (
-    <div className="flex h-full w-full flex-col px-6 pt-[max(36px,env(safe-area-inset-top))] pb-[max(28px,env(safe-area-inset-bottom))]">
+    <div className="flex h-full w-full flex-col px-10 py-14">
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45 }}
         className="shrink-0 text-center"
       >
-        <p className="text-[20px] text-white/50">{r.title}</p>
-        <p className="mt-4 text-[34px] leading-snug font-extrabold text-white">{grade}</p>
-        <p className="mt-3 text-[22px] text-blue-300 tabular-nums">{score}</p>
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-[26px] text-white/50"
+        >
+          {r.title}
+        </motion.p>
+        <motion.p
+          initial={{ opacity: 0, y: 18, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.12, ease: 'easeOut' }}
+          className="mt-5 text-[46px] leading-snug font-extrabold text-white"
+        >
+          {grade}
+        </motion.p>
+        <motion.p
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.24 }}
+          className="mt-4 text-[28px] text-blue-300 tabular-nums"
+        >
+          {score}
+        </motion.p>
       </motion.div>
 
       <div className="flex min-h-0 flex-1 flex-col justify-center gap-3 py-6">
-        <p className="mb-1 text-[20px] font-bold text-white/70">{r.rulesTitle}</p>
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
+          className="mb-1 text-[26px] font-bold text-white/70"
+        >
+          {r.rulesTitle}
+        </motion.p>
         {r.rules.map((rule, i) => (
           <motion.div
             key={rule}
             initial={{ opacity: 0, x: -12 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.15 + i * 0.12 }}
+            transition={{ duration: 0.4, delay: 0.42 + i * 0.12 }}
             className="flex items-start gap-3 border-l-4 border-blue-400 bg-blue-400/10 px-4 py-3"
           >
-            <span className="text-[22px] font-extrabold text-blue-300 tabular-nums">{i + 1}</span>
-            <span className="text-[20px] leading-relaxed text-white/90">{rule}</span>
+            <span className="text-[28px] font-extrabold text-blue-300 tabular-nums">{i + 1}</span>
+            <span className="text-[26px] leading-relaxed text-white/90">{rule}</span>
           </motion.div>
         ))}
       </div>
@@ -72,9 +100,14 @@ export function ResultScreen({
         <TapButton tone="counter" onClick={onReset}>
           {r.again}
         </TapButton>
-        <p className="mt-3 text-center text-[17px] text-white/35 tabular-nums">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.9 }}
+          className="mt-3 text-center text-[22px] text-white/35 tabular-nums"
+        >
           {fill(r.autoReset, { n: left })}
-        </p>
+        </motion.p>
       </div>
     </div>
   )

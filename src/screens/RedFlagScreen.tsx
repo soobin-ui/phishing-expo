@@ -7,6 +7,12 @@ import type { RedFlag, Scenario } from '../types'
 
 const TIME_LIMIT = 25 // 초
 
+/** 글자가 한 줄씩 밀려 올라오는 공통 동작 */
+const rise = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.42, ease: 'easeOut' } },
+} as const
+
 /** [7] 3막 — 위험 신호 찾기. Phase 5에서 판정 연출을 완성합니다. */
 export function RedFlagScreen({
   scenario,
@@ -66,23 +72,35 @@ export function RedFlagScreen({
   const showAnswer = (flag?: RedFlag) => !!flag && (isFound(flag) || revealed)
 
   return (
-    <div className="flex h-full w-full flex-col px-5 pt-8 pb-[max(24px,env(safe-area-inset-bottom))]">
+    <div className="flex h-full w-full flex-col px-9 py-12">
       <SafetyGauge value={safety} />
 
-      <div className="mt-5 mb-3 text-center">
-        <h2 className="text-[27px] leading-snug font-extrabold whitespace-pre-line text-white">
+      <motion.div
+        initial="hidden"
+        animate="show"
+        variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
+        className="mt-7 mb-4 text-center"
+      >
+        <motion.h2
+          key={done ? 'done' : 'ask'}
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-[36px] leading-snug font-extrabold whitespace-pre-line text-white"
+        >
           {done ? ui.redflag.timeUp : ui.redflag.title}
-        </h2>
-        <p className="mt-2 text-[19px] font-semibold text-blue-300 tabular-nums">
+        </motion.h2>
+        <motion.p variants={rise} className="mt-3 text-[25px] font-semibold text-blue-300 tabular-nums">
           {fill(ui.redflag.found, { n: found.length })}
           {!done && <span className="ml-3 text-white/40">{left}초</span>}
-        </p>
-      </div>
+        </motion.p>
+      </motion.div>
 
       {/* 다시 뜬 메시지 — 손이 닿는 위치에 둡니다 */}
       <motion.div
-        animate={miss ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 }}
-        transition={{ duration: 0.35 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={miss ? { opacity: 1, y: 0, x: [0, -6, 6, -4, 4, 0] } : { opacity: 1, y: 0, x: 0 }}
+        transition={{ duration: 0.35, delay: 0.2 }}
         className="max-h-[48%] shrink-0 overflow-auto border-2 border-white/15 bg-white/[0.05] p-4"
       >
         <button
@@ -92,11 +110,11 @@ export function RedFlagScreen({
             showAnswer(headerFlag) ? 'bg-red-500/20' : ''
           }`}
         >
-          <span className="block text-[19px] font-semibold text-white">
+          <span className="block text-[25px] font-semibold text-white">
             {scenario.sender.name}
           </span>
           <span
-            className={`text-[18px] ${
+            className={`text-[23px] ${
               showAnswer(headerFlag) ? 'font-bold text-red-300 underline' : 'text-white/45'
             }`}
           >
@@ -104,7 +122,7 @@ export function RedFlagScreen({
           </span>
         </button>
 
-        <p className="text-[19px] leading-relaxed whitespace-pre-line text-white/90">
+        <p className="text-[25px] leading-relaxed whitespace-pre-line text-white/90">
           {segments.map((seg, i) =>
             seg.flag ? (
               <span
@@ -138,8 +156,8 @@ export function RedFlagScreen({
                 animate={{ opacity: 1, y: 0 }}
                 className="border-l-4 border-blue-400 bg-blue-400/10 px-3 py-2"
               >
-                <p className="text-[18px] font-bold text-blue-200">{flag.label}</p>
-                <p className="text-[17px] leading-snug text-white/70">{flag.explain}</p>
+                <p className="text-[24px] font-bold text-blue-200">{flag.label}</p>
+                <p className="text-[22px] leading-snug text-white/70">{flag.explain}</p>
               </motion.div>
             ))}
       </div>

@@ -31,7 +31,7 @@ export function TapButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`min-h-[84px] w-full px-5 py-4 text-[24px] leading-snug font-semibold transition-transform duration-100 active:scale-[0.98] disabled:opacity-40 ${toneClass[tone]} ${className}`}
+      className={`min-h-[104px] w-full px-7 py-5 text-[29px] leading-snug font-semibold transition-transform duration-100 active:scale-[0.98] disabled:opacity-40 ${toneClass[tone]} ${className}`}
     >
       {children}
     </button>

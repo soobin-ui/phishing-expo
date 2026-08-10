@@ -50,23 +50,28 @@ export function ChatScreen({
 
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="px-6 pt-8 pb-4">
+      <div className="px-9 pt-12 pb-5">
         <SafetyGauge value={safety} />
       </div>
 
       {/* 메신저 헤더 */}
-      <div className="flex items-center gap-3 border-y border-white/10 bg-white/[0.04] px-6 py-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-600 text-[18px] font-bold">
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex items-center gap-3 border-y border-white/10 bg-white/[0.04] px-9 py-5"
+      >
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-600 text-[23px] font-bold">
           {scenario.sender.name.slice(0, 1)}
         </div>
         <div className="min-w-0">
-          <p className="truncate text-[20px] font-semibold">{scenario.sender.name}</p>
-          <p className="text-[16px] text-white/45">{scenario.sender.number}</p>
+          <p className="truncate text-[26px] font-semibold">{scenario.sender.name}</p>
+          <p className="text-[21px] text-white/45">{scenario.sender.number}</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* 대화 */}
-      <div className="flex min-h-0 flex-1 flex-col justify-end gap-3 px-5 py-4">
+      <div className="flex min-h-0 flex-1 flex-col justify-end gap-4 px-8 py-6">
         {visible.map((bubble, i) => (
             <motion.div
               key={`${bubble.from}-${bubble.text.slice(0, 8)}-${i}`}
@@ -76,7 +81,7 @@ export function ChatScreen({
               className={bubble.from === 'me' ? 'flex justify-end' : 'flex justify-start'}
             >
               <p
-                className={`max-w-[85%] px-4 py-3 text-[20px] leading-relaxed whitespace-pre-line ${
+                className={`max-w-[85%] px-4 py-3 text-[26px] leading-relaxed whitespace-pre-line ${
                   bubble.from === 'me'
                     ? 'rounded-2xl rounded-br-sm bg-blue-600 text-white'
                     : 'rounded-2xl rounded-bl-sm bg-white/12 text-white'
@@ -89,7 +94,7 @@ export function ChatScreen({
       </div>
 
       {/* 선택지 */}
-      <div className="flex flex-col gap-3 px-5 pb-[max(24px,env(safe-area-inset-bottom))]">
+      <div className="flex flex-col gap-4 px-8 pb-12">
         {showChoices &&
           scenario.turns[turn].choices.map((choice, i) => (
             <motion.div

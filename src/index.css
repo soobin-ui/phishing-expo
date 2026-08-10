@@ -1,12 +1,21 @@
 @import 'tailwindcss';
 
 /*
-  폰트: Phase 8에서 Pretendard woff2를 public/fonts/ 에 넣고 아래 @font-face를 켭니다.
-  (지금은 기기 기본 한글 폰트로 표시됩니다 — 인터넷 연결 없이 동작)
+  폰트: Pretendard Variable 을 파일로 들고 있습니다(2MB).
+  전시장 인터넷이 끊겨도 글꼴이 그대로 나옵니다. 외부에서 받아오지 않습니다.
+  출처: github.com/orioncactus/pretendard (SIL Open Font License 1.1)
 */
+@font-face {
+  font-family: 'Pretendard Variable';
+  font-weight: 45 920;
+  font-style: normal;
+  font-display: block;
+  src: url('./assets/fonts/PretendardVariable.woff2') format('woff2-variations');
+}
+
 @theme {
   --font-sans:
-    'Pretendard', 'Pretendard Variable', -apple-system, BlinkMacSystemFont,
+    'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont,
     'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
 }
 

@@ -22,8 +22,8 @@ export function CaughtScreen({ onNext }: { onNext: () => void }) {
         transition={{ duration: 0.45, delay: 0.25 }}
         className="text-center"
       >
-        <p className="mb-6 text-[64px]">⚠️</p>
-        <p className="text-[36px] leading-snug font-extrabold text-white">{ui.caught.title}</p>
+        <p className="mb-6 text-[86px]">⚠️</p>
+        <p className="text-[48px] leading-snug font-extrabold text-white">{ui.caught.title}</p>
       </motion.div>
     </motion.div>
   )

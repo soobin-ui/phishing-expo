@@ -2,6 +2,17 @@ import { motion } from 'framer-motion'
 import { fill, ui } from '../lib/content'
 import type { Track } from '../types'
 
+/** 글자가 한 줄씩 밀려 올라오는 공통 동작 */
+const rise = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+} as const
+
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.09 } },
+} as const
+
 /** [0] 첫 화면 — 시나리오 체험 / 피싱 찾기 퀴즈 둘 중 하나를 고릅니다. */
 export function MenuScreen({
   onPick,
@@ -13,23 +24,43 @@ export function MenuScreen({
   const m = ui.menu
 
   return (
-    <div className="flex h-full w-full flex-col px-6 pt-[max(40px,env(safe-area-inset-top))] pb-[max(28px,env(safe-area-inset-bottom))]">
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45 }}
-        className="shrink-0 text-center"
-      >
-        <p className="text-[19px] font-semibold text-blue-600">{m.eyebrow}</p>
-        <h1 className="mt-3 text-[38px] leading-[1.25] font-extrabold whitespace-pre-line text-slate-900">
-          {m.headline}
-        </h1>
-        <p className="mt-4 text-[21px] text-slate-500">{m.sub}</p>
-      </motion.div>
+    <motion.div
+      initial="hidden"
+      animate="show"
+      variants={stagger}
+      className="flex h-full w-full flex-col px-10 py-14"
+    >
+      {/* ── 행사 타이틀 ── */}
+      <div className="shrink-0 text-center">
+        <motion.p variants={rise} className="text-[24px] font-bold text-blue-600">
+          {m.eyebrow}
+        </motion.p>
+        <motion.p
+          variants={rise}
+          className="mt-1 text-[40px] leading-tight font-extrabold text-slate-900"
+        >
+          {m.title}
+        </motion.p>
 
-      <div className="flex min-h-0 flex-1 flex-col justify-center gap-5 py-6">
+        <motion.div variants={rise} className="mx-auto mt-6 h-px w-24 bg-slate-300" />
+
+        <motion.h1
+          variants={rise}
+          className="mt-6 text-[52px] leading-tight font-extrabold text-slate-900"
+        >
+          {m.headline}
+        </motion.h1>
+        <motion.p variants={rise} className="mt-4 text-[26px] text-slate-500">
+          {m.tagline}
+        </motion.p>
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col justify-center gap-6">
+        <motion.p variants={rise} className="text-center text-[22px] font-medium text-slate-400">
+          {m.sub}
+        </motion.p>
+
         <Card
-          delay={0.15}
           badge={m.chat.badge}
           title={m.chat.title}
           desc={m.chat.desc}
@@ -37,7 +68,6 @@ export function MenuScreen({
           onClick={() => onPick('chat')}
         />
         <Card
-          delay={0.28}
           badge={m.quiz.badge}
           title={m.quiz.title}
           desc={m.quiz.desc}
@@ -46,10 +76,13 @@ export function MenuScreen({
         />
       </div>
 
-      <p className="shrink-0 text-center text-[18px] text-slate-400 tabular-nums">
+      <motion.p
+        variants={rise}
+        className="shrink-0 text-center text-[20px] text-slate-400 tabular-nums"
+      >
         {fill(m.todayCount, { n: todayCount })}
-      </p>
-    </div>
+      </motion.p>
+    </motion.div>
   )
 }
 
@@ -68,33 +101,29 @@ function Card({
   title,
   desc,
   tone,
-  delay,
   onClick,
 }: {
   badge: string
   title: string
   desc: string
   tone: 'chat' | 'quiz'
-  delay: number
   onClick: () => void
 }) {
   return (
     <motion.button
       type="button"
       onClick={onClick}
-      initial={{ opacity: 0, y: 22 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay, ease: 'easeOut' }}
+      variants={rise}
       whileTap={{ scale: 0.98 }}
-      className={`flex shrink-0 flex-col justify-center rounded-3xl border-2 px-7 py-9 text-left shadow-[0_10px_30px_rgba(15,23,42,0.07)] ${toneClass[tone]}`}
+      className={`flex shrink-0 flex-col justify-center rounded-3xl border-2 px-9 py-10 text-left shadow-[0_10px_30px_rgba(15,23,42,0.08)] ${toneClass[tone]}`}
     >
       <span
-        className={`inline-block self-start rounded-full px-3.5 py-1.5 text-[16px] font-bold ${badgeClass[tone]}`}
+        className={`inline-block self-start rounded-full px-4 py-1.5 text-[19px] font-bold ${badgeClass[tone]}`}
       >
         {badge}
       </span>
-      <p className="mt-4 text-[32px] leading-tight font-extrabold text-slate-900">{title}</p>
-      <p className="mt-3 text-[21px] leading-relaxed whitespace-pre-line text-slate-500">{desc}</p>
+      <p className="mt-5 text-[38px] leading-tight font-extrabold text-slate-900">{title}</p>
+      <p className="mt-4 text-[24px] leading-relaxed whitespace-pre-line text-slate-500">{desc}</p>
     </motion.button>
   )
 }

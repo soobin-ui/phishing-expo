@@ -27,8 +27,15 @@ const browser = await puppeteer.launch({
 })
 
 const page = await browser.newPage()
-// 태블릿 세로. Stage 가 9:16 으로 잡아주므로 그 비율로 봅니다.
-await page.setViewport({ width: 810, height: 1440, deviceScaleFactor: 1, isMobile: true, hasTouch: true })
+/*
+  화면 크기. 기본은 태블릿 세로(810×1440)입니다.
+  ★ 다른 크기로도 꼭 한 번씩 찍어보세요. 무대를 통째로 축소하는 방식이라
+    비율만 작아져야 정상이고, 글자가 겹치면 그건 버그입니다.
+      npm run shots -- <주소> 390x844      (휴대폰)
+      npm run shots -- <주소> 1024x768     (가로로 눕힌 태블릿)
+*/
+const [vw, vh] = (process.argv[3] || '810x1440').split('x').map(Number)
+await page.setViewport({ width: vw, height: vh, deviceScaleFactor: 1, isMobile: true, hasTouch: true })
 
 let n = 0
 const shot = async (name) => {
