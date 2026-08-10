@@ -11,6 +11,9 @@
   },
   "chat": {
     "safetyLabel": "안전도",
+    "counter": "{current} / {total}",
+    "read": "읽음",
+    "waiting": "잠시만요…",
     "newMessage": "새 메시지"
   },
   "caught": {
