@@ -1,30 +1,32 @@
 /**
- * 화면 흐름
+ * 화면 흐름 — 한 줄기입니다.
  *
- *   [0] menu ─┬─ [A] 시나리오 체험 : age → chat → caught → redflag → result
- *             └─ [B] 피싱 찾기 퀴즈 : quiz(2문제) → result
+ *   [0] menu   받아볼 문자를 고른다
+ *   [1] chat   문자가 오고, 직접 답장을 타이핑한다
+ *   [2] caught 넘어갔는지 / 안 넘어갔는지
+ *   [3] find   ★ 방금 그 문자에서 수상한 곳 3군데를 찾는다
+ *   [4] result 마무리
+ *
+ * ★ find 를 chat 앞으로 옮기거나 따로 떼어내지 마세요.
+ *   직접 당해본 직후여야 찾을 마음이 생깁니다. 그게 이 순서의 이유입니다.
  */
 export type Step =
-  | 'menu' // [0] 첫 화면 — 두 가지 중 고르기
-  | 'age' // [A-1] 연령대 고르기
-  | 'chat' // [A-2] 피싱 메시지 대화
-  | 'caught' // [A-3] 당함 연출
-  | 'debrief' // [A-4] 복기 — 방금 받은 문자를 되짚어 보여줌
-  | 'quiz' // [B-1] 산학연 피싱 문자에서 3곳 찾기 (2문제)
-  | 'result' // 마무리
+  | 'menu'
+  | 'chat'
+  | 'caught'
+  | 'find'
+  | 'result'
   | 'admin' // 운영자 화면
 
-/** 어느 쪽을 골랐는지 */
-export type Track = 'chat' | 'quiz'
+/** 첫 화면에서 고르는 상황 */
+export interface Situation {
+  id: string
+  label: string
+  desc: string
+}
 
 /** 막(幕) — 화면 색감이 이 값에 따라 바뀝니다. */
 export type Act = 'bright' | 'dark' | 'counter'
-
-export interface AgeGroup {
-  id: string
-  label: string
-  note: string
-}
 
 export interface RedFlag {
   target: string
@@ -41,18 +43,9 @@ export interface ScenarioTurn {
 
 export interface Scenario {
   id: string
-  ageGroup: string
+  situation: string
   sender: { name: string; number: string }
   turns: ScenarioTurn[]
-  redFlags: RedFlag[]
-}
-
-/** 퀴즈 한 문제 — 피싱 문자 한 통과 그 안의 수상한 지점 3곳 */
-export interface QuizItem {
-  id: string
-  topic: string
-  sender: { name: string; number: string }
-  message: string
   redFlags: RedFlag[]
 }
 
@@ -62,8 +55,7 @@ export interface SessionRecord {
   startedAt: number
   durationMs: number
   completed: boolean
-  track: Track
-  ageGroup: string // 퀴즈만 한 경우 빈 값
+  situation: string
   scenarioId: string
   flagsFound: number
   flagsTotal: number

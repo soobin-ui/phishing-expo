@@ -61,76 +61,54 @@ const reload = async () => {
 console.log('열기:', URL)
 await reload()
 
-// [0] 첫 화면
+// [0] 첫 화면 — 받아볼 문자 고르기
 await shot('menu')
 
-// ── A. 시나리오 체험 ─────────────────────────────
-await tapText('시나리오 체험')
-await wait(700)
-await shot('age')
-
-await tapText('40 · 50대')
+// 산학연 시나리오로 진행합니다 (클라이언트 요구 지점)
+await tapText('연구실 · 산학협력')
 await wait(1800)
 await shot('chat-turn1')
 
 /** 관람객처럼 한 글자씩 직접 쳐 넣습니다 */
 const typeReply = async (text) => {
   await page.click('input')
-  await page.type('input', text, { delay: 25 })
+  await page.type('input', text, { delay: 22 })
 }
 
-// 첫 답장 — 넘어가는 쪽
-await typeReply('알겠어 어떻게 하면 돼?')
+await typeReply('네 알겠습니다 등록하겠습니다')
 await wait(300)
 await shot('chat-typed')
 await tapText('보내기')
 await wait(2400)
 await shot('chat-turn2')
 
-// 두 번째 답장 — 계좌번호를 그대로 적어버리는 최악의 경우
-await typeReply('국민 110-234-567890 으로 보낼게')
+// 계좌번호를 그대로 적어버리는 최악의 경우
+await typeReply('하나 210-889-334512 입니다')
 await tapText('보내기')
 await wait(1400)
 await shot('caught')
+
+// 방금 그 문자에서 3곳 찾기
 await wait(2200)
-await shot('debrief')
-await wait(2600)
-await shot('debrief-full')
-
-await tapText('다음')
-await wait(900)
-await shot('result-chat')
-
-// ── B. 피싱 찾기 퀴즈 ────────────────────────────
-await tapText('처음으로')
-await wait(800)
-await tapText('피싱 찾기 퀴즈')
-await wait(900)
-await shot('quiz1')
-
+await shot('find')
 await page.evaluate(() => {
   document.querySelectorAll('span.cursor-pointer').forEach((el) => el.click())
   const header = document.querySelector('button.mb-3')
   if (header) header.click()
 })
-await wait(900)
-await shot('quiz1-found')
-
-await tapText('다음 문자')
-await wait(900)
-await shot('quiz2')
-
-await page.evaluate(() => {
-  document.querySelectorAll('span.cursor-pointer').forEach((el) => el.click())
-  const header = document.querySelector('button.mb-3')
-  if (header) header.click()
-})
-await wait(900)
-await shot('quiz2-found')
+await wait(1000)
+await shot('find-found')
 
 await tapText('결과 보기')
-await wait(800)
-await shot('result-quiz')
+await wait(900)
+await shot('result')
+
+// 다른 상황도 한 번 — 학회 논문
+await tapText('처음으로')
+await wait(900)
+await tapText('학회 · 논문')
+await wait(1800)
+await shot('journal-turn1')
 
 await browser.close()
 console.log('완료 →', OUT)

@@ -2,19 +2,16 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { TapButton } from '../components/Buttons'
 import { fill, ui } from '../lib/content'
-import type { Track } from '../types'
 
 const AUTO_RESET = 30 // 초
 
 /** 마무리 화면 — 두 갈래가 같은 화면으로 끝납니다. */
 export function ResultScreen({
-  track,
   found,
   total,
   safety,
   onReset,
 }: {
-  track: Track
   found: number
   total: number
   safety: number
@@ -37,14 +34,10 @@ export function ResultScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // 시나리오 쪽은 '무엇을 답했는가'(안전도), 퀴즈 쪽은 '몇 개 찾았는가'로 판정합니다.
-  const ratio = track === 'chat' ? safety / 100 : total > 0 ? found / total : 0
-  const grade = ratio >= 0.8 ? r.gradeHigh : ratio >= 0.4 ? r.gradeMid : r.gradeLow
-  const score = fill(track === 'chat' ? r.scoreChat : r.scoreQuiz, {
-    found,
-    total,
-    safety: Math.round(safety),
-  })
+  // '무엇을 답했는가'(안전도)와 '몇 개 찾았는가'를 반씩 봅니다.
+  const ratio = (safety / 100) * 0.5 + (total > 0 ? found / total : 0) * 0.5
+  const grade = ratio >= 0.8 ? r.gradeHigh : ratio >= 0.45 ? r.gradeMid : r.gradeLow
+  const score = fill(r.score, { found, total, safety: Math.round(safety) })
 
   return (
     <div className="flex h-full w-full flex-col px-10 py-14">

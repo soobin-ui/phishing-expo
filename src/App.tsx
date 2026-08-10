@@ -3,80 +3,74 @@ import { motion } from 'framer-motion'
 import { Stage } from './components/Stage'
 import { TapButton } from './components/Buttons'
 import { MenuScreen } from './screens/MenuScreen'
-import { AgeScreen } from './screens/AgeScreen'
 import { ChatScreen } from './screens/ChatScreen'
 import { CaughtScreen } from './screens/CaughtScreen'
-import { DebriefScreen } from './screens/DebriefScreen'
-import { QuizFindScreen } from './screens/QuizFindScreen'
+import { FindScreen } from './screens/FindScreen'
 import { ResultScreen } from './screens/ResultScreen'
 import { AdminScreen } from './screens/AdminScreen'
-import { fill, quizzes, scenarioFor, ui } from './lib/content'
+import { fill, scenarioFor, ui } from './lib/content'
 import { useIdleTimer } from './lib/useIdleTimer'
 import { newSessionId, saveRecord, todayRecords } from './lib/stats'
-import type { Act, Step, Track } from './types'
+import type { Act, Step } from './types'
 
 /** 화면마다 배경 색감이 바뀝니다. 밝게 시작해서 어두워집니다. */
 const ACT_OF: Record<Step, Act> = {
   menu: 'bright',
-  age: 'bright',
   chat: 'dark',
   caught: 'dark',
-  debrief: 'counter',
-  quiz: 'counter',
+  find: 'counter',
   result: 'counter',
   admin: 'dark',
 }
 
+/**
+ * 흐름은 한 줄기입니다.
+ *   상황 고르기 → 문자 받고 직접 답장 → 넘어갔나 → 그 문자에서 3곳 찾기 → 정리
+ *
+ * ★ '찾기'를 앞으로 빼거나 따로 떼어내지 마세요.
+ *   직접 당해본 직후여야 찾을 마음이 생깁니다.
+ */
 export default function App() {
   const [step, setStep] = useState<Step>('menu')
-  const [track, setTrack] = useState<Track>('chat')
-  const [ageGroup, setAgeGroup] = useState('')
+  const [situation, setSituation] = useState('')
   const [safety, setSafety] = useState(100)
-  const [quizIndex, setQuizIndex] = useState(0)
   const [found, setFound] = useState(0)
   const [todayCount, setTodayCount] = useState(() => todayRecords().length)
 
   const sessionRef = useRef({ id: newSessionId(), startedAt: Date.now() })
   const savedRef = useRef(false)
 
-  const scenario = useMemo(() => scenarioFor(ageGroup), [ageGroup])
+  const scenario = useMemo(() => scenarioFor(situation), [situation])
 
   /** 안전도 60 이상이면 넘어가지 않은 것으로 봅니다 */
   const defended = safety >= 60
 
-  /** 찾아야 할 개수 — 시나리오는 3개, 퀴즈는 문제 수 × 3개 */
-  const flagsTotal =
-    track === 'chat'
-      ? scenario.redFlags.length
-      : quizzes.reduce((sum, q) => sum + q.redFlags.length, 0)
-
   const reset = useCallback(() => {
     sessionRef.current = { id: newSessionId(), startedAt: Date.now() }
     savedRef.current = false
-    setTrack('chat')
-    setAgeGroup('')
+    setSituation('')
     setSafety(100)
-    setQuizIndex(0)
     setFound(0)
     setTodayCount(todayRecords().length)
     setStep('menu')
   }, [])
 
+  // 채팅 중에는 타이핑하느라 화면을 안 건드릴 수 있어 자동 리셋을 걸지 않습니다
   const idleRemaining = useIdleTimer({
     enabled: step !== 'menu' && step !== 'admin' && step !== 'result' && step !== 'chat',
     onReset: reset,
   })
 
-  const pickTrack = (picked: Track) => {
+  const start = (situationId: string) => {
     // 전체화면 시도 (태블릿에서 주소창 숨김 — 실패해도 체험은 그대로 진행됩니다)
     document.documentElement.requestFullscreen?.().catch(() => {})
     sessionRef.current = { id: newSessionId(), startedAt: Date.now() }
-    setTrack(picked)
-    setStep(picked === 'chat' ? 'age' : 'quiz')
+    setSituation(situationId)
+    setStep('chat')
   }
 
-  /** 마무리 화면으로 넘어가면서 기록을 남깁니다(개인정보 없음). */
-  const finish = (foundCount: number, total: number) => {
+  /** 마무리 화면으로 넘어가면서 기록을 남깁니다(개인정보 없음 — 쓴 글은 저장하지 않습니다). */
+  const finish = (foundCount: number) => {
     if (!savedRef.current) {
       savedRef.current = true
       saveRecord({
@@ -84,11 +78,10 @@ export default function App() {
         startedAt: sessionRef.current.startedAt,
         durationMs: Date.now() - sessionRef.current.startedAt,
         completed: true,
-        track,
-        ageGroup,
-        scenarioId: track === 'chat' ? scenario.id : 'quiz',
+        situation,
+        scenarioId: scenario.id,
         flagsFound: foundCount,
-        flagsTotal: total,
+        flagsTotal: scenario.redFlags.length,
         defended,
       })
     }
@@ -100,23 +93,13 @@ export default function App() {
     <Stage act={ACT_OF[step]}>
       {/* 화면 전환: 새 화면이 배경 위로 부드럽게 나타납니다(빈 화면 없음) */}
       <motion.div
-        key={step + (step === 'quiz' ? quizIndex : '')}
+        key={step}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.22 }}
         className="absolute inset-0"
       >
-        {step === 'menu' && <MenuScreen onPick={pickTrack} todayCount={todayCount} />}
-
-        {step === 'age' && (
-          <AgeScreen
-            onPick={(id) => {
-              setAgeGroup(id)
-              setStep('chat')
-            }}
-            onBack={reset}
-          />
-        )}
+        {step === 'menu' && <MenuScreen onPick={start} todayCount={todayCount} />}
 
         {step === 'chat' && (
           <ChatScreen
@@ -128,39 +111,15 @@ export default function App() {
         )}
 
         {step === 'caught' && (
-          <CaughtScreen defended={defended} onNext={() => setStep('debrief')} />
+          <CaughtScreen defended={defended} onNext={() => setStep('find')} />
         )}
 
-        {step === 'debrief' && (
-          <DebriefScreen
-            scenario={scenario}
-            defended={defended}
-            onNext={() => finish(0, scenario.redFlags.length)}
-          />
-        )}
-
-        {step === 'quiz' && (
-          <QuizFindScreen
-            quiz={quizzes[quizIndex]}
-            index={quizIndex}
-            total={quizzes.length}
-            onDone={(count) => {
-              const sum = found + count
-              if (quizIndex + 1 < quizzes.length) {
-                setFound(sum)
-                setQuizIndex(quizIndex + 1)
-              } else {
-                finish(sum, flagsTotal)
-              }
-            }}
-          />
-        )}
+        {step === 'find' && <FindScreen scenario={scenario} onDone={finish} />}
 
         {step === 'result' && (
           <ResultScreen
-            track={track}
             found={found}
-            total={flagsTotal}
+            total={scenario.redFlags.length}
             safety={safety}
             onReset={reset}
           />

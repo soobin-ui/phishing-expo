@@ -1,6 +1,5 @@
 import { motion } from 'framer-motion'
-import { fill, ui } from '../lib/content'
-import type { Track } from '../types'
+import { fill, situations, ui } from '../lib/content'
 
 /** 글자가 한 줄씩 밀려 올라오는 공통 동작 */
 const rise = {
@@ -10,15 +9,15 @@ const rise = {
 
 const stagger = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.09 } },
+  show: { transition: { staggerChildren: 0.08 } },
 } as const
 
-/** [0] 첫 화면 — 시나리오 체험 / 피싱 찾기 퀴즈 둘 중 하나를 고릅니다. */
+/** [0] 첫 화면 — 받아볼 문자를 고릅니다. */
 export function MenuScreen({
   onPick,
   todayCount,
 }: {
-  onPick: (track: Track) => void
+  onPick: (situationId: string) => void
   todayCount: number
 }) {
   const m = ui.menu
@@ -28,7 +27,7 @@ export function MenuScreen({
       initial="hidden"
       animate="show"
       variants={stagger}
-      className="flex h-full w-full flex-col px-10 py-14"
+      className="flex h-full w-full flex-col px-10 py-12"
     >
       {/* ── 행사 타이틀 ── */}
       <div className="shrink-0 text-center">
@@ -37,43 +36,35 @@ export function MenuScreen({
         </motion.p>
         <motion.p
           variants={rise}
-          className="mt-1 text-[40px] leading-tight font-extrabold text-slate-900"
+          className="mt-1 text-[38px] leading-tight font-extrabold text-slate-900"
         >
           {m.title}
         </motion.p>
 
-        <motion.div variants={rise} className="mx-auto mt-6 h-px w-24 bg-slate-300" />
+        <motion.div variants={rise} className="mx-auto mt-5 h-px w-24 bg-slate-300" />
 
         <motion.h1
           variants={rise}
-          className="mt-6 text-[52px] leading-tight font-extrabold text-slate-900"
+          className="mt-5 text-[48px] leading-tight font-extrabold text-slate-900"
         >
           {m.headline}
         </motion.h1>
-        <motion.p variants={rise} className="mt-4 text-[26px] text-slate-500">
+        <motion.p variants={rise} className="mt-4 text-[24px] text-slate-500">
           {m.tagline}
         </motion.p>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col justify-center gap-6">
-        <motion.p variants={rise} className="text-center text-[22px] font-medium text-slate-400">
-          {m.sub}
-        </motion.p>
-
-        <Card
-          badge={m.chat.badge}
-          title={m.chat.title}
-          desc={m.chat.desc}
-          tone="chat"
-          onClick={() => onPick('chat')}
-        />
-        <Card
-          badge={m.quiz.badge}
-          title={m.quiz.title}
-          desc={m.quiz.desc}
-          tone="quiz"
-          onClick={() => onPick('quiz')}
-        />
+      <div className="flex min-h-0 flex-1 flex-col justify-center gap-4 py-6">
+        {situations.map((s, i) => (
+          <SituationCard
+            key={s.id}
+            label={s.label}
+            desc={s.desc}
+            cta={m.cta}
+            index={i}
+            onClick={() => onPick(s.id)}
+          />
+        ))}
       </div>
 
       <motion.p
@@ -86,27 +77,21 @@ export function MenuScreen({
   )
 }
 
-const toneClass = {
-  chat: 'border-blue-200 bg-white active:bg-blue-50',
-  quiz: 'border-slate-200 bg-white active:bg-slate-50',
-}
-
-const badgeClass = {
-  chat: 'bg-blue-600 text-white',
-  quiz: 'bg-slate-800 text-white',
-}
-
-function Card({
-  badge,
-  title,
+/**
+ * 상황 카드.
+ * 화살표가 계속 오른쪽으로 밀립니다 — 누르는 자리라는 걸 가만히 있어도 알 수 있게.
+ */
+function SituationCard({
+  label,
   desc,
-  tone,
+  cta,
+  index,
   onClick,
 }: {
-  badge: string
-  title: string
+  label: string
   desc: string
-  tone: 'chat' | 'quiz'
+  cta: string
+  index: number
   onClick: () => void
 }) {
   return (
@@ -114,16 +99,39 @@ function Card({
       type="button"
       onClick={onClick}
       variants={rise}
-      whileTap={{ scale: 0.98 }}
-      className={`flex shrink-0 flex-col justify-center rounded-3xl border-2 px-9 py-10 text-left shadow-[0_10px_30px_rgba(15,23,42,0.08)] ${toneClass[tone]}`}
+      whileTap={{ scale: 0.985 }}
+      className="flex shrink-0 items-center gap-5 rounded-3xl border-2 border-slate-200 bg-white px-8 py-6 text-left shadow-[0_8px_24px_rgba(15,23,42,0.06)] active:border-blue-400 active:bg-blue-50"
     >
-      <span
-        className={`inline-block self-start rounded-full px-4 py-1.5 text-[19px] font-bold ${badgeClass[tone]}`}
-      >
-        {badge}
-      </span>
-      <p className="mt-5 text-[38px] leading-tight font-extrabold text-slate-900">{title}</p>
-      <p className="mt-4 text-[24px] leading-relaxed whitespace-pre-line text-slate-500">{desc}</p>
+      <div className="min-w-0 flex-1">
+        <p className="text-[31px] leading-tight font-extrabold text-slate-900">{label}</p>
+        <p className="mt-2 text-[21px] leading-snug text-slate-500">{desc}</p>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-2 text-blue-600">
+        <span className="text-[21px] font-bold">{cta}</span>
+        <motion.svg
+          width="26"
+          height="26"
+          viewBox="0 0 26 26"
+          aria-hidden="true"
+          animate={{ x: [0, 7, 0] }}
+          transition={{
+            duration: 1.4,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: index * 0.18,
+          }}
+        >
+          <path
+            d="M4 13h16M14 6l7 7-7 7"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </motion.svg>
+      </div>
     </motion.button>
   )
 }

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { TapButton } from '../components/Buttons'
 import { splitByFlags } from '../lib/highlight'
 import { fill, ui } from '../lib/content'
-import type { QuizItem, RedFlag } from '../types'
+import type { RedFlag, Scenario } from '../types'
 
 const TIME_LIMIT = 40 // 초
 
@@ -14,31 +14,38 @@ const rise = {
 } as const
 
 /**
- * [B] 피싱 찾기 퀴즈 — 산학연협력 현장을 노린 문자에서 수상한 곳 3군데를 찾습니다.
+ * [3] 방금 받은 그 문자에서 수상한 곳 3군데를 찾습니다.
+ *
+ * ★ 이 화면은 반드시 '직접 당해본 다음'에 와야 합니다.
+ *   처음 보는 문자에서 찾게 하면 그냥 퀴즈지만,
+ *   방금 자기가 답장한 문자를 다시 놓고 찾게 하면 남습니다.
  *
  * ★ 메시지 안에 수상한 지점이 정확히 3개만 있어야 합니다.
  *   4개째를 넣으면 관람객이 맞는 곳을 눌러도 '틀렸다'고 흔들립니다.
  */
-export function QuizFindScreen({
-  quiz,
-  index,
-  total,
+export function FindScreen({
+  scenario,
   onDone,
 }: {
-  quiz: QuizItem
-  index: number
-  total: number
+  scenario: Scenario
   onDone: (foundCount: number) => void
 }) {
-  const segments = useMemo(() => splitByFlags(quiz.message, quiz.redFlags), [quiz])
-  const headerFlag = quiz.redFlags.find((f) => f.match === quiz.sender.number)
+  const messageText = useMemo(
+    () => scenario.turns.map((t) => t.message).join('\n\n'),
+    [scenario],
+  )
+  const segments = useMemo(
+    () => splitByFlags(messageText, scenario.redFlags),
+    [messageText, scenario],
+  )
+  const headerFlag = scenario.redFlags.find((f) => f.match === scenario.sender.number)
 
   const [found, setFound] = useState<string[]>([])
   const [miss, setMiss] = useState(false)
   const [revealed, setRevealed] = useState(false)
   const [left, setLeft] = useState(TIME_LIMIT)
 
-  const done = revealed || found.length >= quiz.redFlags.length
+  const done = revealed || found.length >= scenario.redFlags.length
 
   useEffect(() => {
     if (done) return
@@ -71,28 +78,24 @@ export function QuizFindScreen({
   return (
     <div className="flex h-full w-full flex-col px-9 py-12">
       <motion.div
-        key={quiz.id}
         initial="hidden"
         animate="show"
         variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
         className="shrink-0 text-center"
       >
-        <motion.p variants={rise} className="text-[23px] font-bold text-blue-300">
-          {fill(ui.quiz.counter, { current: index + 1, total })}
-        </motion.p>
         <motion.h2
           key={done ? 'done' : 'ask'}
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="mt-3 text-[36px] leading-snug font-extrabold whitespace-pre-line text-white"
+          className="mt-0 text-[36px] leading-snug font-extrabold whitespace-pre-line text-white"
         >
-          {done ? ui.quiz.timeUp : ui.quiz.title}
+          {done ? ui.find.timeUp : ui.find.title}
         </motion.h2>
         <motion.p variants={rise} className="mt-3 text-[25px] font-semibold text-blue-300 tabular-nums">
-          {fill(ui.quiz.found, { n: found.length })}
+          {fill(ui.find.found, { n: found.length })}
           {!done && (
-            <span className="ml-3 text-white/40">{fill(ui.quiz.hintTime, { n: left })}</span>
+            <span className="ml-3 text-white/40">{fill(ui.find.hintTime, { n: left })}</span>
           )}
         </motion.p>
       </motion.div>
@@ -111,13 +114,13 @@ export function QuizFindScreen({
             showAnswer(headerFlag) ? 'bg-red-500/20' : ''
           }`}
         >
-          <span className="block text-[25px] font-semibold text-white">{quiz.sender.name}</span>
+          <span className="block text-[25px] font-semibold text-white">{scenario.sender.name}</span>
           <span
             className={`text-[23px] ${
               showAnswer(headerFlag) ? 'font-bold text-red-300 underline' : 'text-white/45'
             }`}
           >
-            {quiz.sender.number}
+            {scenario.sender.number}
           </span>
         </button>
 
@@ -146,7 +149,7 @@ export function QuizFindScreen({
 
       {/* 찾은 것부터 하나씩 설명이 붙습니다 */}
       <div className="mt-3 flex min-h-0 flex-1 flex-col gap-2 overflow-auto">
-        {quiz.redFlags
+        {scenario.redFlags
           .filter((flag) => showAnswer(flag))
           .map((flag) => (
             <motion.div
@@ -164,7 +167,7 @@ export function QuizFindScreen({
       {done && (
         <div className="mt-4 shrink-0">
           <TapButton tone="counter" onClick={() => onDone(found.length)}>
-            {index + 1 < total ? ui.quiz.next : ui.quiz.last}
+            {ui.find.next}
           </TapButton>
         </div>
       )}
