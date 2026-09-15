@@ -1,9 +1,12 @@
 @import 'tailwindcss';
 
 /*
-  폰트: Pretendard Variable 을 파일로 들고 있습니다(2MB).
+  폰트
+  - 본문: Pretendard Variable (2MB, 자체 보관)
+  - 제목: 지마켓 산스 — 휴대폰 QR 페이지(phishing-qr)·홍보 포스터와 같은 서체.
+    KS X 1001 2350자만 남긴 서브셋이라 아주 드문 글자는 Pretendard 로 떨어집니다.
   전시장 인터넷이 끊겨도 글꼴이 그대로 나옵니다. 외부에서 받아오지 않습니다.
-  출처: github.com/orioncactus/pretendard (SIL Open Font License 1.1)
+  출처: github.com/orioncactus/pretendard (SIL OFL 1.1) / 지마켓 산스(무료 배포 서체)
 */
 @font-face {
   font-family: 'Pretendard Variable';
@@ -12,11 +15,55 @@
   font-display: block;
   src: url('./assets/fonts/PretendardVariable.woff2') format('woff2-variations');
 }
+@font-face {
+  font-family: 'Gmarket Sans';
+  src: url('./assets/fonts/GmarketSansMedium.subset.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Gmarket Sans';
+  src: url('./assets/fonts/GmarketSansBold.subset.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: block;
+}
+
+/*
+  가로로 넓은 화면(가로 태블릿·노트북·눕힌 휴대폰)에서는 두 칸으로 나눕니다.
+  세로 화면은 폭이 아무리 넓어도 한 칸입니다(세로 태블릿).
+    예) wide:flex-row  wide:w-1/2
+*/
+@custom-variant wide (@media (orientation: landscape) and (min-width: 700px));
 
 @theme {
   --font-sans:
     'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont,
     'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
+  --font-display: 'Gmarket Sans', var(--font-sans);
+
+  /* 포스터·QR 페이지와 같은 색 (포스터 원본 픽셀에서 뽑은 값) */
+  --color-navy: #263b7c;
+  --color-navy-deep: #1c2e63;
+  --color-night: #0e1633; /* 어두운 화면 바탕 — 포스터 남색을 밤빛으로 내린 것 */
+  --color-night-2: #15204a;
+  --color-gold: #feca36;
+  --color-gold-deep: #e9b21c;
+  --color-sky: #a9d6fd;
+  --color-sky-pale: #eaf4ff;
+}
+
+/*
+  ★ 글자 크기의 기준(1rem)을 화면 크기에 맞춰 늘였다 줄였다 합니다.
+    화면의 짧은 쪽(vmin)을 따라가므로 세로·가로를 돌려도 크기가 튀지 않습니다.
+      휴대폰 15px · 태블릿 18~22px · 노트북 18~20px · 큰 모니터 24px(상한)
+    모든 크기는 rem 으로 적습니다(Tailwind 기본 간격·글자 크기도 전부 rem).
+    예전처럼 810×1440 무대를 통째로 축소하지 않으므로 검은 여백이 생기지 않습니다.
+*/
+html {
+  font-size: clamp(15px, calc(5px + 1.7vmin), 24px);
+  color-scheme: light; /* 안드로이드 크롬 '자동 어둡게'가 색을 뒤집지 않게 */
 }
 
 html,
@@ -27,7 +74,7 @@ body,
   padding: 0;
 }
 
-/* ── 키오스크 기본 하드닝 (Phase 8에서 보강) ───────────────── */
+/* ── 키오스크 기본 하드닝 ───────────────── */
 html {
   overscroll-behavior: none; /* 당겨서 새로고침 / 바운스 금지 */
   touch-action: manipulation; /* 핀치 줌 · 더블탭 줌 금지 */
@@ -35,8 +82,8 @@ html {
 }
 
 body {
-  overflow: hidden; /* 스크롤 금지 */
-  background: #000;
+  overflow: hidden; /* 문서 전체 스크롤 금지 — 필요한 곳만 화면 안에서 스크롤 */
+  background: var(--color-night);
   color: #fff;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -44,9 +91,53 @@ body {
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none; /* 롱프레스 메뉴 금지 */
+  word-break: keep-all; /* 한글을 단어 단위로 줄바꿈 */
+  overflow-wrap: anywhere;
 }
 
 button {
   font-family: inherit;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; /* 스크롤 영역 안 버튼 탭이 스크롤로 먹히지 않게 */
+}
+
+/* 입력창 글자가 16px 미만이면 iOS 가 화면을 확대합니다.
+   base 층에 둬야 Tailwind 글자 크기 클래스(text-xl 등)가 이깁니다.
+   (rem 기준이 최소 15px 이라 입력창 글자는 어느 기기에서도 16px 을 넘깁니다) */
+@layer base {
+  input {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* 스크롤 막대는 숨깁니다(터치로 밀면 됩니다) */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* 포스터에 흩뿌려진 별빛 — 첫 화면에만 몇 개, 천천히 */
+.spark {
+  position: absolute;
+  animation: spark 3.6s ease-in-out infinite;
+}
+@keyframes spark {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spark {
+    animation: none;
+    opacity: 0.7;
+  }
 }

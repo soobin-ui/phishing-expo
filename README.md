@@ -10,7 +10,8 @@ npm run dev
 ```
 
 브라우저에서 http://localhost:5175 로 접속합니다.
-(개발 중에는 PC 브라우저 창을 세로로 길게 줄이면 태블릿과 같은 화면으로 보입니다.)
+화면은 기기 크기에 맞춰 늘었다 줄었다 합니다 — 휴대폰·세로 태블릿은 한 칸, 가로 태블릿·노트북은 두 칸.
+여러 기기 크기로 한 번에 확인: `node tools/fit_check.mjs http://localhost:8899/ --shots` (결과 `tools/shots/fit/`)
 
 ## 문구를 고치고 싶을 때
 

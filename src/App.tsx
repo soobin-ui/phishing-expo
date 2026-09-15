@@ -142,13 +142,13 @@ export default function App() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-8 bg-black/85 px-8 text-center"
+          className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-6 bg-night/90 px-8 text-center backdrop-blur-sm"
         >
-          <p className="text-[34px] font-extrabold text-white">{ui.idle.title}</p>
-          <p className="text-[24px] text-white/70 tabular-nums">
+          <p className="font-display text-[1.9rem] font-bold text-white">{ui.idle.title}</p>
+          <p className="text-[1.2rem] text-white/70 tabular-nums">
             {fill(ui.idle.countdown, { n: idleRemaining })}
           </p>
-          <div className="w-full max-w-[420px]">
+          <div className="mt-2 w-full max-w-[24rem]">
             <TapButton onClick={() => {}}>{ui.idle.continue}</TapButton>
           </div>
         </motion.div>
@@ -164,7 +164,7 @@ function AdminTapZone({ onEnter }: { onEnter: () => void }) {
     <button
       type="button"
       aria-hidden
-      className="absolute top-0 right-0 z-40 h-20 w-20 opacity-0"
+      className="absolute top-0 right-0 z-40 h-16 w-16 opacity-0"
       onClick={() => {
         const now = Date.now()
         taps.current = [...taps.current, now].filter((t) => now - t < 2500)

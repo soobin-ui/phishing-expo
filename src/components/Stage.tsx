@@ -1,86 +1,52 @@
-import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { Act } from '../types'
 
-/**
- * 무대 크기(디자인 기준). 모든 화면은 이 크기 안에서 짭니다.
- * 태블릿 세로 9:16.
- */
-export const STAGE_W = 810
-export const STAGE_H = 1440
-
 const actClass: Record<Act, string> = {
-  // 1막: 밝고 산뜻한 안내 화면
-  bright: 'bg-gradient-to-b from-[#eaf1ff] via-[#f6f9ff] to-[#ffffff] text-slate-900',
-  // 2막: 어둡고 각진 경고 화면
-  dark: 'bg-[#0a0d16] text-white',
-  // 3막: 어둡지만 참가자 쪽에 파란 주도권이 생김
-  counter: 'bg-[#080c18] text-white',
+  // 1막: 밝은 안내 화면 — 포스터 하늘색을 아주 옅게
+  bright: 'bg-gradient-to-b from-sky-pale via-[#f4f9ff] to-white text-navy',
+  // 2막: 문자가 오는 화면 — 포스터 남색을 밤빛으로 내린 바탕
+  dark: 'bg-night text-white',
+  // 3막: 되짚어 보는 화면 — 같은 남색, 한 톤 밝게
+  counter: 'bg-gradient-to-b from-night to-night-2 text-white',
 }
 
 /**
- * ★ 810 × 1440 짜리 무대를 하나 만들어 놓고, 화면 크기에 맞게 통째로 축소합니다.
+ * 화면 전체를 채우는 바탕.
  *
- *   글자 크기를 화면마다 다시 계산하는 방식은 어딘가 반드시 깨집니다.
- *   (실제로 휴대폰에서 열었을 때 제목과 카드가 겹쳐 나왔습니다)
- *   무대 하나를 통째로 줄이면 어떤 기기에서 열어도 비율만 작아질 뿐
- *   글자가 겹치거나 넘칠 수 없습니다.
+ * ★ 예전에는 810×1440 무대를 통째로 축소해서 노트북·가로 태블릿에서
+ *   양옆이 검게 비고 휴대폰 크기로만 보였습니다.
+ *   이제는 화면을 꽉 채우고, 글자 크기는 index.css 의 rem 기준이,
+ *   배치는 각 화면의 `wide:` (가로로 넓은 화면) 규칙이 맞춥니다.
+ *
+ * ★ 내용이 화면보다 길어지면 잘리지 않고 그 화면 안에서 스크롤됩니다
+ *   (ScrollScreen). 정상 크기에서는 스크롤 없이 한 화면에 들어오도록 짭니다.
  */
 export function Stage({ act, children }: { act: Act; children: ReactNode }) {
-  const [scale, setScale] = useState(() => fitScale())
-
-  useEffect(() => {
-    const fit = () => setScale(fitScale())
-    fit()
-    window.addEventListener('resize', fit)
-    window.addEventListener('orientationchange', fit)
-    // 주소창이 접히고 펴질 때도 다시 맞춥니다
-    window.visualViewport?.addEventListener('resize', fit)
-    return () => {
-      window.removeEventListener('resize', fit)
-      window.removeEventListener('orientationchange', fit)
-      window.visualViewport?.removeEventListener('resize', fit)
-    }
-  }, [])
-
   return (
-    <div className="fixed inset-0 flex items-center justify-center overflow-hidden bg-black">
-      {/*
-        shrink-0 이 반드시 있어야 합니다.
-        없으면 flex 자식이라 810px 가 화면 폭에 맞게 먼저 찌그러지고,
-        그 위에 scale 이 또 걸려서 두 번 줄어듭니다(글자가 다시 줄바꿈됩니다).
-      */}
-      <div
-        className={`relative shrink-0 overflow-hidden transition-colors duration-500 ${actClass[act]}`}
-        style={{
-          width: STAGE_W,
-          height: STAGE_H,
-          transform: `scale(${scale})`,
-          transformOrigin: 'center center',
-        }}
-      >
-        {children}
-      </div>
+    <div
+      className={`fixed inset-0 overflow-hidden transition-colors duration-500 ${actClass[act]}`}
+    >
+      {children}
     </div>
   )
 }
 
-function fitScale(): number {
-  if (typeof window === 'undefined') return 1
-  const w = window.visualViewport?.width ?? window.innerWidth
-  const h = window.visualViewport?.height ?? window.innerHeight
-  return Math.min(w / STAGE_W, h / STAGE_H)
-}
-
 /**
- * 한 화면의 뼈대.
- * 위쪽은 읽기 전용, 아래쪽 55%는 손이 닿는 조작 영역입니다.
+ * 한 화면의 바깥 틀 — 바깥은 스크롤, 안쪽은 가운데 정렬 두 겹.
+ *
+ * ⚠️ 한 겹에 justify-center 와 overflow-y-auto 를 같이 걸면
+ *    내용이 길어졌을 때 위쪽으로 스크롤해도 닿지 않습니다. 반드시 두 겹으로.
  */
-export function ScreenLayout({ top, bottom }: { top?: ReactNode; bottom?: ReactNode }) {
+export function ScrollScreen({
+  children,
+  className = '',
+}: {
+  children: ReactNode
+  className?: string
+}) {
   return (
-    <div className="flex h-full w-full flex-col px-8 py-10">
-      <div className="flex min-h-0 flex-[45] flex-col justify-center">{top}</div>
-      <div className="flex min-h-0 flex-[55] flex-col justify-end gap-4">{bottom}</div>
+    <div className="no-scrollbar h-full w-full overflow-y-auto overscroll-contain" data-scroll-screen>
+      <div className={`flex min-h-full w-full flex-col ${className}`}>{children}</div>
     </div>
   )
 }

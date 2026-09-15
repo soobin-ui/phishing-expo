@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { TapButton } from '../components/Buttons'
+import { ScrollScreen } from '../components/Stage'
 import { fill, ui } from '../lib/content'
 
 const AUTO_RESET = 40 // 초
@@ -46,72 +47,93 @@ export function ActionScreen({
   const grade = ratio >= 0.8 ? a.gradeHigh : ratio >= 0.45 ? a.gradeMid : a.gradeLow
 
   return (
-    <div className="flex h-full w-full flex-col px-10 py-12">
-      <motion.div
-        initial="hidden"
-        animate="show"
-        variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
-        className="shrink-0 text-center"
-      >
-        <motion.p variants={rise} className="text-[23px] text-white/45">
-          {a.eyebrow}
-        </motion.p>
-        <motion.p variants={rise} className="mt-2 text-[38px] font-extrabold text-white">
-          {grade}
-        </motion.p>
-        <motion.p variants={rise} className="mt-2 text-[24px] text-blue-300 tabular-nums">
-          {fill(a.score, { found, total, safety: Math.round(safety) })}
-        </motion.p>
-
-        <motion.h2
-          variants={rise}
-          className="mt-8 text-[40px] leading-snug font-extrabold whitespace-pre-line text-white"
+    <ScrollScreen className="justify-center">
+      <div className="mx-auto flex w-full max-w-[38rem] flex-col px-6 pt-[max(1.25rem,3vh)] pb-5 wide:max-w-[76rem] wide:flex-row wide:items-center wide:gap-[5%] wide:px-[5%] wide:py-8">
+        {/* ── 왼쪽 칸(가로) / 위(세로): 결과 한 줄 + 제목 + (가로) 버튼 ── */}
+        <motion.div
+          initial="hidden"
+          animate="show"
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
+          className="shrink-0 text-center wide:flex wide:flex-1 wide:flex-col wide:text-left"
         >
-          {a.title}
-        </motion.h2>
-      </motion.div>
-
-      <div className="mt-7 flex min-h-0 flex-1 flex-col justify-center gap-3">
-        {a.steps.map((step, i) => (
-          <motion.div
-            key={step.n}
-            initial={{ opacity: 0, x: -18 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.42, delay: 0.5 + i * 0.14 }}
-            className="flex items-start gap-5 border-l-4 border-blue-400 bg-blue-400/10 px-6 py-4"
+          <motion.p variants={rise} className="text-[1.05rem] text-white/45">
+            {a.eyebrow}
+          </motion.p>
+          <motion.p
+            variants={rise}
+            className="mt-1.5 font-display text-[1.7rem] font-bold text-white wide:text-[2rem]"
           >
-            <span className="text-[32px] font-extrabold text-blue-300 tabular-nums">{step.n}</span>
-            <div className="min-w-0">
-              <p className="text-[26px] leading-snug font-bold text-white">{step.title}</p>
-              <p className="mt-1 text-[21px] leading-snug text-white/65">{step.desc}</p>
-            </div>
+            {grade}
+          </motion.p>
+          <motion.p variants={rise} className="mt-1.5 text-[1.1rem] text-gold tabular-nums">
+            {fill(a.score, { found, total, safety: Math.round(safety) })}
+          </motion.p>
+
+          <motion.div variants={rise} className="mx-auto my-[min(1.5rem,2.5vh)] h-px w-16 bg-white/20 wide:mx-0 wide:my-6" />
+
+          <motion.h2
+            variants={rise}
+            className="font-display text-[min(1.8rem,7vw)] leading-snug font-bold whitespace-pre-line text-white wide:text-[min(2.5rem,3.6vw)]"
+          >
+            {a.title}
+          </motion.h2>
+
+          <motion.div variants={rise} className="mt-8 hidden wide:block">
+            <Again label={a.again} note={fill(a.autoReset, { n: left })} onReset={onReset} />
           </motion.div>
-        ))}
+        </motion.div>
 
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 1.15 }}
-          className="mt-2 border border-white/20 px-5 py-4 text-[21px] leading-snug text-white/70"
+        {/* ── 오른쪽 칸(가로) / 아래(세로): 해야 할 일 4가지 ── */}
+        <div className="mt-[min(1.75rem,3vh)] flex flex-col gap-2 wide:mt-0 wide:gap-2.5 wide:w-[min(34rem,52%)]">
+          {a.steps.map((step, i) => (
+            <motion.div
+              key={step.n}
+              initial={{ opacity: 0, x: -18 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.42, delay: 0.5 + i * 0.14 }}
+              className="flex items-start gap-4 rounded-xl bg-white/[0.06] px-4 py-3 wide:px-5 wide:py-3.5"
+            >
+              <span className="flex h-[2rem] w-[2rem] shrink-0 items-center justify-center rounded-full bg-gold font-display text-[1.05rem] font-bold text-navy-deep tabular-nums">
+                {step.n}
+              </span>
+              <div className="min-w-0">
+                <p className="text-[1.2rem] leading-snug font-bold text-white">{step.title}</p>
+                <p className="mt-1 text-[0.98rem] leading-snug text-white/65">{step.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 1.15 }}
+            className="mt-1 rounded-xl border border-white/20 px-4 py-3 text-[0.98rem] wide:px-5 wide:py-3.5 leading-snug text-white/70"
+          >
+            {a.app}
+          </motion.p>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 1.3 }}
+          className="mt-[min(1.75rem,3vh)] shrink-0 wide:hidden"
         >
-          {a.app}
-        </motion.p>
+          <Again label={a.again} note={fill(a.autoReset, { n: left })} onReset={onReset} />
+        </motion.div>
       </div>
+    </ScrollScreen>
+  )
+}
 
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 1.3 }}
-        className="shrink-0"
-      >
-        <TapButton tone="counter" onClick={onReset}>
-          {a.again}
-        </TapButton>
-        <p className="mt-3 text-center text-[20px] text-white/35 tabular-nums">
-          {fill(a.autoReset, { n: left })}
-        </p>
-      </motion.div>
-    </div>
+function Again({ label, note, onReset }: { label: string; note: string; onReset: () => void }) {
+  return (
+    <>
+      <TapButton onClick={onReset}>{label}</TapButton>
+      <p className="mt-2.5 text-center text-[0.9rem] text-white/35 tabular-nums wide:text-left">
+        {note}
+      </p>
+    </>
   )
 }
 

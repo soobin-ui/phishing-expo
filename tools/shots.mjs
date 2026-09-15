@@ -29,8 +29,8 @@ const browser = await puppeteer.launch({
 const page = await browser.newPage()
 /*
   화면 크기. 기본은 태블릿 세로(810×1440)입니다.
-  ★ 다른 크기로도 꼭 한 번씩 찍어보세요. 무대를 통째로 축소하는 방식이라
-    비율만 작아져야 정상이고, 글자가 겹치면 그건 버그입니다.
+  ★ 화면 크기에 따라 배치가 바뀝니다(가로로 넓으면 두 칸).
+    여러 기기 크기를 한 번에 보려면 tools/fit_check.mjs --shots 를 쓰세요.
       npm run shots -- <주소> 390x844      (휴대폰)
       npm run shots -- <주소> 1024x768     (가로로 눕힌 태블릿)
 */
@@ -104,8 +104,7 @@ await wait(1500)
 await shot('find')
 await page.evaluate(() => {
   document.querySelectorAll('span.cursor-pointer').forEach((el) => el.click())
-  const header = document.querySelector('button.mb-3')
-  if (header) header.click()
+  document.querySelector('[data-role="sender-flag"]')?.click()
 })
 await wait(1200)
 await shot('find-found')
