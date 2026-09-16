@@ -24,9 +24,12 @@ const TIME_LIMIT = 60 // 초 — 대화가 5턴이라 읽을 글이 많습니다
  */
 export function FindScreen({
   scenario,
+  defended,
   onDone,
 }: {
   scenario: Scenario
+  /** 안 넘어간 사람인지 — 제목이 '왜 수상했는지 짚어볼까요?'로 바뀝니다 */
+  defended: boolean
   onDone: (foundCount: number) => void
 }) {
   // 방금 받은 그 화면 그대로 — 상대가 보낸 본문만 다시 띄웁니다(내 답장·받아친 말은 빼고)
@@ -103,7 +106,11 @@ export function FindScreen({
         transition={{ duration: 0.4 }}
         className="font-display text-[min(1.6rem,6.4vw)] leading-snug font-bold whitespace-pre-line text-white wide:text-[1.9rem]"
       >
-        {allFound ? ui.find.allFound : done ? ui.find.timeUp : fill(ui.find.title, { n: total, medium })}
+        {allFound
+          ? ui.find.allFound
+          : done
+            ? ui.find.timeUp
+            : fill(defended ? ui.find.titleSafe : ui.find.title, { n: total, medium })}
       </motion.h2>
       <p className="mt-2 text-[1.15rem] font-semibold text-gold tabular-nums">
         {fill(ui.find.found, { n: found.length, total })}

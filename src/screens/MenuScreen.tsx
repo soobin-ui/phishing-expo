@@ -1,8 +1,7 @@
-import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { EventPill } from '../components/Buttons'
 import { ScrollScreen } from '../components/Stage'
-import { fill, situations, ui } from '../lib/content'
+import { situations, ui } from '../lib/content'
 
 /** 글자가 한 줄씩 밀려 올라오는 공통 동작 */
 const rise = {
@@ -28,13 +27,7 @@ const stagger = {
  *
  * 세로 화면: 제목 위 / 목록 아래.  가로 화면: 제목 왼쪽 / 목록 오른쪽.
  */
-export function MenuScreen({
-  onPick,
-  todayCount,
-}: {
-  onPick: (situationId: string) => void
-  todayCount: number
-}) {
+export function MenuScreen({ onPick }: { onPick: (situationId: string) => void }) {
   const m = ui.menu
 
   return (
@@ -95,7 +88,7 @@ export function MenuScreen({
         </div>
       </motion.div>
 
-      <PosterBand>{fill(m.todayCount, { n: todayCount })}</PosterBand>
+      <PosterBand />
     </ScrollScreen>
   )
 }
@@ -158,7 +151,7 @@ function SituationRow({
  * 포스터 아래쪽의 금색 아크 + 남색 띠 — QR 페이지 첫 화면과 같은 마감.
  * non-scaling-stroke 라 화면 폭이 늘어나도 금색 선 굵기는 그대로입니다.
  */
-function PosterBand({ children }: { children: ReactNode }) {
+function PosterBand() {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[clamp(3.2rem,10vh,6rem)]">
       <svg
@@ -177,9 +170,6 @@ function PosterBand({ children }: { children: ReactNode }) {
           vectorEffect="non-scaling-stroke"
         />
       </svg>
-      <p className="absolute inset-x-0 bottom-0 flex h-[62%] items-center justify-center text-[0.95rem] text-white/60 tabular-nums">
-        {children}
-      </p>
     </div>
   )
 }

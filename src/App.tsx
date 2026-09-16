@@ -12,7 +12,7 @@ import { ActionScreen } from './screens/ActionScreen'
 import { AdminScreen } from './screens/AdminScreen'
 import { fill, scenarioFor, situations, ui } from './lib/content'
 import { useIdleTimer } from './lib/useIdleTimer'
-import { newSessionId, saveRecord, todayRecords } from './lib/stats'
+import { newSessionId, saveRecord } from './lib/stats'
 import type { Act, Step } from './types'
 
 /** ?topic=rnd|journal|job|family|agency — 시연용 바로가기(키오스크는 주소에 아무것도 붙이지 않음) */
@@ -55,7 +55,6 @@ export default function App() {
   const [gave, setGave] = useState<string[]>([])
   /** 전화 [끊기]를 눌렀는지 — 끊었으면 안전도와 상관없이 '넘어가지 않음' */
   const [hungUp, setHungUp] = useState(false)
-  const [todayCount, setTodayCount] = useState(() => todayRecords().length)
 
   const sessionRef = useRef({ id: newSessionId(), startedAt: Date.now() })
   const savedRef = useRef(false)
@@ -73,7 +72,6 @@ export default function App() {
     setFound(0)
     setGave([])
     setHungUp(false)
-    setTodayCount(todayRecords().length)
     setStep('menu')
   }, [])
 
@@ -121,7 +119,7 @@ export default function App() {
         transition={{ duration: 0.22 }}
         className="absolute inset-0"
       >
-        {step === 'menu' && <MenuScreen onPick={start} todayCount={todayCount} />}
+        {step === 'menu' && <MenuScreen onPick={start} />}
 
         {step === 'arrive' && scenario.channel === 'mail' && (
           <MailScreen
@@ -171,7 +169,9 @@ export default function App() {
           />
         )}
 
-        {step === 'find' && <FindScreen scenario={scenario} onDone={finish} />}
+        {step === 'find' && (
+          <FindScreen scenario={scenario} defended={defended} onDone={finish} />
+        )}
 
         {step === 'action' && (
           <ActionScreen
