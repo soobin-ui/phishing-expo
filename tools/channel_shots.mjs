@@ -100,9 +100,14 @@ async function run(topic, [label, w, h, mobile]) {
     await shot('4-hit')
     await wait(2600)
     await shot('5-card')
-    await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('정리 보기'))?.click())
+    await page.click('[data-role="flip-card"]')
+    await wait(1400)
+    await shot('6-card-back')
+    await page.click('[data-role="flip-card"]')
+    await wait(1200)
+    await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('이렇게 예방'))?.click())
     await wait(1500)
-    await shot('6-action')
+    await shot('7-action')
     await browser.close()
     return { topic, label, problems, flags: 4 }
   } else {
