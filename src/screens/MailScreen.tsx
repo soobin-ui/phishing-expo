@@ -1,320 +1,484 @@
 import { useRef, useState } from 'react'
-import type { ReactNode } from 'react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { EmailBody } from '../channels/MailView'
-import { SafetyGauge } from '../components/Buttons'
-import { situations, ui } from '../lib/content'
-import type { MailDoc, Scenario } from '../types'
+import { TapButton } from '../components/Buttons'
+import { splitByFlags } from '../lib/highlight'
+import { fill, ui } from '../lib/content'
+import type { MailDoc, RedFlag, Scenario } from '../types'
 
 /**
- * [메일] 연구실·산학협력 — 받은편지함을 열어 오늘 온 메일을 처리합니다.
+ * [메일] 연구실·산학협력 — **피싱 전문 수사관** 모드.
  *
- * ★ 보기를 주지 않습니다.
- *   "①첨부 열기 ②신고하기" 처럼 늘어놓으면 답을 알려주는 꼴이라, 실제 메일 앱처럼
- *   본문의 파란 버튼·첨부파일·도구막대(답장·전달·삭제·신고)만 놓아둡니다.
- *   손이 먼저 어디로 가는지가 그대로 답입니다.
+ * 브리핑 → 받은편지함 → 새로 온 메일을 열어 수상한 곳 4군데를 조사 → 잡았다 카드.
  *
- * ★ 평범한 업무 메일 2통을 같이 놓습니다(scenario.inbox).
- *   "체험존이니까 이건 피싱이겠지"를 깨고, 진짜 메일에도 링크가 있다는 걸 보여줍니다.
- *   진짜 메일은 무엇을 하든 벌점이 없습니다. 신고해도 "정상 메일이었습니다"로 끝.
+ * ★ 돋보기(조사 기회)에 개수 제한이 있습니다.
+ *   제한이 없으면 "전부 눌러보면 성공"하는 다 눌러보기 게임이 됩니다.
+ *   맞든 틀리든 한 번 누를 때마다 하나씩 닳으므로, 눈으로 먼저 읽게 됩니다.
  *
- * ★ 피싱 메일에 손을 대는 순간 체험이 갈립니다.
- *   링크→가짜 로그인, 첨부→실행 확인, 답장·전달은 당함 / 삭제·신고는 방어 성공.
+ * ★ 수상한 곳을 찾으면 바로 옆에 말풍선이 떠서 '어떻게 조사할지' 고르게 합니다.
+ *   찾는 것으로 끝내면 "빨간 줄 누르기"가 되고 실제로 뭘 해야 하는지는 안 남습니다.
+ *   틀린 방법을 고르면 왜 안 되는지 알려주고 다시 고르게 합니다(벌점 없음).
+ *
+ * 다른 네 주제(문자·메신저·전화)는 직접 당해보는 방식입니다. 메일만 이 방식입니다.
  */
-type View = { kind: 'inbox' } | { kind: 'mail'; id: string }
-type Sub = 'none' | 'login' | 'install'
+type View = 'brief' | 'inbox' | 'mail'
+type Pop = { flag: RedFlag; x: number; y: number; below: boolean; wrong: number | null }
 
 const PHISH = '__phish__'
+/** 돋보기 개수 — 찾을 곳 4곳 + 헛짚을 여유 2번 */
+const TOOLS = 6
 
 export function MailScreen({
   scenario,
-  safety,
   onReply,
-  onFinish,
+  onSolved,
 }: {
   scenario: Scenario
-  safety: number
+  /** 놓친 곳만큼 안전도를 깎습니다(마지막 등급에 반영) */
   onReply: (delta: number, gave: string | null) => void
-  onFinish: () => void
+  onSolved: (foundCount: number) => void
 }) {
+  const t = ui.investigate
   const c = ui.channels.mail
-  const t = c.toolbar
-  const [view, setView] = useState<View>({ kind: 'inbox' })
-  const [sub, setSub] = useState<Sub>('none')
-  // 평범한 메일은 이미 읽은 상태로 시작합니다 — 새로 온 것은 피싱 한 통뿐
-  const [read, setRead] = useState<string[]>(() =>
-    (scenario.inbox ?? []).map((d, i) => d.id ?? `d${i}`),
-  )
-  const [toast, setToast] = useState('')
-  const done = useRef(false)
-  const situationLabel = situations.find((s) => s.id === scenario.situation)?.label ?? ''
+  const flags = scenario.redFlags
+  const total = flags.length
 
-  /** 받은편지함 — 방금 온 피싱 메일이 맨 위, 아래는 이미 읽은 업무 메일들 */
+  const [view, setView] = useState<View>('brief')
+  const [solved, setSolved] = useState<string[]>([])
+  const [used, setUsed] = useState(0)
+  const [pop, setPop] = useState<Pop | null>(null)
+  const [miss, setMiss] = useState(false)
+  const [toast, setToast] = useState('')
+  const [card, setCard] = useState(false)
+  const paneRef = useRef<HTMLElement>(null)
+  const done = useRef(false)
+
+  const left = TOOLS - used
   const decoys = scenario.inbox ?? []
   const mails: Array<{ id: string; doc: MailDoc; phish: boolean }> = [
     { id: PHISH, doc: scenario, phish: true },
     ...decoys.map((d, i) => ({ id: d.id ?? `d${i}`, doc: d, phish: false })),
   ]
-  const open = view.kind === 'mail' ? mails.find((m) => m.id === view.id) : undefined
 
-  /** 피싱 메일에 손을 댄 순간 — 한 번만 채점하고 결과로 */
-  const settle = (delta: number, gave: string | null) => {
+  const showToast = (msg: string) => {
+    setToast(msg)
+    window.setTimeout(() => setToast(''), 1800)
+  }
+
+  /** 조사 끝 — 다 잡았거나 돋보기가 떨어졌거나 */
+  const finish = (foundCount: number) => {
     if (done.current) return
     done.current = true
-    onReply(delta, gave)
-    window.setTimeout(onFinish, 400)
+    onReply(-15 * (total - foundCount), null)
+    setCard(true)
   }
 
-  const backToInbox = (message: string, id: string) => {
-    setRead((prev) => (prev.includes(id) ? prev : [...prev, id]))
-    setToast(message)
-    window.setTimeout(() => setToast(''), 2200)
-    setView({ kind: 'inbox' })
+  const spend = (): number => {
+    const next = used + 1
+    setUsed(next)
+    return TOOLS - next
   }
 
-  /** 도구막대 — 피싱이면 결과가 갈리고, 평범한 메일이면 그냥 처리됩니다 */
-  const act = (kind: 'reply' | 'forward' | 'delete' | 'report') => {
-    if (!open) return
-    if (open.phish) {
-      if (kind === 'reply') settle(-30, '발신자에게 회신(내 주소가 살아있음을 알림)')
-      else if (kind === 'forward') settle(-30, '동료에게 그대로 전달')
-      else settle(5, null) // 삭제 · 신고 = 방어 성공
+  /** 수상한 곳을 눌렀을 때 — 그 자리 옆에 말풍선 */
+  const tapFlag = (flag: RedFlag, el: HTMLElement) => {
+    if (pop || card || solved.includes(flag.target)) return
+    const pane = paneRef.current?.getBoundingClientRect()
+    if (!pane) return
+    const r = el.getBoundingClientRect()
+    spend()
+    const bottom = r.bottom - pane.top
+    const below = bottom + 240 < pane.height
+    setPop({
+      flag,
+      x: r.left - pane.left,
+      y: below ? bottom + 8 : r.top - pane.top - 8,
+      below,
+      wrong: null,
+    })
+  }
+
+  /** 수상하지 않은 곳을 눌렀을 때 — 돋보기만 닳습니다 */
+  const tapMiss = () => {
+    if (pop || card) return
+    const remain = spend()
+    setMiss(true)
+    window.setTimeout(() => setMiss(false), 700)
+    showToast(remain === 1 ? t.lastOne : t.miss)
+    if (remain <= 0) window.setTimeout(() => finish(solved.length), 700)
+  }
+
+  /** 말풍선에서 조사 방법을 골랐을 때 */
+  const choose = (i: number) => {
+    if (!pop?.flag.probe) return
+    if (!pop.flag.probe.options[i].ok) {
+      setPop({ ...pop, wrong: i })
       return
     }
-    const msg =
-      kind === 'reply' ? c.toast.replyOk
-      : kind === 'forward' ? c.toast.forwardOk
-      : kind === 'delete' ? c.toast.deleteOk
-      : c.toast.reportOk
-    backToInbox(msg, open.id)
+    const next = [...solved, pop.flag.target]
+    setSolved(next)
+    setPop(null)
+    if (next.length >= total || left <= 0) window.setTimeout(() => finish(next.length), 500)
   }
 
-  return (
-    <div className="flex h-full w-full flex-col wide:flex-row">
-      {/* 옆 칸(가로) / 윗줄(세로): 주제 · 안전도 */}
-      <aside className="shrink-0 px-5 pt-[max(0.9rem,2vh)] pb-3 wide:flex wide:w-[32%] wide:max-w-[26rem] wide:flex-col wide:justify-center wide:gap-10 wide:px-[3%] wide:py-10">
-        <p className="mb-2 text-[0.85rem] font-semibold text-sky wide:mb-0 wide:text-[1rem]">{situationLabel}</p>
-        <p className="hidden font-display text-[1.9rem] leading-snug font-bold wide:block">
-          {ui.chat.newMessage}
-        </p>
-        <SafetyGauge value={safety} />
-      </aside>
+  /** 메일 글자를 '누를 수 있는 조각'으로 */
+  const render = (text: string) =>
+    splitByFlags(text, flags).map((seg, i) =>
+      seg.flag ? (
+        <span
+          key={i}
+          onClick={(e) => tapFlag(seg.flag!, e.currentTarget)}
+          className={`cursor-pointer rounded px-0.5 ${
+            solved.includes(seg.flag.target)
+              ? 'bg-red-100 font-bold text-red-700 underline decoration-red-400 decoration-2'
+              : ''
+          }`}
+        >
+          {seg.text}
+        </span>
+      ) : (
+        <span key={i} onClick={tapMiss}>
+          {seg.text}
+        </span>
+      ),
+    )
 
-      <section className="relative min-h-0 min-w-0 flex-1 overflow-hidden rounded-t-2xl bg-white wide:my-4 wide:mr-4 wide:rounded-2xl">
-        {view.kind === 'inbox' ? (
+  const flagOf = (target: string) => flags.find((f) => f.target === target)
+  const linkFlag = flagOf('link')
+  const fileFlag = flagOf('attachment')
+
+  /* ── 브리핑 ── */
+  if (view === 'brief') {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center px-6 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-[34rem]"
+        >
+          <span className="inline-flex items-center gap-2 rounded-full bg-gold px-4 py-1.5 font-display text-[0.95rem] font-bold text-navy-deep">
+            <Magnifier className="h-[1rem] w-[1rem]" />
+            {t.badge}
+          </span>
+          <h1 className="mt-6 font-display text-[min(2.1rem,7.5vw)] leading-snug font-bold text-white">
+            {t.briefTitle}
+          </h1>
+          <p className="mt-4 text-[1.2rem] leading-relaxed whitespace-pre-line text-white/75">
+            {t.briefBody}
+          </p>
+
+          <div className="mt-8 rounded-2xl border border-white/15 bg-white/[0.06] px-5 py-4 text-left">
+            <p className="flex items-center gap-2 font-display text-[1.1rem] font-bold text-gold">
+              <Magnifier className="h-[1.1rem] w-[1.1rem]" />
+              {fill(t.toolTitle, { n: TOOLS })}
+            </p>
+            <p className="mt-2 text-[1rem] leading-snug whitespace-pre-line text-white/70">
+              {t.toolBody}
+            </p>
+          </div>
+
+          <div className="mt-7">
+            <TapButton onClick={() => setView('inbox')}>{t.start}</TapButton>
+          </div>
+        </motion.div>
+      </div>
+    )
+  }
+
+  /* ── 받은편지함 / 메일 조사 ── */
+  return (
+    <div className="flex h-full w-full flex-col">
+      <header className="shrink-0 px-5 pt-[max(0.9rem,2vh)] pb-3">
+        <div className="mx-auto flex w-full max-w-[62rem] items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[0.95rem] font-semibold text-sky">
+              {fill(t.goal, { n: total })}
+            </p>
+            <p className="mt-0.5 text-[0.85rem] text-white/45 tabular-nums">
+              {fill(t.progress, { found: solved.length, total })}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1" aria-label={fill(t.left, { n: left })}>
+            {Array.from({ length: TOOLS }, (_, i) => (
+              <Magnifier
+                key={i}
+                className={`h-[1.3rem] w-[1.3rem] ${i < left ? 'text-gold' : 'text-white/15'}`}
+              />
+            ))}
+          </div>
+        </div>
+      </header>
+
+      <motion.section
+        ref={paneRef}
+        animate={miss ? { x: [0, -7, 7, -4, 4, 0] } : { x: 0 }}
+        transition={{ duration: 0.45 }}
+        className="relative mx-auto min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-t-2xl bg-white wide:mb-4 wide:max-w-[62rem] wide:rounded-2xl"
+      >
+        {view === 'inbox' ? (
           <Inbox
             mails={mails}
-            read={read}
-            hint={c.arrive.openHint}
             title={c.inbox}
-            onOpen={(id) => setView({ kind: 'mail', id })}
+            hint={c.arrive.openHint}
+            onOpen={(id) => (id === PHISH ? setView('mail') : showToast(t.openDecoy))}
           />
         ) : (
-          open && (
-            <div className="flex h-full min-h-0 flex-col text-[#1f2430]">
-              {/* 메일 앱 도구막대 — 색으로 위험을 알려주지 않습니다 */}
-              <div className="flex shrink-0 items-center gap-1 border-b border-[#eceff4] px-2 py-2">
-                <button
-                  type="button"
-                  data-role="to-inbox"
-                  onClick={() => setView({ kind: 'inbox' })}
-                  className="rounded-lg px-2.5 py-2 text-[0.95rem] text-[#5f6b80] active:bg-[#f1f4f9]"
-                >
-                  ‹ {c.inbox}
-                </button>
-                <span className="flex-1" />
-                <ToolButton label={t.reply} role="reply" onClick={() => act('reply')} d="M9 10V6l-6 6 6 6v-4c4 0 7 1 9 5 0-6-3-9-9-9z" />
-                <ToolButton label={t.forward} role="forward" onClick={() => act('forward')} d="M15 10V6l6 6-6 6v-4c-4 0-7 1-9 5 0-6 3-9 9-9z" />
-                <ToolButton label={t.delete} role="delete" onClick={() => act('delete')} d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" stroke />
-                <ToolButton label={t.report} role="report" onClick={() => act('report')} d="M5 21V4h10l-1 3h5v8h-8l-1-3H7v9" stroke />
-              </div>
-
-              <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
-                <div className="mx-auto w-full max-w-[50rem] px-4 py-4">
-                  <EmailBody
-                    mail={open.doc}
-                    render={(x) => x}
-                    onLink={() =>
-                      open.phish ? setSub('login') : backToInbox(c.toast.linkOk, open.id)
-                    }
-                    onAttachment={() => open.phish && setSub('install')}
-                  />
-                </div>
-              </div>
-
-              {/* 메일 앱 안내줄 — 늘 붙어 있는 문구라 이 메일만 의심하게 만들지 않습니다 */}
-              {open.doc.link && (
-                <p className="shrink-0 border-t border-[#eceff4] bg-[#f7f9fc] px-4 py-2.5 text-center text-[0.85rem] text-[#8a93a5]">
-                  {c.linkTip}
-                </p>
-              )}
+          <div className="flex h-full min-h-0 flex-col text-[#1f2430]">
+            <div className="flex shrink-0 items-center gap-4 border-b border-[#eceff4] px-4 py-3 text-[0.95rem] text-[#5f6b80]">
+              <button
+                type="button"
+                data-role="to-inbox"
+                onClick={() => setView('inbox')}
+                className="rounded-lg px-1 py-1 active:bg-[#f1f4f9]"
+              >
+                ‹ {c.inbox}
+              </button>
             </div>
-          )
+            <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <div className="mx-auto w-full max-w-[50rem] px-4 py-4">
+                <EmailBody
+                  mail={scenario}
+                  render={render}
+                  onLink={(el) => linkFlag && tapFlag(linkFlag, el)}
+                  onAttachment={(el) => fileFlag && tapFlag(fileFlag, el)}
+                  solvedLink={!!linkFlag && solved.includes(linkFlag.target)}
+                  solvedFile={!!fileFlag && solved.includes(fileFlag.target)}
+                />
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* 링크를 누르면 뜨는 가짜 로그인 */}
-        {sub === 'login' && (
-          <Overlay>
-            <div className="flex shrink-0 items-center gap-2 px-4 py-3 text-[0.9rem] text-white/50">
-              <span className="break-all">🔒 {scenario.link?.url}</span>
-            </div>
-            <div className="flex min-h-0 flex-1 flex-col justify-center px-6">
-              <div className="mx-auto w-full max-w-[24rem]">
-                <p className="text-center font-display text-[1.5rem] font-bold">{c.decide.loginTitle}</p>
-                <p className="mt-1.5 text-center text-[1rem] text-white/60">{c.decide.loginDesc}</p>
-                <div className="mt-6 flex flex-col gap-3">
-                  <input
-                    className="rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-[1.05rem] text-white placeholder:text-white/35 focus:border-gold focus:outline-none"
-                    placeholder={c.decide.idPlaceholder}
-                    autoComplete="off"
-                    aria-label={c.decide.idLabel}
-                  />
-                  <input
-                    type="password"
-                    className="rounded-lg border border-white/20 bg-white/5 px-4 py-3 text-[1.05rem] text-white placeholder:text-white/35 focus:border-gold focus:outline-none"
-                    placeholder={c.decide.pwPlaceholder}
-                    autoComplete="off"
-                    aria-label={c.decide.pwLabel}
-                  />
-                  <button
-                    type="button"
-                    data-role="fake-login"
-                    onClick={() => settle(-60, '가짜 포털에 로그인(아이디·비밀번호)')}
-                    className="mt-1 rounded-lg bg-gold px-4 py-3 font-display text-[1.05rem] font-bold text-navy-deep active:bg-gold-deep"
-                  >
-                    {c.decide.loginBtn}
-                  </button>
-                  <button
-                    type="button"
-                    data-role="sub-back"
-                    onClick={() => setSub('none')}
-                    className="rounded-lg px-4 py-2.5 text-[1rem] font-semibold text-white/70 active:text-white"
-                  >
-                    ← {c.decide.back}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Overlay>
-        )}
+        <AnimatePresence>
+          {pop && <Bubble pop={pop} onPick={choose} onRetry={() => setPop({ ...pop, wrong: null })} />}
+        </AnimatePresence>
 
-        {/* 첨부파일을 누르면 뜨는 실행 확인 */}
-        {sub === 'install' && (
-          <Overlay>
-            <div className="flex min-h-0 flex-1 flex-col justify-center px-6">
-              <div className="mx-auto w-full max-w-[24rem] rounded-2xl bg-white p-6 text-[#1f2430]">
-                <p className="text-[1.1rem] font-bold break-all">{scenario.attachment?.name}</p>
-                <p className="mt-2 text-[1rem] text-[#5b6474]">{c.decide.installDesc}</p>
-                <div className="mt-5 flex gap-2.5">
-                  <button
-                    type="button"
-                    data-role="sub-back"
-                    onClick={() => setSub('none')}
-                    className="flex-1 rounded-lg border border-[#d9dee7] px-4 py-3 text-[1rem] font-semibold text-[#3a4250] active:bg-[#f1f4f9]"
-                  >
-                    {c.decide.cancel}
-                  </button>
-                  <button
-                    type="button"
-                    data-role="fake-install"
-                    onClick={() => settle(-60, '기기에 악성 앱 설치')}
-                    className="flex-1 rounded-lg bg-[#2f6be0] px-4 py-3 text-[1rem] font-bold text-white active:bg-[#2459c2]"
-                  >
-                    {c.decide.install}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Overlay>
-        )}
+        <AnimatePresence>
+          {card && (
+            <CaughtCard flags={flags} solved={solved} onNext={() => onSolved(solved.length)} />
+          )}
+        </AnimatePresence>
 
-        {/* 평범한 메일을 처리했을 때 잠깐 뜨는 안내 */}
         {toast && (
           <motion.p
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             className="absolute inset-x-4 bottom-4 z-30 rounded-xl bg-[#1f2430] px-4 py-3 text-center text-[0.95rem] text-white shadow-lg"
           >
             {toast}
           </motion.p>
         )}
-      </section>
+      </motion.section>
     </div>
+  )
+}
+
+/** 어떻게 조사할까요? — 찾은 자리 바로 옆 말풍선 */
+function Bubble({
+  pop,
+  onPick,
+  onRetry,
+}: {
+  pop: Pop
+  onPick: (i: number) => void
+  onRetry: () => void
+}) {
+  const t = ui.investigate
+  const probe = pop.flag.probe
+  if (!probe) return null
+  const wrong = pop.wrong === null ? null : probe.options[pop.wrong]
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.94 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.18 }}
+      data-role="probe"
+      className="absolute z-40 w-[min(23rem,calc(100%-1.5rem))]"
+      style={{
+        left: `clamp(0.75rem, ${pop.x}px, calc(100% - min(23rem, 100% - 1.5rem) - 0.75rem))`,
+        top: pop.below ? pop.y : undefined,
+        bottom: pop.below ? undefined : `calc(100% - ${pop.y}px)`,
+      }}
+    >
+      <div className="rounded-2xl bg-navy-deep p-4 text-white shadow-[0_0.8rem_2rem_rgba(0,0,0,0.35)]">
+        <p className="flex items-start gap-2 text-[1.02rem] leading-snug font-bold">
+          <span className="mt-0.5 shrink-0 rounded-md bg-gold px-1.5 py-0.5 text-[0.7rem] font-extrabold text-navy-deep">
+            발견
+          </span>
+          {pop.flag.label}
+        </p>
+
+        {wrong ? (
+          <>
+            <p className="mt-3 text-[0.95rem] font-bold text-[#fca5a5]">{t.wrong}</p>
+            <p className="mt-1.5 text-[0.98rem] leading-relaxed text-white/80">{wrong.why}</p>
+            <button
+              type="button"
+              data-role="probe-retry"
+              onClick={onRetry}
+              className="mt-3 w-full rounded-xl bg-white/12 px-4 py-2.5 text-[0.98rem] font-bold text-white active:bg-white/20"
+            >
+              {t.retry}
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="mt-2.5 text-[0.92rem] font-semibold text-sky">{probe.question}</p>
+            <div className="mt-2 flex flex-col gap-1.5">
+              {probe.options.map((o, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  data-role={o.ok ? 'probe-ok' : 'probe-no'}
+                  onClick={() => onPick(i)}
+                  className="rounded-xl bg-white/10 px-3.5 py-2.5 text-left text-[0.98rem] leading-snug font-semibold text-white active:bg-white/20"
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </motion.div>
+  )
+}
+
+/** 잡았다, 요놈! */
+function CaughtCard({
+  flags,
+  solved,
+  onNext,
+}: {
+  flags: RedFlag[]
+  solved: string[]
+  onNext: () => void
+}) {
+  const t = ui.investigate
+  const all = solved.length >= flags.length
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="absolute inset-0 z-50 flex flex-col bg-navy-deep/[0.97] text-white"
+    >
+      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-5 py-6">
+        <motion.div
+          initial={{ scale: 0.86, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 220, damping: 16 }}
+          className="mx-auto w-full max-w-[42rem] text-center"
+        >
+          <p className="font-display text-[min(2.6rem,10vw)] leading-tight font-bold text-gold">
+            {all ? t.caughtTitle : t.failTitle}
+          </p>
+          <p className="mt-2.5 text-[1.05rem] text-white/75">
+            {all ? fill(t.caughtBody, { n: flags.length }) : t.failBody}
+          </p>
+        </motion.div>
+
+        <div className="mx-auto mt-6 flex w-full max-w-[42rem] flex-col gap-2.5">
+          {flags.map((f, i) => (
+            <motion.div
+              key={f.target}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 + i * 0.12 }}
+              className={`rounded-xl border-l-4 px-4 py-3 text-left ${
+                solved.includes(f.target) ? 'border-gold bg-white/[0.07]' : 'border-white/20 bg-white/[0.03]'
+              }`}
+            >
+              <p className="flex items-center gap-2 text-[1.05rem] font-bold text-gold">
+                {solved.includes(f.target) ? <Check /> : <span className="text-white/35">—</span>}
+                {f.label}
+              </p>
+              <p className="mt-1 text-[0.98rem] leading-snug text-white/70">{f.explain}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      <div className="shrink-0 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto w-full max-w-[42rem]">
+          <TapButton onClick={onNext}>{t.cardNext}</TapButton>
+        </div>
+      </div>
+    </motion.div>
   )
 }
 
 /** 받은편지함 목록 */
 function Inbox({
   mails,
-  read,
-  hint,
   title,
+  hint,
   onOpen,
 }: {
   mails: Array<{ id: string; doc: MailDoc; phish: boolean }>
-  read: string[]
-  hint: string
   title: string
+  hint: string
   onOpen: (id: string) => void
 }) {
-  const unread = mails.filter((m) => !read.includes(m.id)).length
   return (
     <div className="flex h-full min-h-0 flex-col text-[#1f2430]">
       <div className="flex shrink-0 items-center gap-2 border-b border-[#eceff4] px-5 py-3.5">
         <span className="font-display text-[1.2rem] font-bold text-navy">{title}</span>
-        {unread > 0 && (
-          <span className="rounded-full bg-[#2f6be0] px-2 py-0.5 text-[0.78rem] font-bold text-white">
-            {unread}
-          </span>
-        )}
+        <span className="rounded-full bg-[#2f6be0] px-2 py-0.5 text-[0.78rem] font-bold text-white">1</span>
       </div>
 
       <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-[44rem]">
-          {mails.map((m) => {
-            const isRead = read.includes(m.id)
-            return (
-              <motion.button
-                key={m.id}
-                type="button"
-                data-role={m.phish ? 'open-phish' : 'open-decoy'}
-                onClick={() => onOpen(m.id)}
-                // 안 읽은 메일만 아주 천천히·살짝 떠올랐다 가라앉습니다(눌러볼 자리 안내)
-                animate={
-                  isRead
-                    ? undefined
-                    : { scale: [1, 1.012, 1], backgroundColor: ['rgba(47,107,224,0)', 'rgba(47,107,224,0.07)', 'rgba(47,107,224,0)'] }
-                }
-                transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-                className={`flex w-full items-start gap-3 border-b border-[#f2f4f8] px-5 py-4 text-left active:bg-[#eef4ff] ${
-                  isRead ? 'opacity-55' : ''
+          {mails.map((m) => (
+            <motion.button
+              key={m.id}
+              type="button"
+              data-role={m.phish ? 'open-phish' : 'open-decoy'}
+              onClick={() => onOpen(m.id)}
+              animate={
+                m.phish
+                  ? {
+                      scale: [1, 1.012, 1],
+                      backgroundColor: [
+                        'rgba(47,107,224,0)',
+                        'rgba(47,107,224,0.07)',
+                        'rgba(47,107,224,0)',
+                      ],
+                    }
+                  : undefined
+              }
+              transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+              className={`flex w-full items-start gap-3 border-b border-[#f2f4f8] px-5 py-4 text-left active:bg-[#eef4ff] ${
+                m.phish ? '' : 'opacity-55'
+              }`}
+            >
+              <span
+                className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${
+                  m.phish ? 'bg-[#2f6be0]' : 'bg-transparent'
                 }`}
-              >
+              />
+              <span className="flex h-[2.4rem] w-[2.4rem] shrink-0 items-center justify-center rounded-full bg-[#e9edf3] text-[0.9rem] font-bold text-[#5f6b80]">
+                {m.doc.sender.name.slice(0, 1)}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="flex justify-between text-[1rem]">
+                  <span className={`truncate ${m.phish ? 'font-bold text-[#1f2430]' : 'text-[#6b7280]'}`}>
+                    {m.doc.sender.name}
+                  </span>
+                  <span className="shrink-0 pl-2 text-[0.82rem] text-[#9aa1ad]">{m.doc.time}</span>
+                </span>
                 <span
-                  className={`mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full ${
-                    isRead ? 'bg-transparent' : 'bg-[#2f6be0]'
-                  }`}
-                />
-                <span className="flex h-[2.4rem] w-[2.4rem] shrink-0 items-center justify-center rounded-full bg-[#e9edf3] text-[0.9rem] font-bold text-[#5f6b80]">
-                  {m.doc.sender.name.slice(0, 1)}
+                  className={`block truncate text-[1.02rem] ${m.phish ? 'font-semibold' : 'text-[#8a93a5]'}`}
+                >
+                  {m.doc.subject}
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="flex justify-between text-[1rem]">
-                    <span className={`truncate ${isRead ? 'text-[#6b7280]' : 'font-bold text-[#1f2430]'}`}>
-                      {m.doc.sender.name}
-                    </span>
-                    <span className="shrink-0 pl-2 text-[0.82rem] text-[#9aa1ad]">{m.doc.time}</span>
-                  </span>
-                  <span className={`block truncate text-[1.02rem] ${isRead ? 'text-[#8a93a5]' : 'font-semibold'}`}>
-                    {m.doc.subject}
-                  </span>
-                  <span className="mt-0.5 block truncate text-[0.92rem] text-[#9aa1ad]">
-                    {(m.doc.body ?? '').split('\n')[0]}
-                  </span>
+                <span className="mt-0.5 block truncate text-[0.92rem] text-[#9aa1ad]">
+                  {(m.doc.body ?? '').split('\n')[0]}
                 </span>
-              </motion.button>
-            )
-          })}
+              </span>
+            </motion.button>
+          ))}
         </div>
       </div>
 
@@ -325,51 +489,35 @@ function Inbox({
   )
 }
 
-function ToolButton({
-  label,
-  role,
-  onClick,
-  d,
-  stroke,
-}: {
-  label: string
-  role: string
-  onClick: () => void
-  d: string
-  stroke?: boolean
-}) {
+function Magnifier({ className = '' }: { className?: string }) {
   return (
-    <button
-      type="button"
-      data-role={role}
-      onClick={onClick}
-      className="flex min-w-[3.2rem] flex-col items-center gap-0.5 rounded-lg px-1.5 py-1.5 text-[#5f6b80] active:bg-[#f1f4f9]"
+    <svg
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      aria-hidden="true"
     >
-      <svg
-        className="h-[1.25rem] w-[1.25rem]"
-        viewBox="0 0 24 24"
-        fill={stroke ? 'none' : 'currentColor'}
-        stroke={stroke ? 'currentColor' : 'none'}
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden="true"
-      >
-        <path d={d} />
-      </svg>
-      <span className="text-[0.72rem] font-semibold">{label}</span>
-    </button>
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <path d="M15.5 15.5L21 21" strokeLinecap="round" />
+    </svg>
   )
 }
 
-function Overlay({ children }: { children: ReactNode }) {
+function Check() {
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="absolute inset-0 z-20 flex flex-col bg-[#0e1633] text-white"
+    <svg
+      viewBox="0 0 24 24"
+      className="h-[1.1rem] w-[1.1rem] shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
     >
-      {children}
-    </motion.div>
+      <path d="M4 12.5l5 5L20 6.5" />
+    </svg>
   )
 }

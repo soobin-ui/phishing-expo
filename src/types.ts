@@ -34,6 +34,11 @@ export interface RedFlag {
   match: string
   label: string
   explain: string
+  /** 수사 모드(연구실 메일)에서 찾은 뒤 뜨는 '어떻게 조사할까요?' 말풍선 */
+  probe?: {
+    question: string
+    options: Array<{ label: string; ok: boolean; why: string }>
+  }
 }
 
 /**

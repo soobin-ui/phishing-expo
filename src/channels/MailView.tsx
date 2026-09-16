@@ -45,13 +45,19 @@ export function EmailBody({
   revealUrl = false,
   onLink,
   onAttachment,
+  solvedLink = false,
+  solvedFile = false,
 }: {
   mail: MailDoc
   render: (t: string) => ReactNode
   /** 링크 주소를 펼쳐서 보여줄지 (찾기 화면에서만 true) */
   revealUrl?: boolean
-  onLink?: () => void
-  onAttachment?: () => void
+  /** 누른 요소를 그대로 넘깁니다 — 수사 모드에서 말풍선을 그 자리 옆에 띄우려고 */
+  onLink?: (el: HTMLElement) => void
+  onAttachment?: (el: HTMLElement) => void
+  /** 수사 모드에서 이미 확인된 곳은 빨갛게 표시 */
+  solvedLink?: boolean
+  solvedFile?: boolean
 }) {
   const c = ui.channels.mail
   const initial = mail.sender.name.slice(0, 1)
@@ -81,7 +87,7 @@ export function EmailBody({
 
       {/* 파란 링크 버튼 — 주소는 꾹 눌러야 보입니다 */}
       {mail.link && (
-        <LinkButton link={mail.link} render={render} revealUrl={revealUrl} onLink={onLink} />
+        <LinkButton link={mail.link} revealUrl={revealUrl} onLink={onLink} solved={solvedLink} />
       )}
 
       {/* 첨부파일 */}
@@ -91,8 +97,10 @@ export function EmailBody({
           <button
             type="button"
             data-role="attachment"
-            onClick={onAttachment}
-            className="flex w-full items-center gap-2.5 rounded-xl border border-[#dfe3ea] px-3 py-2.5 text-left active:bg-[#f2f5f9]"
+            onClick={(e) => onAttachment?.(e.currentTarget)}
+            className={`flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left active:bg-[#f2f5f9] ${
+              solvedFile ? 'border-red-400 bg-red-50' : 'border-[#dfe3ea]'
+            }`}
           >
             <span className="flex h-[2.4rem] w-[2rem] shrink-0 items-end justify-center rounded-md bg-[#e05c4b] pb-1 text-[0.6rem] font-extrabold text-white">
               EXE
@@ -123,14 +131,14 @@ export function EmailBody({
  */
 function LinkButton({
   link,
-  render,
   revealUrl,
   onLink,
+  solved = false,
 }: {
   link: { label: string; url: string }
-  render: (t: string) => ReactNode
   revealUrl: boolean
-  onLink?: () => void
+  onLink?: (el: HTMLElement) => void
+  solved?: boolean
 }) {
   const [peek, setPeek] = useState(false)
   const timer = useRef<number | undefined>(undefined)
@@ -169,22 +177,24 @@ function LinkButton({
         onPointerLeave={end}
         onPointerCancel={end}
         onContextMenu={(e) => e.preventDefault()}
-        onClick={() => {
+        onClick={(e) => {
           // 꾹 눌러 주소만 확인한 경우에는 누른 것으로 치지 않습니다
           if (longPressed.current) {
             longPressed.current = false
             return
           }
-          onLink?.()
+          onLink?.(e.currentTarget)
         }}
-        className="rounded-lg bg-[#2f6be0] px-6 py-3 text-[1.02rem] font-bold text-white active:bg-[#2459c2]"
+        className={`rounded-lg px-6 py-3 text-[1.02rem] font-bold text-white ${
+          solved ? 'bg-red-600 ring-2 ring-red-300' : 'bg-[#2f6be0] active:bg-[#2459c2]'
+        }`}
       >
         {link.label}
       </button>
 
       {/* 찾기 화면에서는 주소를 펼쳐 놓습니다(눌러서 찾을 수 있게) */}
-      {revealUrl && (
-        <p className="mt-1.5 break-all text-[0.9rem] text-[#8a93a5]">{render(link.url)}</p>
+      {(revealUrl || solved) && (
+        <p className="mt-1.5 break-all text-[0.9rem] font-semibold text-red-600">{link.url}</p>
       )}
     </div>
   )

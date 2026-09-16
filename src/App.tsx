@@ -124,12 +124,11 @@ export default function App() {
         {step === 'arrive' && scenario.channel === 'mail' && (
           <MailScreen
             scenario={scenario}
-            safety={safety}
             onReply={(delta, item) => {
               setSafety((v) => Math.max(0, Math.min(100, v + delta)))
               if (item) setGave((prev) => (prev.includes(item) ? prev : [...prev, item]))
             }}
-            onFinish={() => setStep('caught')}
+            onSolved={finish}
           />
         )}
 

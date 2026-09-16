@@ -70,23 +70,39 @@ async function run(topic, [label, w, h, mobile]) {
   }
 
   if (topic === 'rnd') {
-    // 메일 — 받은편지함에서 평범한 메일을 먼저 열어보고, 피싱 메일로 들어갑니다
-    await page.waitForSelector('[data-role="open-phish"]', { timeout: 10000 })
-    await shot('0-inbox')
-    await page.click('[data-role="open-decoy"]')
-    await wait(900)
-    await shot('1-decoy')
-    await page.click('[data-role="to-inbox"]')
+    // 메일 — 수사관 모드: 브리핑 → 받은편지함 → 수상한 곳 4곳 조사
+    await page.waitForFunction(() => document.body.innerText.includes('조사 시작'), { timeout: 10000 })
+    await shot('0-brief')
+    await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('조사 시작'))?.click())
     await wait(700)
+    await shot('1-inbox')
     await page.click('[data-role="open-phish"]')
-    await wait(900)
+    await wait(800)
     await shot('2-mail')
-    // 링크 클릭 → 가짜 로그인 → 로그인
+    // 보낸 사람 주소 → 본문 협박 → 링크 → 첨부 (각각 말풍선에서 올바른 조사 방법 고르기)
+    await page.evaluate(() => [...document.querySelectorAll('span')].find((x) => x.textContent === 'narea-rnd.or.kr')?.click())
+    await wait(500)
+    await shot('3-probe')
+    await page.click('[data-role="probe-ok"]')
+    await wait(600)
+    await page.evaluate(() => [...document.querySelectorAll('span')].find((x) => x.textContent?.includes('연구비 환수 및 향후'))?.click())
+    await wait(500)
+    await page.click('[data-role="probe-ok"]')
+    await wait(600)
     await page.click('[data-role="mail-link"]')
-    await wait(700)
-    await page.waitForSelector('[data-role="fake-login"]', { timeout: 5000 })
-    await page.click('[data-role="fake-login"]')
-    await wait(1300)
+    await wait(500)
+    await page.click('[data-role="probe-ok"]')
+    await wait(600)
+    await page.click('[data-role="attachment"]')
+    await wait(500)
+    await page.click('[data-role="probe-ok"]')
+    await wait(1400)
+    await shot('4-caught')
+    await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('정리 보기'))?.click())
+    await wait(1500)
+    await shot('5-action')
+    await browser.close()
+    return { topic, label, problems, flags: 4 }
   } else {
     for (let i = 0; i < REPLIES.length; i += 1) {
       await page.waitForFunction(() => {
