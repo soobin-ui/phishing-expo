@@ -110,9 +110,13 @@ async function run([label, w, h, mobile, allowV]) {
   }
 
   await check('1-menu')
-  await tapText(page, '연구실 · 산학협력')
+  // 타이핑으로 진행되는 주제로 훑습니다(메일은 받은편지함·선택 방식이라 흐름이 다름)
+  await tapText(page, '학회 · 논문')
+  await wait(1200)
+  await check('2-arrive')
+  await page.click('[data-role="open-channel"]')
   await wait(1900)
-  await check('2-chat')
+  await check('3-chat')
 
   for (let i = 0; i < REPLIES.length; i += 1) {
     await page.waitForFunction(() => {
@@ -121,25 +125,25 @@ async function run([label, w, h, mobile, allowV]) {
     }, { timeout: 10000 })
     await page.click('input')
     await page.type('input', REPLIES[i], { delay: 5 })
-    await tapText(page, '보내기')
+    await page.keyboard.press('Enter')
     await wait(3000)
-    if (i === 3) await check('3-chat-late')
+    if (i === 3) await check('4-chat-late')
   }
 
   await wait(2800)
-  await check('4-caught')
+  await check('5-caught')
   await tapText(page, '어디서 알아챌')
   await wait(1400)
-  await check('5-find')
+  await check('6-find')
   await page.evaluate(() => {
     document.querySelectorAll('span.cursor-pointer').forEach((el) => el.click())
-    document.querySelector('[data-role="sender-flag"]')?.click()
+
   })
   await wait(1200)
-  await check('6-find-done')
+  await check('7-find-done')
   await tapText(page, '결과 보기')
   await wait(2400)
-  await check('7-action')
+  await check('8-action')
   await browser.close()
   return { label, rows }
 }
