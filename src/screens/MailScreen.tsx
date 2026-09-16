@@ -156,6 +156,9 @@ export function MailScreen({
       ),
     )
 
+  /** 브리핑 본문 두 줄 — 사이에 편지 그림이 들어갑니다 */
+  const briefLines = t.briefBody.split(String.fromCharCode(10))
+
   const flagOf = (target: string) => flags.find((f) => f.target === target)
   const linkFlag = flagOf('link')
   const fileFlag = flagOf('attachment')
@@ -177,8 +180,12 @@ export function MailScreen({
           <h1 className="mt-6 font-display text-[min(2.1rem,7.5vw)] leading-snug font-bold text-white">
             {t.briefTitle}
           </h1>
-          <p className="mt-4 text-[1.2rem] leading-relaxed whitespace-pre-line text-white/75">
-            {t.briefBody}
+          {/* 편지 아이콘은 이모지가 아니라 그림입니다(기종에 따라 이모지가 네모로 깨짐) */}
+          <p className="mt-4 text-[1.2rem] leading-relaxed text-white/75">
+            {briefLines[0]}
+            <Envelope />
+            <br />
+            {briefLines[1]}
           </p>
 
           <div className="mt-8 rounded-2xl border border-white/15 bg-white/[0.06] px-5 py-4 text-left">
@@ -463,6 +470,21 @@ function Inbox({
         {hint}
       </p>
     </div>
+  )
+}
+
+/** 브리핑 문장 속 편지 그림 */
+function Envelope() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="ml-1.5 inline-block h-[1em] w-[1em] -translate-y-[0.06em] align-middle text-gold"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M3 6.2A1.2 1.2 0 014.2 5h15.6A1.2 1.2 0 0121 6.2v.4l-9 5.2-9-5.2z" />
+      <path d="M21 8.6V17.8A1.2 1.2 0 0119.8 19H4.2A1.2 1.2 0 013 17.8V8.6l8.5 4.9a1 1 0 001 0z" />
+    </svg>
   )
 }
 
