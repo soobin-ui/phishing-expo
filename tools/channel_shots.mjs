@@ -97,10 +97,12 @@ async function run(topic, [label, w, h, mobile]) {
     await wait(500)
     await page.click('[data-role="probe-ok"]')
     await wait(1400)
-    await shot('4-caught')
+    await shot('4-hit')
+    await wait(2600)
+    await shot('5-card')
     await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('정리 보기'))?.click())
     await wait(1500)
-    await shot('5-action')
+    await shot('6-action')
     await browser.close()
     return { topic, label, problems, flags: 4 }
   } else {

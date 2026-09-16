@@ -141,3 +141,19 @@ button {
     opacity: 0.7;
   }
 }
+
+/* 수사 모드 — 마우스 커서를 돋보기로 (태블릿 터치에는 영향 없음) */
+.cursor-magnify,
+.cursor-magnify * {
+  cursor: url("data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2236%22 height=%2236%22 viewBox=%220 0 36 36%22><circle cx=%2215%22 cy=%2215%22 r=%229.5%22 fill=%22rgba(169,214,253,0.22)%22/><g fill=%22none%22 stroke=%22%230e1633%22 stroke-width=%225%22 stroke-linecap=%22round%22><circle cx=%2215%22 cy=%2215%22 r=%229.5%22/><path d=%22M22 22L32 32%22/></g><g fill=%22none%22 stroke=%22%23feca36%22 stroke-width=%222.6%22 stroke-linecap=%22round%22><circle cx=%2215%22 cy=%2215%22 r=%229.5%22/><path d=%22M22 22L32 32%22/></g></svg>") 15 15, crosshair;
+}
+
+/* 돋보기를 한 개 쓸 때 누른 자리에서 떠오르는 표시 */
+.tool-pop {
+  animation: tool-pop 1.15s ease-out forwards;
+}
+@keyframes tool-pop {
+  0% { opacity: 0; transform: translate(-50%, 0) scale(0.8); }
+  18% { opacity: 1; transform: translate(-50%, -0.5rem) scale(1.06); }
+  100% { opacity: 0; transform: translate(-50%, -3.4rem) scale(1); }
+}

@@ -53,8 +53,8 @@ export function EmailBody({
   /** 링크 주소를 펼쳐서 보여줄지 (찾기 화면에서만 true) */
   revealUrl?: boolean
   /** 누른 요소를 그대로 넘깁니다 — 수사 모드에서 말풍선을 그 자리 옆에 띄우려고 */
-  onLink?: (el: HTMLElement) => void
-  onAttachment?: (el: HTMLElement) => void
+  onLink?: (el: HTMLElement, at: { clientX: number; clientY: number }) => void
+  onAttachment?: (el: HTMLElement, at: { clientX: number; clientY: number }) => void
   /** 수사 모드에서 이미 확인된 곳은 빨갛게 표시 */
   solvedLink?: boolean
   solvedFile?: boolean
@@ -97,7 +97,7 @@ export function EmailBody({
           <button
             type="button"
             data-role="attachment"
-            onClick={(e) => onAttachment?.(e.currentTarget)}
+            onClick={(e) => onAttachment?.(e.currentTarget, e)}
             className={`flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left active:bg-[#f2f5f9] ${
               solvedFile ? 'border-red-400 bg-red-50' : 'border-[#dfe3ea]'
             }`}
@@ -137,7 +137,7 @@ function LinkButton({
 }: {
   link: { label: string; url: string }
   revealUrl: boolean
-  onLink?: (el: HTMLElement) => void
+  onLink?: (el: HTMLElement, at: { clientX: number; clientY: number }) => void
   solved?: boolean
 }) {
   const [peek, setPeek] = useState(false)
@@ -183,7 +183,7 @@ function LinkButton({
             longPressed.current = false
             return
           }
-          onLink?.(e.currentTarget)
+          onLink?.(e.currentTarget, e)
         }}
         className={`rounded-lg px-6 py-3 text-[1.02rem] font-bold text-white ${
           solved ? 'bg-red-600 ring-2 ring-red-300' : 'bg-[#2f6be0] active:bg-[#2459c2]'

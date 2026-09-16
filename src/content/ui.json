@@ -191,11 +191,24 @@
     "wrong": "그 방법으로는 확인되지 않습니다",
     "retry": "다시 고르기",
     "confirmed": "확인했습니다",
-    "caughtTitle": "잡았다, 요놈!",
+    "caughtTitle": "검거 완료",
     "caughtBody": "이 메일이 쓴 수법 {n}가지를 모두 잡아냈습니다.",
     "failTitle": "조사를 마쳤습니다",
     "failBody": "돋보기를 다 썼습니다. 놓친 곳을 알려드릴게요.",
     "cardNext": "정리 보기",
-    "openDecoy": "정상 메일입니다. 받은편지함으로 돌아갑니다."
+    "openDecoy": "정상 메일입니다. 받은편지함으로 돌아갑니다.",
+    "spent": "남은 돋보기 {n}개",
+    "card": {
+      "zone": "UR CYBER SAFETY ZONE",
+      "rankHigh": "보안 실드 마스터",
+      "rankMid": "보안 요원",
+      "rankLow": "수습 수사관",
+      "detect": "피싱 탐지력",
+      "react": "보안 대응력",
+      "protect": "정보 보호력",
+      "block": "악성 차단력",
+      "footer": "2026 산학연협력 EXPO · 안전체험관",
+      "tricks": "이 메일이 쓴 수법"
+    }
   }
 }

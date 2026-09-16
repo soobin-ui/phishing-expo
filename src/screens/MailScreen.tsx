@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { EmailBody } from '../channels/MailView'
 import { TapButton } from '../components/Buttons'
+import { DefenseCard } from '../components/DefenseCard'
 import { splitByFlags } from '../lib/highlight'
 import { fill, ui } from '../lib/content'
 import type { MailDoc, RedFlag, Scenario } from '../types'
@@ -48,8 +49,12 @@ export function MailScreen({
   const [used, setUsed] = useState(0)
   const [pop, setPop] = useState<Pop | null>(null)
   const [miss, setMiss] = useState(false)
+  const [misses, setMisses] = useState(0)
+  const [wrongs, setWrongs] = useState(0)
   const [toast, setToast] = useState('')
   const [card, setCard] = useState(false)
+  /** 돋보기를 쓴 자리에서 잠깐 떠오르는 '남은 개수' */
+  const [popCount, setPopCount] = useState<{ id: number; x: number; y: number; n: number } | null>(null)
   const paneRef = useRef<HTMLElement>(null)
   const done = useRef(false)
 
@@ -73,19 +78,26 @@ export function MailScreen({
     setCard(true)
   }
 
-  const spend = (): number => {
+  /** 돋보기 한 개 쓰기 — 누른 자리에 남은 개수를 띄웁니다 */
+  const spend = (e?: { clientX: number; clientY: number }): number => {
     const next = used + 1
     setUsed(next)
-    return TOOLS - next
+    const remain = TOOLS - next
+    const pane = paneRef.current?.getBoundingClientRect()
+    if (e && pane) {
+      setPopCount({ id: Date.now(), x: e.clientX - pane.left, y: e.clientY - pane.top, n: remain })
+      window.setTimeout(() => setPopCount(null), 1150)
+    }
+    return remain
   }
 
   /** 수상한 곳을 눌렀을 때 — 그 자리 옆에 말풍선 */
-  const tapFlag = (flag: RedFlag, el: HTMLElement) => {
+  const tapFlag = (flag: RedFlag, el: HTMLElement, at?: { clientX: number; clientY: number }) => {
     if (pop || card || solved.includes(flag.target)) return
     const pane = paneRef.current?.getBoundingClientRect()
     if (!pane) return
     const r = el.getBoundingClientRect()
-    spend()
+    spend(at ?? { clientX: r.left + r.width / 2, clientY: r.top })
     const bottom = r.bottom - pane.top
     const below = bottom + 240 < pane.height
     setPop({
@@ -98,9 +110,10 @@ export function MailScreen({
   }
 
   /** 수상하지 않은 곳을 눌렀을 때 — 돋보기만 닳습니다 */
-  const tapMiss = () => {
+  const tapMiss = (at?: { clientX: number; clientY: number }) => {
     if (pop || card) return
-    const remain = spend()
+    const remain = spend(at)
+    setMisses((m) => m + 1)
     setMiss(true)
     window.setTimeout(() => setMiss(false), 700)
     showToast(remain === 1 ? t.lastOne : t.miss)
@@ -111,6 +124,7 @@ export function MailScreen({
   const choose = (i: number) => {
     if (!pop?.flag.probe) return
     if (!pop.flag.probe.options[i].ok) {
+      setWrongs((w) => w + 1)
       setPop({ ...pop, wrong: i })
       return
     }
@@ -126,7 +140,7 @@ export function MailScreen({
       seg.flag ? (
         <span
           key={i}
-          onClick={(e) => tapFlag(seg.flag!, e.currentTarget)}
+          onClick={(e) => tapFlag(seg.flag!, e.currentTarget, e)}
           className={`cursor-pointer rounded px-0.5 ${
             solved.includes(seg.flag.target)
               ? 'bg-red-100 font-bold text-red-700 underline decoration-red-400 decoration-2'
@@ -136,7 +150,7 @@ export function MailScreen({
           {seg.text}
         </span>
       ) : (
-        <span key={i} onClick={tapMiss}>
+        <span key={i} onClick={(e) => tapMiss(e)}>
           {seg.text}
         </span>
       ),
@@ -213,7 +227,9 @@ export function MailScreen({
         ref={paneRef}
         animate={miss ? { x: [0, -7, 7, -4, 4, 0] } : { x: 0 }}
         transition={{ duration: 0.45 }}
-        className="relative mx-auto min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-t-2xl bg-white wide:mb-4 wide:max-w-[62rem] wide:rounded-2xl"
+        className={`relative mx-auto min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-t-2xl bg-white wide:mb-4 wide:max-w-[62rem] wide:rounded-2xl ${
+          view === 'mail' && !card ? 'cursor-magnify' : ''
+        }`}
       >
         {view === 'inbox' ? (
           <Inbox
@@ -239,8 +255,8 @@ export function MailScreen({
                 <EmailBody
                   mail={scenario}
                   render={render}
-                  onLink={(el) => linkFlag && tapFlag(linkFlag, el)}
-                  onAttachment={(el) => fileFlag && tapFlag(fileFlag, el)}
+                  onLink={(el, e) => linkFlag && tapFlag(linkFlag, el, e)}
+                  onAttachment={(el, e) => fileFlag && tapFlag(fileFlag, el, e)}
                   solvedLink={!!linkFlag && solved.includes(linkFlag.target)}
                   solvedFile={!!fileFlag && solved.includes(fileFlag.target)}
                 />
@@ -255,9 +271,33 @@ export function MailScreen({
 
         <AnimatePresence>
           {card && (
-            <CaughtCard flags={flags} solved={solved} onNext={() => onSolved(solved.length)} />
+            <DefenseCard
+              stats={{
+                found: solved.length,
+                total,
+                wrongs,
+                misses,
+                blocked:
+                  (linkFlag && solved.includes(linkFlag.target) ? 1 : 0) +
+                  (fileFlag && solved.includes(fileFlag.target) ? 1 : 0),
+              }}
+              flags={flags}
+              solved={solved}
+              onNext={() => onSolved(solved.length)}
+            />
           )}
         </AnimatePresence>
+
+        {popCount && (
+          <span
+            key={popCount.id}
+            className="tool-pop pointer-events-none absolute z-40 flex items-center gap-1 rounded-full bg-[#1f2430]/95 px-2.5 py-1 text-[0.85rem] font-bold whitespace-nowrap text-white"
+            style={{ left: popCount.x, top: popCount.y }}
+          >
+            <Magnifier className="h-[0.85rem] w-[0.85rem] text-gold" />
+            {fill(t.spent, { n: popCount.n })}
+          </span>
+        )}
 
         {toast && (
           <motion.p
@@ -341,69 +381,6 @@ function Bubble({
             </div>
           </>
         )}
-      </div>
-    </motion.div>
-  )
-}
-
-/** 잡았다, 요놈! */
-function CaughtCard({
-  flags,
-  solved,
-  onNext,
-}: {
-  flags: RedFlag[]
-  solved: string[]
-  onNext: () => void
-}) {
-  const t = ui.investigate
-  const all = solved.length >= flags.length
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="absolute inset-0 z-50 flex flex-col bg-navy-deep/[0.97] text-white"
-    >
-      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto px-5 py-6">
-        <motion.div
-          initial={{ scale: 0.86, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 220, damping: 16 }}
-          className="mx-auto w-full max-w-[42rem] text-center"
-        >
-          <p className="font-display text-[min(2.6rem,10vw)] leading-tight font-bold text-gold">
-            {all ? t.caughtTitle : t.failTitle}
-          </p>
-          <p className="mt-2.5 text-[1.05rem] text-white/75">
-            {all ? fill(t.caughtBody, { n: flags.length }) : t.failBody}
-          </p>
-        </motion.div>
-
-        <div className="mx-auto mt-6 flex w-full max-w-[42rem] flex-col gap-2.5">
-          {flags.map((f, i) => (
-            <motion.div
-              key={f.target}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 + i * 0.12 }}
-              className={`rounded-xl border-l-4 px-4 py-3 text-left ${
-                solved.includes(f.target) ? 'border-gold bg-white/[0.07]' : 'border-white/20 bg-white/[0.03]'
-              }`}
-            >
-              <p className="flex items-center gap-2 text-[1.05rem] font-bold text-gold">
-                {solved.includes(f.target) ? <Check /> : <span className="text-white/35">—</span>}
-                {f.label}
-              </p>
-              <p className="mt-1 text-[0.98rem] leading-snug text-white/70">{f.explain}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      <div className="shrink-0 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
-        <div className="mx-auto w-full max-w-[42rem]">
-          <TapButton onClick={onNext}>{t.cardNext}</TapButton>
-        </div>
       </div>
     </motion.div>
   )
@@ -505,19 +482,4 @@ function Magnifier({ className = '' }: { className?: string }) {
   )
 }
 
-function Check() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="h-[1.1rem] w-[1.1rem] shrink-0"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M4 12.5l5 5L20 6.5" />
-    </svg>
-  )
-}
+
