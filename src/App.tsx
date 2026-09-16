@@ -3,19 +3,34 @@ import { motion } from 'framer-motion'
 import { Stage } from './components/Stage'
 import { TapButton } from './components/Buttons'
 import { MenuScreen } from './screens/MenuScreen'
+import { ArriveScreen } from './screens/ArriveScreen'
+import { MailScreen } from './screens/MailScreen'
 import { ChatScreen } from './screens/ChatScreen'
 import { CaughtScreen } from './screens/CaughtScreen'
 import { FindScreen } from './screens/FindScreen'
 import { ActionScreen } from './screens/ActionScreen'
 import { AdminScreen } from './screens/AdminScreen'
-import { fill, scenarioFor, ui } from './lib/content'
+import { fill, scenarioFor, situations, ui } from './lib/content'
 import { useIdleTimer } from './lib/useIdleTimer'
 import { newSessionId, saveRecord, todayRecords } from './lib/stats'
 import type { Act, Step } from './types'
 
+/** ?topic=rnd|journal|job|family|agency — 시연용 바로가기(키오스크는 주소에 아무것도 붙이지 않음) */
+const START_TOPIC = (() => {
+  try {
+    const q = new URLSearchParams(window.location.search).get('topic')
+    const w = (window as { __TOPIC__?: string }).__TOPIC__
+    const id = q ?? w ?? ''
+    return situations.some((s) => s.id === id) ? id : ''
+  } catch {
+    return ''
+  }
+})()
+
 /** 화면마다 배경 색감이 바뀝니다. 밝게 시작해서 어두워집니다. */
 const ACT_OF: Record<Step, Act> = {
   menu: 'bright',
+  arrive: 'dark',
   chat: 'dark',
   caught: 'dark',
   find: 'counter',
@@ -31,12 +46,15 @@ const ACT_OF: Record<Step, Act> = {
  *   직접 당해본 직후여야 찾을 마음이 생깁니다.
  */
 export default function App() {
-  const [step, setStep] = useState<Step>('menu')
-  const [situation, setSituation] = useState('')
+  // 링크로 주제를 정해 열면(?topic=rnd) 첫 화면을 건너뛰고 바로 그 주제가 시작됩니다 — 시연·검토용
+  const [step, setStep] = useState<Step>(() => (START_TOPIC ? 'arrive' : 'menu'))
+  const [situation, setSituation] = useState(START_TOPIC)
   const [safety, setSafety] = useState(100)
   const [found, setFound] = useState(0)
   /** 대화 중 넘겨준 것들 — 당한 직후 '이걸 넘겼습니다'로 보여줍니다 */
   const [gave, setGave] = useState<string[]>([])
+  /** 전화 [끊기]를 눌렀는지 — 끊었으면 안전도와 상관없이 '넘어가지 않음' */
+  const [hungUp, setHungUp] = useState(false)
   const [todayCount, setTodayCount] = useState(() => todayRecords().length)
 
   const sessionRef = useRef({ id: newSessionId(), startedAt: Date.now() })
@@ -44,8 +62,8 @@ export default function App() {
 
   const scenario = useMemo(() => scenarioFor(situation), [situation])
 
-  /** 안전도 60 이상이면 넘어가지 않은 것으로 봅니다 */
-  const defended = safety >= 60
+  /** 안전도 60 이상이거나 전화를 끊었으면 넘어가지 않은 것으로 봅니다 */
+  const defended = hungUp || safety >= 60
 
   const reset = useCallback(() => {
     sessionRef.current = { id: newSessionId(), startedAt: Date.now() }
@@ -54,6 +72,7 @@ export default function App() {
     setSafety(100)
     setFound(0)
     setGave([])
+    setHungUp(false)
     setTodayCount(todayRecords().length)
     setStep('menu')
   }, [])
@@ -69,7 +88,7 @@ export default function App() {
     document.documentElement.requestFullscreen?.().catch(() => {})
     sessionRef.current = { id: newSessionId(), startedAt: Date.now() }
     setSituation(situationId)
-    setStep('chat')
+    setStep('arrive')
   }
 
   /** 마무리 화면으로 넘어가면서 기록을 남깁니다(개인정보 없음 — 쓴 글은 저장하지 않습니다). */
@@ -104,8 +123,8 @@ export default function App() {
       >
         {step === 'menu' && <MenuScreen onPick={start} todayCount={todayCount} />}
 
-        {step === 'chat' && (
-          <ChatScreen
+        {step === 'arrive' && scenario.channel === 'mail' && (
+          <MailScreen
             scenario={scenario}
             safety={safety}
             onReply={(delta, item) => {
@@ -116,8 +135,40 @@ export default function App() {
           />
         )}
 
+        {step === 'arrive' && scenario.channel !== 'mail' && (
+          <ArriveScreen
+            scenario={scenario}
+            onOpen={() => setStep('chat')}
+            onDecline={() => {
+              setHungUp(true)
+              setStep('caught')
+            }}
+          />
+        )}
+
+        {step === 'chat' && (
+          <ChatScreen
+            scenario={scenario}
+            safety={safety}
+            onReply={(delta, item) => {
+              setSafety((v) => Math.max(0, Math.min(100, v + delta)))
+              if (item) setGave((prev) => (prev.includes(item) ? prev : [...prev, item]))
+            }}
+            onFinish={() => setStep('caught')}
+            onHangUp={() => {
+              setHungUp(true)
+              setStep('caught')
+            }}
+          />
+        )}
+
         {step === 'caught' && (
-          <CaughtScreen defended={defended} gave={gave} onNext={() => setStep('find')} />
+          <CaughtScreen
+            defended={defended}
+            hungUp={hungUp}
+            gave={gave}
+            onNext={() => setStep('find')}
+          />
         )}
 
         {step === 'find' && <FindScreen scenario={scenario} onDone={finish} />}

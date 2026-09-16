@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>받는 화면 시안 — 주제별 5종</title>
+<!--
+  시안 전용 파일입니다. 앱 빌드에는 들어가지 않습니다(vite 는 index.html 만 입력으로 잡음).
+  보는 법: npm run dev 후 http://localhost:5175/mockup-channels.html
+-->
+<style>
+@font-face{font-family:'Pretendard Variable';font-weight:45 920;src:url('./src/assets/fonts/PretendardVariable.woff2') format('woff2-variations')}
+@font-face{font-family:'Gmarket Sans';font-weight:700;src:url('./src/assets/fonts/GmarketSansBold.subset.woff2') format('woff2')}
+@font-face{font-family:'Gmarket Sans';font-weight:500;src:url('./src/assets/fonts/GmarketSansMedium.subset.woff2') format('woff2')}
+:root{--navy:#263b7c;--navy-deep:#1c2e63;--night:#0e1633;--gold:#feca36;--sky:#a9d6fd;--sky-pale:#eaf4ff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Pretendard Variable',system-ui,sans-serif;background:#f3f6fb;color:#1b2440;word-break:keep-all;-webkit-font-smoothing:antialiased;padding:40px 32px 64px}
+.page-head{max-width:1480px;margin:0 auto 28px}
+.pill{display:inline-block;background:var(--navy);color:#fff;font-family:'Gmarket Sans';font-weight:700;font-size:13px;padding:7px 14px;border-radius:99px}
+h1{font-family:'Gmarket Sans';font-weight:700;color:var(--navy);font-size:30px;margin-top:12px}
+.lead{margin-top:10px;color:#56627f;font-size:15px;line-height:1.6;max-width:900px}
+.grid{max-width:1480px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:36px 28px}
+.card-label{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.card-label .n{font-family:'Gmarket Sans';font-weight:700;color:#b7c2da;font-size:15px}
+.card-label .t{font-weight:800;font-size:18px;color:var(--navy)}
+.card-label .ch{margin-left:auto;font-size:13px;font-weight:700;color:var(--navy);background:#fff;border:1px solid #d6e0f0;padding:4px 10px;border-radius:99px}
+
+/* ── 앱 틀(체험관) : 남색 윗줄 + 안쪽은 실제 앱처럼 ── */
+.device{height:760px;border-radius:22px;overflow:hidden;background:var(--night);box-shadow:0 18px 40px rgba(20,34,80,.18);display:flex;flex-direction:column}
+.frame-top{flex:none;padding:12px 16px 12px;color:#fff;display:flex;align-items:center;gap:12px}
+.frame-top .lbl{font-size:12px;color:rgba(255,255,255,.6);font-weight:600}
+.gauge{flex:1;height:7px;border-radius:9px;background:rgba(255,255,255,.14);overflow:hidden}
+.gauge i{display:block;height:100%;border-radius:9px}
+.frame-top .num{font-family:'Gmarket Sans';font-weight:700;font-size:15px;min-width:28px;text-align:right}
+.screen{flex:1;min-height:0;display:flex;flex-direction:column;border-radius:16px 16px 0 0;overflow:hidden}
+
+.notes{margin-top:12px;background:#fff;border:1px solid #dfe6f3;border-radius:14px;padding:14px 16px;font-size:13.5px;line-height:1.55;color:#3a4563}
+.notes b{color:var(--navy)}
+.notes ul{margin:6px 0 0 18px}
+.notes .flag{background:#ffe3e3;color:#b3261e;font-weight:700;padding:0 3px;border-radius:3px}
+
+/* 수상한 곳 표시(시안에서만 — 실제 체험 중에는 안 보임, 찾기 화면에서 드러남) */
+.sus{outline:2px dashed #ef4444;outline-offset:2px;border-radius:3px}
+
+/* 공통 입력줄 */
+.compose{flex:none;display:flex;gap:8px;align-items:center;padding:10px 12px 14px}
+.compose .field{flex:1;min-width:0;border-radius:22px;padding:11px 16px;font-size:15px;color:#9aa3b5}
+.hint{flex:none;font-size:13px;padding:10px 14px 0}
+
+/* ─────────── 1. 이메일 ─────────── */
+.mail{background:#fff;color:#1f2430}
+.mail-bar{flex:none;display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid #eceff4;color:#5f6b80;font-size:14px}
+.mail-bar .grow{flex:1}
+.ico{width:18px;height:18px;display:inline-block}
+.subject{flex:none;padding:14px 18px 10px;font-size:18px;font-weight:700;line-height:1.35}
+.subject .tag{display:inline-block;font-size:11px;font-weight:600;color:#5f6b80;background:#eef1f6;border-radius:4px;padding:2px 6px;vertical-align:middle;margin-left:4px}
+.thread{flex:1;min-height:0;overflow:hidden;padding:0 12px;display:flex;flex-direction:column;gap:10px}
+.m{border:1px solid #e7eaf0;border-radius:12px;padding:12px 14px}
+.m-head{display:flex;gap:10px;align-items:flex-start}
+.av{width:34px;height:34px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.m-who{flex:1;min-width:0;font-size:13.5px;line-height:1.4}
+.m-who .nm{font-weight:700;color:#1f2430}
+.m-who .ad{color:#6b7280}
+.m-who .to{color:#9aa1ad;font-size:12px}
+.m-time{font-size:12px;color:#9aa1ad;flex:none}
+.m-body{margin-top:10px;font-size:14.5px;line-height:1.65;white-space:pre-line;color:#2b3140}
+.m.me{background:#f6f8fb;padding:10px 14px}
+.m.me .m-body{margin-top:4px}
+.mail .hint{color:#3b6fd8}
+.mail .compose .field{border:1px solid #d9dee7;border-radius:10px;background:#fff}
+.btn-mail{background:#2f6be0;color:#fff;font-weight:700;font-size:14px;border-radius:10px;padding:11px 16px}
+
+/* ─────────── 2·3. 문자 ─────────── */
+.sms{background:#fff;color:#111}
+.sms-bar{flex:none;display:flex;align-items:center;gap:12px;padding:12px 16px 10px;border-bottom:1px solid #f0f1f4}
+.sms-bar .num{font-size:19px;font-weight:700;letter-spacing:.2px}
+.sms-bar .sub{font-size:12px;color:#8a8f99;margin-top:2px}
+.add-contact{margin-left:auto;font-size:12px;font-weight:600;color:#2f6be0;border:1px solid #cfdcf6;border-radius:99px;padding:5px 10px}
+.day{align-self:center;font-size:12px;color:#8a8f99;margin:6px 0}
+.flow{flex:1;min-height:0;overflow:hidden;padding:8px 12px;display:flex;flex-direction:column;gap:8px;justify-content:flex-end}
+.b{max-width:80%;padding:10px 13px;font-size:14.5px;line-height:1.55;white-space:pre-line;border-radius:18px}
+.b.in{align-self:flex-start;background:#eef0f3;border-bottom-left-radius:6px}
+.b.out{align-self:flex-end;background:#3478f6;color:#fff;border-bottom-right-radius:6px}
+.sms .tm{font-size:11px;color:#a1a6ae;margin:-2px 4px 2px}
+.sms .tm.r{align-self:flex-end}
+.file{margin-top:8px;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #dfe3ea;border-radius:12px;padding:10px 12px;white-space:normal}
+.file .fi{width:34px;height:40px;border-radius:6px;background:#3ddc84;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px;flex:none}
+.file .fn{font-weight:700;font-size:14px}
+.file .fs{font-size:12px;color:#8a8f99;margin-top:4px}
+.file .open{margin-left:auto;font-size:13px;font-weight:700;color:#2f6be0}
+.link{color:#1f5fd1;text-decoration:underline}
+.preview{margin-top:8px;background:#fff;border:1px solid #dfe3ea;border-radius:12px;overflow:hidden;white-space:normal}
+.preview .img{height:64px;background:linear-gradient(135deg,#dbe6ff,#f1f5ff);display:flex;align-items:center;padding-left:12px;font-weight:800;color:#5a74c9;font-size:13px}
+.preview .pt{padding:8px 12px 2px;font-weight:700;font-size:13.5px}
+.preview .pd{padding:0 12px 9px;font-size:12px;color:#8a8f99}
+.sms .hint{color:#3478f6}
+.sms .compose .field{background:#f1f2f5}
+.send-round{width:40px;height:40px;border-radius:50%;background:#3478f6;display:flex;align-items:center;justify-content:center;flex:none}
+.plus{width:36px;height:36px;border-radius:50%;background:#f1f2f5;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:22px;flex:none}
+
+/* ─────────── 4. 메신저 ─────────── */
+.msgr{background:#bfd2e3;color:#111}
+.msgr-bar{flex:none;display:flex;align-items:center;gap:10px;padding:12px 14px;background:#bfd2e3}
+.msgr-bar .nm{font-size:17px;font-weight:700}
+.warn{flex:none;margin:4px 12px 0;background:#fff;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5;color:#374151}
+.warn .wt{font-weight:800;color:#111;display:flex;gap:6px;align-items:center}
+.warn .btns{display:flex;gap:8px;margin-top:10px}
+.warn .btns span{flex:1;text-align:center;border:1px solid #e3e6ea;border-radius:8px;padding:7px 0;font-weight:700;font-size:13px}
+.warn .btns .block{color:#d93025}
+.msgr .flow{gap:6px}
+.row{display:flex;gap:8px;align-items:flex-start}
+.def-av{width:36px;height:36px;border-radius:14px;background:#9fb3c8;flex:none;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+.row .nm{font-size:12px;color:#4b5563;margin-bottom:3px}
+.k{max-width:78%;padding:9px 12px;font-size:14.5px;line-height:1.5;white-space:pre-line;border-radius:14px}
+.k.in{background:#fff;border-top-left-radius:4px}
+.k.out{align-self:flex-end;background:#ffe14d;border-top-right-radius:4px}
+.msgr .tm{font-size:11px;color:#5b6b7c;align-self:flex-end}
+.msgr .hint{color:#1c2e63;background:#bfd2e3}
+.msgr .compose{background:#fff}
+.msgr .compose .field{background:#f3f4f6;border-radius:10px}
+.btn-k{background:#ffe14d;color:#3a2f00;font-weight:800;font-size:14px;border-radius:10px;padding:11px 14px}
+
+/* ─────────── 5. 전화 ─────────── */
+.call{background:radial-gradient(120% 70% at 50% 0%,#33405e 0%,#151b2b 70%);color:#fff;align-items:center}
+.call-top{flex:none;text-align:center;padding:26px 16px 8px}
+.call-top .st{font-size:13px;color:#8fd19e;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px}
+.call-top .st i{width:7px;height:7px;border-radius:50%;background:#8fd19e}
+.call-top .num{font-size:28px;font-weight:700;margin-top:10px;letter-spacing:.5px}
+.call-top .loc{font-size:13px;color:#aab3c5;margin-top:4px}
+.call-top .timer{font-family:'Gmarket Sans';font-weight:500;font-size:15px;color:#cfd6e4;margin-top:8px;font-variant-numeric:tabular-nums}
+.subs{flex:1;min-height:0;width:100%;padding:6px 18px;display:flex;flex-direction:column;justify-content:flex-end;gap:10px;overflow:hidden}
+.sub{font-size:15px;line-height:1.55}
+.sub .who{font-size:11.5px;font-weight:700;color:#9fb0cc;margin-bottom:3px;letter-spacing:.3px}
+.sub.old{opacity:.38}
+.sub.now{font-size:19px;font-weight:700;line-height:1.5}
+.sub.me{align-self:flex-end;text-align:right;color:var(--gold);font-size:14.5px}
+.sub.me .who{color:rgba(254,202,54,.7)}
+.call .hint{color:var(--sky);width:100%;text-align:left}
+.call .compose{width:100%}
+.call .compose .field{background:rgba(255,255,255,.1);color:rgba(255,255,255,.45)}
+.btn-say{background:var(--gold);color:var(--navy-deep);font-weight:800;font-size:14px;border-radius:22px;padding:11px 16px}
+.call-ctrl{flex:none;display:flex;justify-content:center;gap:26px;padding:6px 0 4px}
+.cc{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:#aab3c5}
+.cc span{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center}
+.hang{flex:none;margin:8px 0 18px;width:62px;height:62px;border-radius:50%;background:#ef4444;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 6px rgba(239,68,68,.18)}
+</style>
+</head>
+<body>
+
+<div class="page-head">
+  <span class="pill">2026 산학연협력 EXPO · 안전체험관</span>
+  <h1>받는 화면 시안 — 주제별 5종</h1>
+  <p class="lead">
+    바깥 남색 틀(안전도 줄)은 체험관 화면, 그 안쪽은 <b>실제 메일·문자·메신저·전화 앱처럼</b> 보이게 했습니다.
+    답장을 직접 치고 안전도가 깎이는 방식은 다섯 가지 모두 같습니다.
+    <span style="outline:2px dashed #ef4444;outline-offset:2px;border-radius:3px;padding:0 2px">빨간 점선</span>은
+    나중에 '찾기' 화면에서 드러나는 수상한 곳 — 체험 중에는 안 보입니다(시안 설명용).
+  </p>
+</div>
+
+<div class="grid">
+
+  <!-- ═══════════ 1. 연구실 · 산학협력 — 업무 이메일 ═══════════ -->
+  <section>
+    <div class="card-label"><span class="n">01</span><span class="t">연구실 · 산학협력</span><span class="ch">업무 이메일</span></div>
+    <div class="device">
+      <div class="frame-top"><span class="lbl">안전도</span><div class="gauge"><i style="width:85%;background:#34d399"></i></div><span class="num">85</span></div>
+      <div class="screen mail">
+        <div class="mail-bar">
+          <span>‹ 받은편지함</span><span class="grow"></span>
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="5" rx="1"/><path d="M5 9v10h14V9M10 13h4"/></svg>
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+          <svg class="ico" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>
+        </div>
+        <div class="subject">산학연협력 기술개발사업 협약 안내 (공고 제2026-118호)<span class="tag">받은편지함</span></div>
+        <div class="thread">
+          <div class="m">
+            <div class="m-head">
+              <div class="av" style="background:#e3ebff;color:#2f55b8">미</div>
+              <div class="m-who">
+                <div class="nm">미래산학연진흥원 사업관리팀</div>
+                <div class="ad">&lt;rnd@<span class="sus">narea-rnd.or.kr</span>&gt;</div>
+                <div class="to">받는 사람: 나</div>
+              </div>
+              <div class="m-time">오후 2:31</div>
+            </div>
+            <div class="m-body">귀 연구실 과제의 협약 절차가 진행 중입니다.
+담당자 인수인계로 연락처가 변경되었음을 알려드립니다.
+
+<span class="sus">전임 담당자 부재로 전화 연결이 어렵습니다</span>.
+메일로 안내드리는 점 양해 부탁드립니다.</div>
+          </div>
+          <div class="m me">
+            <div class="m-head"><div class="av" style="background:#dfe3ea;color:#4b5563;width:26px;height:26px;font-size:12px">나</div><div class="m-who"><span class="nm">나</span> <span class="to">· 오후 2:33</span></div></div>
+            <div class="m-body">네 확인했습니다. 어떻게 진행하면 될까요?</div>
+          </div>
+          <div class="m">
+            <div class="m-head">
+              <div class="av" style="background:#e3ebff;color:#2f55b8">미</div>
+              <div class="m-who"><div class="nm">미래산학연진흥원 사업관리팀</div><div class="to">받는 사람: 나</div></div>
+              <div class="m-time">오후 2:34</div>
+            </div>
+            <div class="m-body">한 가지 안내드릴 사항이 있습니다.
+
+기관 회계 개편으로 <span class="sus">사업비 입금 계좌가 변경되었습니다</span>.
+기존 계좌로는 입금이 반려되오니 참고 바랍니다.</div>
+          </div>
+        </div>
+        <p class="hint">계좌가 바뀌었다고 합니다. 뭐라고 답하시겠어요?</p>
+        <div class="compose"><div class="field">답장을 입력해 보세요</div><span class="btn-mail">보내기</span></div>
+      </div>
+    </div>
+    <div class="notes">
+      <b>5턴 = 메일 한 줄기(스레드)</b> — 상대 메일과 내 답장이 차례로 쌓입니다.<br />
+      찾을 곳: <span class="flag">보낸 사람 주소 한 글자</span>(narea ← narae) · 통화를 피하는 말 · 계좌 변경 통보 · 알리지 말라는 요구<br />
+      대본 수정: "문자로 안내드리는 점" → "메일로", 주소는 본문이 아니라 <b>보낸 사람 줄</b>로 옮김
+    </div>
+  </section>
+
+  <!-- ═══════════ 2. 학회 · 논문 — 문자 + 첨부파일 ═══════════ -->
+  <section>
+    <div class="card-label"><span class="n">02</span><span class="t">학회 · 논문</span><span class="ch">문자 · 첨부파일</span></div>
+    <div class="device">
+      <div class="frame-top"><span class="lbl">안전도</span><div class="gauge"><i style="width:70%;background:#34d399"></i></div><span class="num">70</span></div>
+      <div class="screen sms">
+        <div class="sms-bar">
+          <span style="font-size:20px;color:#555">‹</span>
+          <div><div class="num"><span class="sus">070-8825-1130</span></div><div class="sub">문자 메시지</div></div>
+          <span class="add-contact">+ 연락처 추가</span>
+        </div>
+        <div class="flow">
+          <span class="day">9월 30일 (수)</span>
+          <div class="b in">[대한산학연학회]
+2026 춘계학술대회 논문 심사 결과
+
+제출하신 논문(접수번호 KS-2026-0412)이 심사를 통과하여 게재 확정되었습니다. 축하드립니다.</div>
+          <div class="b out">감사합니다!</div>
+          <div class="b in">게재 등록을 위해 저자 정보를 확인하고 있습니다. 제1저자 성함과 소속 기관을 회신해 주시기 바랍니다.</div>
+          <div class="b out">김OO, 한빛대학교입니다</div>
+          <div class="b in">게재료 납부 안내서를 첨부하오니 아래 파일을 열어 확인해 주시기 바랍니다.
+<div class="file"><div class="fi">APK</div><div><div class="fn"><span class="sus">invoice_2026.apk</span></div><div class="fs">앱 설치 파일 · 3.1MB</div></div><span class="open">열기</span></div></div>
+          <span class="tm">오후 3:12</span>
+        </div>
+        <p class="hint">첨부파일을 열라고 합니다. 뭐라고 답하시겠어요?</p>
+        <div class="compose"><span class="plus">+</span><div class="field">메시지 입력</div><span class="send-round"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg></span></div>
+      </div>
+    </div>
+    <div class="notes">
+      <b>휴대폰 기본 문자 앱 모양</b> — 저장 안 된 번호, '연락처 추가' 버튼.<br />
+      찾을 곳: <span class="flag">070 번호</span> · <span class="flag">.apk 첨부파일 카드</span> · 개인 명의 계좌 · 이미 낸 걸 또 내라는 요구<br />
+      대본 수정: 없음
+    </div>
+  </section>
+
+  <!-- ═══════════ 3. 취업 · 채용 — 문자 + 링크 ═══════════ -->
+  <section>
+    <div class="card-label"><span class="n">03</span><span class="t">취업 · 채용</span><span class="ch">문자 · 링크</span></div>
+    <div class="device">
+      <div class="frame-top"><span class="lbl">안전도</span><div class="gauge"><i style="width:55%;background:#feca36"></i></div><span class="num">55</span></div>
+      <div class="screen sms">
+        <div class="sms-bar">
+          <span style="font-size:20px;color:#555">‹</span>
+          <div><div class="num"><span class="sus">010-2288-4471</span></div><div class="sub">문자 메시지</div></div>
+          <span class="add-contact">+ 연락처 추가</span>
+        </div>
+        <div class="flow">
+          <div class="b in">안녕하세요, 새벽커리어 인사팀입니다.
+지원해주신 연구지원직 서류전형에 합격하셨습니다.
+면접은 온라인으로 진행됩니다.</div>
+          <div class="b out">와 감사합니다!</div>
+          <div class="b in">온라인 면접 안내는 아래 주소에서 확인하실 수 있습니다.
+
+<span class="link sus">sb-career.support/apply</span>
+<div class="preview"><div class="img">새벽커리어</div><div class="pt">온라인 면접 안내</div><div class="pd">sb-career.support</div></div></div>
+          <div class="b out">지금 접속해볼게요</div>
+          <div class="b in">화면 공유가 되지 않는다는 문의가 많습니다.
+<span class="sus">원격지원 앱을 설치하신 뒤</span> 진행하겠습니다.
+설치하면 표시되는 숫자를 알려주세요.</div>
+          <span class="tm">오후 4:05</span>
+        </div>
+        <p class="hint">원격지원 앱을 설치하라고 합니다. 뭐라고 답하시겠어요?</p>
+        <div class="compose"><span class="plus">+</span><div class="field">메시지 입력</div><span class="send-round"><svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M3 20l18-8L3 4v6l12 2-12 2z"/></svg></span></div>
+      </div>
+    </div>
+    <div class="notes">
+      <b>02와 같은 문자 앱</b>, 대신 첨부파일이 아니라 <b>링크 + 미리보기 카드</b>로 차이를 줌.<br />
+      찾을 곳: <span class="flag">회사인데 010 개인번호</span> · <span class="flag">공식이 아닌 주소</span> · 원격제어 앱 · 입사 전 보증금<br />
+      대본 수정: 없음
+    </div>
+  </section>
+
+  <!-- ═══════════ 4. 가족 · 자녀 — 메신저 ═══════════ -->
+  <section>
+    <div class="card-label"><span class="n">04</span><span class="t">가족 · 자녀</span><span class="ch">메신저</span></div>
+    <div class="device">
+      <div class="frame-top"><span class="lbl">안전도</span><div class="gauge"><i style="width:40%;background:#feca36"></i></div><span class="num">40</span></div>
+      <div class="screen msgr">
+        <div class="msgr-bar">
+          <span style="font-size:20px">‹</span><span class="nm">지은이</span>
+          <span style="margin-left:auto;display:flex;gap:14px;color:#374151">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/></svg>
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </span>
+        </div>
+        <div class="warn sus">
+          <div class="wt">⚠ 친구로 추가되지 않은 사용자입니다</div>
+          프로필 사진이 없고, 처음 대화하는 계정입니다. 금전을 요구하면 주의하세요.
+          <div class="btns"><span>친구 추가</span><span class="block">차단</span></div>
+        </div>
+        <div class="flow">
+          <div class="row">
+            <div class="def-av"><svg width="30" height="30" viewBox="0 0 30 30" fill="#e6edf4"><circle cx="15" cy="11" r="6"/><path d="M3 30c1-7 6-10 12-10s11 3 12 10z"/></svg></div>
+            <div style="display:flex;flex-direction:column;gap:5px;min-width:0">
+              <div class="nm">지은이</div>
+              <div class="k in">엄마 나야ㅠㅠ
+폰 액정이 깨져서 친구 폰으로 새 계정 만들어서 보내는 거야</div>
+              <div class="k in"><span class="sus">원래 계정은 로그인이 안 되고 전화도 안 돼</span>
+급하게 부탁할 게 있는데 들어줄 수 있어?</div>
+            </div>
+          </div>
+          <div class="k out">무슨 일인데? 괜찮아?</div>
+          <div class="row">
+            <div class="def-av"><svg width="30" height="30" viewBox="0 0 30 30" fill="#e6edf4"><circle cx="15" cy="11" r="6"/><path d="M3 30c1-7 6-10 12-10s11 3 12 10z"/></svg></div>
+            <div class="k in">친구한테 급하게 빌린 게 있어서 오늘 갚아야 해
+편의점에서 <span class="sus">문화상품권 사서 핀번호만 사진 찍어 보내줘</span></div>
+          </div>
+          <span class="tm">오후 5:20</span>
+        </div>
+        <p class="hint">상품권을 사 달라고 합니다. 뭐라고 답하시겠어요?</p>
+        <div class="compose"><div class="field">메시지 입력</div><span class="btn-k">전송</span></div>
+      </div>
+    </div>
+    <div class="notes">
+      <b>메신저 모양</b>(특정 앱 이름·로고는 쓰지 않음) — 친구 아님 경고 배너, 기본 프로필.<br />
+      찾을 곳: <span class="flag">친구 추가 안 된 새 계정</span>(기존 '낯선 번호'를 대신함) · 통화를 피하는 말 · 상품권 핀번호 · 지금 당장 재촉<br />
+      대본 수정: "카톡도 안 되고" → "원래 계정은 로그인이 안 되고", 1턴에 "새 계정" 추가, 보낸 사람 이름 '알 수 없음' → '지은이'
+    </div>
+  </section>
+
+  <!-- ═══════════ 5. 기관 · 금융 — 전화 ═══════════ -->
+  <section>
+    <div class="card-label"><span class="n">05</span><span class="t">기관 · 금융</span><span class="ch">전화 (보이스피싱)</span></div>
+    <div class="device">
+      <div class="frame-top"><span class="lbl">안전도</span><div class="gauge"><i style="width:60%;background:#34d399"></i></div><span class="num">60</span></div>
+      <div class="screen call">
+        <div class="call-top">
+          <div class="st"><i></i>통화 중</div>
+          <div class="num"><span class="sus">070-8129-4417</span></div>
+          <div class="loc">새빛금융안전센터라고 밝힘</div>
+          <div class="timer">03:14</div>
+        </div>
+        <div class="subs">
+          <div class="sub old"><div class="who">상대방</div>고객님 명의 계좌가 대포통장 의심 거래로 확인되었습니다.</div>
+          <div class="sub me old"><div class="who">나</div>네? 저는 그런 적 없는데요</div>
+          <div class="sub old"><div class="who">상대방</div>확인이 끝날 때까지 <span class="sus">통화를 끊지 마시고</span> 안내에 따라주시기 바랍니다.</div>
+          <div class="sub me"><div class="who">나</div>네 알겠습니다</div>
+          <div class="sub now"><div class="who">상대방</div><span class="sus">본인 확인이 되지 않으면 계좌가 즉시 정지됩니다</span>. 성함과 생년월일을 말씀해 주십시오.</div>
+        </div>
+        <p class="hint">이름과 생년월일을 묻습니다. 뭐라고 대답하시겠어요?</p>
+        <div class="compose"><div class="field">내 대답 입력</div><span class="btn-say">말하기</span></div>
+        <div class="call-ctrl">
+          <div class="cc"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg></span>음소거</div>
+          <div class="cc"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><circle cx="6" cy="6" r="1.8"/><circle cx="12" cy="6" r="1.8"/><circle cx="18" cy="6" r="1.8"/><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/><circle cx="12" cy="18" r="1.8"/></svg></span>키패드</div>
+          <div class="cc"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 010 6"/></svg></span>스피커</div>
+        </div>
+        <div class="hang"><svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><path d="M12 9c-3.2 0-6.1.9-8.4 2.5-.6.4-.8 1.2-.4 1.8l1.4 2.2c.4.6 1.1.8 1.7.5l2.6-1.2c.5-.2.8-.8.7-1.3l-.3-1.8c1.8-.6 3.7-.6 5.4 0l-.3 1.8c-.1.5.2 1.1.7 1.3l2.6 1.2c.6.3 1.3.1 1.7-.5l1.4-2.2c.4-.6.2-1.4-.4-1.8C18.1 9.9 15.2 9 12 9z"/></svg></div>
+      </div>
+    </div>
+    <div class="notes">
+      <b>상대 말은 자막</b>(지난 말은 흐리게), 내 대답은 입력 → '말하기'.<br />
+      <b>제안: 빨간 [끊기]를 누르면 = 가장 안전한 대응</b> → 곧바로 '넘어가지 않았습니다'로. "끊어도 된다"가 이 주제의 핵심 교훈.<br />
+      찾을 곳: <span class="flag">070 번호</span> · 끊지 말라는 말 · 계좌 정지 협박 · 안전계좌<br />
+      대본 수정: 없음
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

@@ -16,10 +16,13 @@ import { ui } from '../lib/content'
  */
 export function CaughtScreen({
   defended,
+  hungUp,
   gave,
   onNext,
 }: {
   defended: boolean
+  /** 전화를 끊어서 끝난 경우 — 끊은 게 정답이라는 한 줄을 덧붙입니다 */
+  hungUp: boolean
   gave: string[]
   onNext: () => void
 }) {
@@ -45,6 +48,9 @@ export function CaughtScreen({
             <p className="mt-6 font-display text-[min(2.1rem,8vw)] leading-snug font-bold text-white wide:text-[min(2.8rem,4.2vw)]">
               {defended ? c.safeTitle : c.title}
             </p>
+            {hungUp && (
+              <p className="mt-3 text-[1.1rem] leading-snug text-white/80">{c.hangUp}</p>
+            )}
           </motion.div>
 
           <div className="mt-10 shrink-0 wide:mt-0 wide:w-[min(30rem,46%)]">

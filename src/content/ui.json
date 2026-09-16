@@ -5,7 +5,7 @@
     "eyebrow": "2026 산학연협력 EXPO",
     "title": "안전체험관",
     "headline": "온라인 피싱 체험존",
-    "tagline": "받아볼 문자를 고르고 체험을 시작하세요",
+    "tagline": "체험하고 싶은 주제를 선택해 주세요",
     "cta": "체험하기",
     "todayCount": "오늘 {n}명 참여"
   },
@@ -22,7 +22,8 @@
     "safeTitle": "당신은 넘어가지 않았습니다.",
     "gaveTitle": "방금 이걸 넘겼습니다",
     "gaveNone": "아무것도 넘기지 않으셨습니다",
-    "next": "어디서 알아챌 수 있었는지 보기"
+    "next": "어디서 알아챌 수 있었는지 보기",
+    "hangUp": "전화를 끊으셨습니다. 모르는 번호가 겁을 주면, 끊는 게 정답입니다."
   },
   "idle": {
     "title": "아직 계신가요?",
@@ -35,11 +36,18 @@
   },
   "find": {
     "_설명": "직접 당해본 직후에 그 문자를 다시 놓고 찾게 하는 자리입니다. 이 순서를 바꾸지 마세요 — 당해봐야 찾을 마음이 생깁니다.",
-    "title": "방금 그 문자에서\n수상한 곳 {n}군데를 찾아 눌러보세요",
+    "title": "방금 받은 그 {medium}에서\n수상한 곳 {n}군데를 찾아 눌러보세요",
     "found": "{n} / {total} 찾음",
     "timeUp": "정답을 보여드릴게요",
     "hintTime": "{n}초",
-    "next": "결과 보기"
+    "next": "결과 보기",
+    "medium": {
+      "mail": "메일",
+      "sms": "문자",
+      "messenger": "메시지",
+      "call": "전화"
+    },
+    "allFound": "전부 찾으셨습니다"
   },
   "action": {
     "_설명": "체험의 마지막 화면. 실제로 당했을 때 뭘 해야 하는지 알려줍니다. 번호는 함부로 바꾸지 마세요.",
@@ -75,5 +83,94 @@
     "app": "앱을 설치했다면 즉시 비행기모드로 바꾸고 휴대폰을 초기화하세요.",
     "again": "처음으로",
     "autoReset": "{n}초 후 처음으로 돌아갑니다"
+  },
+  "channels": {
+    "_설명": "주제마다 다른 받는 화면(메일·문자·메신저·전화)에 보이는 글자입니다.",
+    "mail": {
+      "inbox": "받은편지함",
+      "to": "받는 사람: 나",
+      "me": "나",
+      "receiving": "새 메일을 받는 중…",
+      "placeholder": "답장을 입력해 보세요",
+      "send": "보내기",
+      "arrive": {
+        "badge": "안 읽음",
+        "openHint": "오늘 온 메일입니다. 하나씩 열어 처리해 보세요",
+        "decoySender": "중앙도서관",
+        "decoySubject": "대출 도서 반납 예정 안내",
+        "decoyTime": "오전 9:14"
+      },
+      "attachLabel": "첨부파일 1개",
+      "decide": {
+        "loginTitle": "연구자 소명 포털",
+        "loginDesc": "계속하려면 로그인하세요",
+        "idLabel": "아이디",
+        "pwLabel": "비밀번호",
+        "idPlaceholder": "아이디를 입력하세요",
+        "pwPlaceholder": "비밀번호를 입력하세요",
+        "loginBtn": "로그인",
+        "back": "뒤로",
+        "installTitle": "소명자료_양식.pdf.exe",
+        "installDesc": "이 파일을 실행하시겠습니까?",
+        "install": "실행",
+        "cancel": "취소"
+      },
+      "toolbar": {
+        "reply": "답장",
+        "forward": "전달",
+        "delete": "삭제",
+        "report": "신고"
+      },
+      "linkTip": "링크를 꾹 누르면 실제 주소를 볼 수 있습니다",
+      "toast": {
+        "replyOk": "답장을 보냈습니다.",
+        "forwardOk": "메일을 전달했습니다.",
+        "deleteOk": "메일을 삭제했습니다.",
+        "reportOk": "이 메일은 정상 메일이었습니다. 신고함으로 옮겼습니다.",
+        "linkOk": "안전교육 신청 페이지가 열렸습니다."
+      }
+    },
+    "sms": {
+      "kind": "문자 메시지",
+      "addContact": "+ 연락처 추가",
+      "open": "열기",
+      "placeholder": "메시지 입력",
+      "send": "보내기",
+      "arrive": {
+        "title": "새 문자 메시지",
+        "openHint": "문자를 눌러 확인하세요",
+        "now": "지금"
+      }
+    },
+    "messenger": {
+      "noticeBody": "프로필 사진이 없고, 처음 대화하는 계정입니다. 돈을 요구하면 주의하세요.",
+      "placeholder": "메시지 입력",
+      "send": "전송",
+      "arrive": {
+        "title": "새 메시지",
+        "openHint": "메시지를 눌러 확인하세요",
+        "now": "지금"
+      }
+    },
+    "call": {
+      "status": "통화 중",
+      "record": "통화 내용",
+      "claimed": "{name}라고 밝힘",
+      "them": "상대방",
+      "me": "나",
+      "speaking": "말하는 중",
+      "placeholder": "내 대답 입력",
+      "send": "말하기",
+      "hangUp": "끊기",
+      "mute": "음소거",
+      "keypad": "키패드",
+      "speaker": "스피커",
+      "arrive": {
+        "ringing": "전화가 왔습니다",
+        "accept": "받기",
+        "decline": "거절",
+        "declineHint": "모르는 번호는 받지 않아도 됩니다"
+      }
+    }
   }
 }
