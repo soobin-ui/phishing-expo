@@ -209,12 +209,20 @@ export function DefenseCard({
                 <div className="flex items-center gap-2">
                   <div className="flex flex-1 gap-[0.3em]">
                     {flags.map((f, i) => (
-                      <span
+                      <button
                         key={f.target}
-                        className={`h-[0.4em] flex-1 rounded-full ${
-                          i === trick ? 'bg-[#2fa8ff]' : 'bg-white/20'
-                        }`}
-                      />
+                        type="button"
+                        data-role="pick-trick"
+                        aria-label={`${i + 1}번 수법 보기`}
+                        onClick={() => setTrick(i)}
+                        className="flex-1 py-[0.5em]"
+                      >
+                        <span
+                          className={`block h-[0.4em] w-full rounded-full ${
+                            i === trick ? 'bg-[#2fa8ff]' : 'bg-white/25'
+                          }`}
+                        />
+                      </button>
                     ))}
                   </div>
                   <button
@@ -251,7 +259,7 @@ export function DefenseCard({
               ],
             }}
             transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#7fd4ff] bg-[#1668c4] px-4 py-3 text-[1.05rem] font-bold text-white active:bg-[#12539e]"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#7fd4ff] bg-[#1668c4] px-4 py-3.5 font-display text-[1.15rem] font-bold text-white active:bg-[#12539e]"
           >
             <Flip />
             {flipped ? t.card.flipFront : t.card.flipBack}
@@ -259,7 +267,7 @@ export function DefenseCard({
           <button
             type="button"
             onClick={onNext}
-            className="w-full rounded-xl bg-gold px-4 py-3.5 font-display text-[1.15rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]"
+            className="w-full rounded-xl border-2 border-transparent bg-gold px-4 py-3.5 font-display text-[1.15rem] font-bold text-navy-deep active:bg-gold-deep"
           >
             {t.cardNext}
           </button>
