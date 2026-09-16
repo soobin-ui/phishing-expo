@@ -71,9 +71,9 @@ async function run(topic, [label, w, h, mobile]) {
 
   if (topic === 'rnd') {
     // 메일 — 수사관 모드: 브리핑 → 받은편지함 → 수상한 곳 4곳 조사
-    await page.waitForFunction(() => document.body.innerText.includes('조사 시작'), { timeout: 10000 })
+    await page.waitForFunction(() => document.body.innerText.includes('수사 시작하기'), { timeout: 10000 })
     await shot('0-brief')
-    await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('조사 시작'))?.click())
+    await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('수사 시작하기'))?.click())
     await wait(700)
     await shot('1-inbox')
     await page.click('[data-role="open-phish"]')
