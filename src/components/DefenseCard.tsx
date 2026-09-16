@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import mascot from '../assets/mascot.webp'
+import mascot2 from '../assets/mascot2.webp'
 import { fill, ui } from '../lib/content'
 import type { RedFlag } from '../types'
 
@@ -55,10 +56,10 @@ export function DefenseCard({
   }, [])
 
   const rows = [
-    { label: t.card.detect, sub: 'DETECTION', n: clamp(Math.round((stats.found / stats.total) * 5)) },
-    { label: t.card.react, sub: 'REACTION', n: clamp(5 - stats.wrongs) },
-    { label: t.card.protect, sub: 'PROTECTION', n: clamp(5 - stats.misses) },
-    { label: t.card.block, sub: 'ANTI VIRUS', n: clamp(1 + stats.blocked * 2) },
+    { label: t.card.detect, sub: 'PHISHING DETECTION', icon: <IconDetect />, n: clamp(Math.round((stats.found / stats.total) * 5)) },
+    { label: t.card.react, sub: 'SECURITY REACTION', icon: <IconLock />, n: clamp(5 - stats.wrongs) },
+    { label: t.card.protect, sub: 'INFO PROTECTION', icon: <IconInfo />, n: clamp(5 - stats.misses) },
+    { label: t.card.block, sub: 'ANTI VIRUS', icon: <IconVirus />, n: clamp(1 + stats.blocked * 2) },
   ]
   const score = rows.reduce((sum, r) => sum + r.n, 0)
   const rank = score >= 18 ? t.card.rankHigh : score >= 13 ? t.card.rankMid : t.card.rankLow
@@ -91,40 +92,50 @@ export function DefenseCard({
         </p>
       </div>
 
-      {/* ② 카드 — 남는 높이에 맞춰 크기가 정해집니다 */}
-      <div className="relative z-10 flex min-h-0 flex-1 items-center justify-center px-4 py-3 [perspective:1400px]">
+      {/* ②③ 카드 + 버튼 — 버튼 폭을 카드와 똑같이 맞추려고 한 상자에 담습니다 */}
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-3">
+        <div className="flex w-[min(24rem,86vw,40vh)] flex-col gap-2.5">
+        <div className="w-full [perspective:1400px]">
         {shown && (
           <motion.div
             initial={{ rotateY: 900, scale: 0.35, opacity: 0 }}
             animate={{ rotateY: flipped ? 180 : 0, scale: 1, opacity: 1 }}
             transition={{ duration: 1.15, ease: [0.16, 1, 0.3, 1] }}
             data-role="defense-card"
-            className="relative h-full w-auto max-w-full [transform-style:preserve-3d]"
+            className="relative w-full [transform-style:preserve-3d]"
             style={{ aspectRatio: '5 / 7' }}
           >
             {/* ── 앞면 ── */}
             <CardFace>
               <div className="flex h-full flex-col">
-                {/* 윗줄 — UR / CYBER SAFETY ZONE / 방패 */}
-                <div className="flex items-center gap-1.5">
-                  <span className="font-display text-[1.5em] leading-none font-bold text-white [text-shadow:0_0_0.5em_rgba(47,168,255,0.9)]">
-                    UR
-                  </span>
-                  <span className="flex-1 rounded-full bg-[#1a3f6b] px-1.5 py-[0.28em] text-center font-display text-[0.62em] leading-none font-bold tracking-[0.12em] text-[#7fd4ff]">
-                    {t.card.zone}
-                  </span>
-                  <Shield />
+                {/* 윗줄 — CYBER SAFETY ZONE 띠 */}
+                <div className="rounded-full bg-[#1a3f6b] px-2 py-[0.34em] text-center font-display text-[0.66em] leading-none font-bold tracking-[0.14em] text-[#7fd4ff]">
+                  {t.card.zone}
                 </div>
 
-                {/* 캐릭터 */}
-                <div className="relative flex min-h-0 flex-1 items-center justify-center py-[0.4em]">
-                  <div className="absolute h-[68%] w-[68%] rounded-full bg-[radial-gradient(circle,rgba(47,168,255,0.42),transparent_68%)]" />
+                {/* 캐릭터 둘 사이에 홀로그램 방패 */}
+                <div className="relative flex min-h-0 flex-1 items-end justify-center py-[0.3em]">
+                  <div className="absolute inset-x-0 bottom-[6%] mx-auto h-[80%] w-[92%] rounded-full bg-[radial-gradient(circle,rgba(47,168,255,0.38),transparent_66%)]" />
                   <motion.img
                     src={mascot}
                     alt=""
                     animate={{ y: [0, -4, 0] }}
-                    transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-                    className="relative h-full w-auto object-contain drop-shadow-[0_0_0.7em_rgba(47,168,255,0.85)]"
+                    transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+                    className="relative h-[76%] w-auto object-contain drop-shadow-[0_0_0.5em_rgba(47,168,255,0.8)]"
+                  />
+                  <motion.div
+                    animate={{ y: [0, -6, 0] }}
+                    transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
+                    className="relative z-10 -mx-[7%] mb-[8%] h-[80%] w-[42%] shrink-0"
+                  >
+                    <HoloShield />
+                  </motion.div>
+                  <motion.img
+                    src={mascot2}
+                    alt=""
+                    animate={{ y: [0, -4, 0] }}
+                    transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut', delay: 0.6 }}
+                    className="relative h-[68%] w-auto object-contain drop-shadow-[0_0_0.5em_rgba(47,168,255,0.8)]"
                   />
                 </div>
 
@@ -141,10 +152,12 @@ export function DefenseCard({
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 1.15 + i * 0.12 }}
-                      className="rounded-[0.4em] border border-[#2fa8ff]/30 bg-[#0b1631] px-[0.5em] py-[0.35em]"
+                      className="flex flex-col items-center rounded-[0.4em] border border-[#2fa8ff]/30 bg-[#0b1631] px-[0.35em] py-[0.42em] text-center"
                     >
-                      <p className="text-[0.64em] leading-tight font-bold text-white">{r.label}</p>
-                      <div className="mt-[0.25em] flex gap-[0.08em]">
+                      <span className="text-[#dceeff]">{r.icon}</span>
+                      <p className="mt-[0.22em] text-[0.6em] leading-tight font-bold text-white">{r.label}</p>
+                      <p className="text-[0.42em] leading-tight tracking-[0.06em] text-[#6f93c4]">{r.sub}</p>
+                      <div className="mt-[0.28em] flex justify-center gap-[0.1em]">
                         {[0, 1, 2, 3, 4].map((k) => (
                           <motion.span
                             key={k}
@@ -217,24 +230,32 @@ export function DefenseCard({
             </CardFace>
           </motion.div>
         )}
-      </div>
+        </div>
 
-      {/* ③ 버튼 */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: shown ? 1 : 0, y: shown ? 0 : 10 }}
-        transition={{ delay: 1.5 }}
-        className="relative z-10 shrink-0 px-5 pb-[max(1rem,env(safe-area-inset-bottom))]"
-      >
-        <div className="mx-auto flex w-full max-w-[26rem] flex-col gap-2">
-          <button
+        {/* 버튼 — 카드와 같은 폭 */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: shown ? 1 : 0, y: shown ? 0 : 10 }}
+          transition={{ delay: 1.5 }}
+          className="flex w-full flex-col gap-2"
+        >
+          <motion.button
             type="button"
             data-role="flip-card"
             onClick={() => setFlipped((v) => !v)}
-            className="w-full rounded-xl border border-[#2fa8ff]/60 bg-[#0c1530] px-4 py-3 text-[1rem] font-bold text-[#7fd4ff] active:bg-[#122246]"
+            animate={{
+              boxShadow: [
+                '0 0 0.5rem rgba(47,168,255,0.45)',
+                '0 0 1.5rem rgba(47,168,255,0.9)',
+                '0 0 0.5rem rgba(47,168,255,0.45)',
+              ],
+            }}
+            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#7fd4ff] bg-[#1668c4] px-4 py-3 text-[1.05rem] font-bold text-white active:bg-[#12539e]"
           >
+            <Flip />
             {flipped ? t.card.flipFront : t.card.flipBack}
-          </button>
+          </motion.button>
           <button
             type="button"
             onClick={onNext}
@@ -242,8 +263,9 @@ export function DefenseCard({
           >
             {t.cardNext}
           </button>
+        </motion.div>
         </div>
-      </motion.div>
+      </div>
     </motion.div>
   )
 }
@@ -263,11 +285,88 @@ function CardFace({ children, back = false }: { children: ReactNode; back?: bool
   )
 }
 
-function Shield() {
+/** 두 캐릭터 사이의 홀로그램 방패 — 자물쇠와 도는 고리 */
+function HoloShield() {
   return (
-    <svg viewBox="0 0 24 24" className="h-[1.3em] w-[1.3em] text-[#2fa8ff]" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <path d="M12 3l7 2.6v5.6c0 4.4-3 8-7 9.4-4-1.4-7-5-7-9.4V5.6z" />
-      <path d="M12 9v3M12 15h.01" strokeLinecap="round" />
+    <svg viewBox="0 0 100 120" className="h-full w-full" aria-hidden="true">
+      <defs>
+        <linearGradient id="shieldFill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#7fd4ff" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#1668c4" stopOpacity="0.28" />
+        </linearGradient>
+      </defs>
+      <g style={{ filter: 'drop-shadow(0 0 6px rgba(47,168,255,0.95))' }}>
+        <path
+          d="M50 6l38 14v34c0 26-16 46-38 56C28 100 12 80 12 54V20z"
+          fill="url(#shieldFill)"
+          stroke="#9fe0ff"
+          strokeWidth="3"
+        />
+        <path
+          d="M50 16l29 10.6V54c0 20.5-12.3 36.4-29 44.6C33.3 90.4 21 74.5 21 54V26.6z"
+          fill="none"
+          stroke="#cdeeff"
+          strokeWidth="1.4"
+          opacity="0.75"
+        />
+        {/* 자물쇠 */}
+        <rect x="36" y="52" width="28" height="24" rx="4" fill="#dff3ff" opacity="0.92" />
+        <path d="M41 52v-7a9 9 0 0118 0v7" fill="none" stroke="#dff3ff" strokeWidth="5" />
+        <circle cx="50" cy="63" r="4" fill="#1668c4" />
+        <rect x="48.4" y="63" width="3.2" height="7" rx="1.6" fill="#1668c4" />
+      </g>
+      {/* 도는 고리 */}
+      <ellipse cx="50" cy="72" rx="47" ry="12" fill="none" stroke="#2fa8ff" strokeWidth="2.4" opacity="0.8" />
+      <ellipse cx="50" cy="60" rx="44" ry="10" fill="none" stroke="#7fd4ff" strokeWidth="1.6" opacity="0.5" />
+    </svg>
+  )
+}
+
+/** 방어력 상자 아이콘 — 첨부한 포스터의 네 가지 */
+function IconDetect() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[1.25em] w-[1.25em]" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <path d="M12 3l7.5 2.8v5.5c0 4.7-3.2 8.6-7.5 10.1-4.3-1.5-7.5-5.4-7.5-10.1V5.8z" />
+      <path d="M12 8.2l1.2 2.6 2.8.4-2 2 .5 2.8-2.5-1.3-2.5 1.3.5-2.8-2-2 2.8-.4z" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function IconLock() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[1.25em] w-[1.25em]" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <rect x="5" y="10" width="14" height="11" rx="2.5" />
+      <path d="M8 10V7a4 4 0 018 0v3" />
+      <circle cx="12" cy="15" r="1.4" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function IconInfo() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[1.25em] w-[1.25em]" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <path d="M4 6h16v10H9l-5 4z" />
+      <path d="M8 11h3M13 11h3" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function IconVirus() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[1.25em] w-[1.25em]" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+      <circle cx="12" cy="12" r="5" />
+      <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4" strokeLinecap="round" />
+      <path d="M4 20L20 4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+/** 뒤집기 아이콘 */
+function Flip() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[1.15em] w-[1.15em]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 12a9 9 0 0114.5-7.1M21 12a9 9 0 01-14.5 7.1" />
+      <path d="M17 2.5V6h-3.5M7 21.5V18h3.5" />
     </svg>
   )
 }

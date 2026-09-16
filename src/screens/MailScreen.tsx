@@ -188,8 +188,8 @@ export function MailScreen({
             {briefLines[1]}
           </p>
 
-          <div className="mt-8 rounded-2xl border border-white/15 bg-white/[0.06] px-5 py-4 text-left">
-            <p className="flex items-center gap-2 font-display text-[1.1rem] font-bold text-gold">
+          <div className="mt-8 rounded-2xl border border-white/15 bg-white/[0.06] px-5 py-4 text-center">
+            <p className="flex items-center justify-center gap-2 font-display text-[1.1rem] font-bold text-gold">
               <Magnifier className="h-[1.1rem] w-[1.1rem]" />
               {fill(t.toolTitle, { n: TOOLS })}
             </p>

@@ -80,7 +80,7 @@ async function run(topic, [label, w, h, mobile]) {
     await wait(800)
     await shot('2-mail')
     // 보낸 사람 주소 → 본문 협박 → 링크 → 첨부 (각각 말풍선에서 올바른 조사 방법 고르기)
-    await page.evaluate(() => [...document.querySelectorAll('span')].find((x) => x.textContent === 'narea-rnd.or.kr')?.click())
+    await page.evaluate(() => [...document.querySelectorAll('span')].find((x) => x.textContent?.includes('mail-verify.net'))?.click())
     await wait(500)
     await shot('3-probe')
     await page.click('[data-role="probe-ok"]')
