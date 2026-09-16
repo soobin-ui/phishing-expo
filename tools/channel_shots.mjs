@@ -49,9 +49,19 @@ async function run(topic, [label, w, h, mobile]) {
       const H = innerHeight
       const bad = []
       if (document.documentElement.scrollWidth > W) bad.push('가로 넘침')
+      // 스크롤되는 목록(받은편지함·대화) 안의 요소는 화면 밖에 있어도 정상입니다
+      const inScroller = (el) => {
+        for (let n = el.parentElement; n; n = n.parentElement) {
+          const o = getComputedStyle(n).overflowY
+          if (o === 'auto' || o === 'scroll') return true
+        }
+        return false
+      }
       document.querySelectorAll('button:not([aria-hidden]), input').forEach((el) => {
         const r = el.getBoundingClientRect()
-        if (r.width && (r.right > W + 1 || r.bottom > H + 1 || r.left < -1)) bad.push(`화면 밖:${(el.innerText || el.placeholder || el.getAttribute('aria-label') || '').slice(0, 8)}`)
+        if (!r.width || inScroller(el)) return
+        if (r.right > W + 1 || r.bottom > H + 1 || r.left < -1)
+          bad.push('화면 밖:' + (el.innerText || el.placeholder || el.getAttribute('aria-label') || '').split(String.fromCharCode(10))[0].slice(0, 10))
       })
       return bad
     })

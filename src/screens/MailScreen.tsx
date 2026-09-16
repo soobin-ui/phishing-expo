@@ -41,17 +41,19 @@ export function MailScreen({
   const t = c.toolbar
   const [view, setView] = useState<View>({ kind: 'inbox' })
   const [sub, setSub] = useState<Sub>('none')
-  const [read, setRead] = useState<string[]>([])
+  // 평범한 메일은 이미 읽은 상태로 시작합니다 — 새로 온 것은 피싱 한 통뿐
+  const [read, setRead] = useState<string[]>(() =>
+    (scenario.inbox ?? []).map((d, i) => d.id ?? `d${i}`),
+  )
   const [toast, setToast] = useState('')
   const done = useRef(false)
   const situationLabel = situations.find((s) => s.id === scenario.situation)?.label ?? ''
 
-  /** 받은편지함 — 새로 온 순서대로(피싱은 가운데) */
+  /** 받은편지함 — 방금 온 피싱 메일이 맨 위, 아래는 이미 읽은 업무 메일들 */
   const decoys = scenario.inbox ?? []
   const mails: Array<{ id: string; doc: MailDoc; phish: boolean }> = [
-    ...decoys.slice(0, 1).map((d) => ({ id: d.id ?? 'd0', doc: d, phish: false })),
     { id: PHISH, doc: scenario, phish: true },
-    ...decoys.slice(1).map((d, i) => ({ id: d.id ?? `d${i + 1}`, doc: d, phish: false })),
+    ...decoys.map((d, i) => ({ id: d.id ?? `d${i}`, doc: d, phish: false })),
   ]
   const open = view.kind === 'mail' ? mails.find((m) => m.id === view.id) : undefined
 
@@ -272,11 +274,18 @@ function Inbox({
           {mails.map((m) => {
             const isRead = read.includes(m.id)
             return (
-              <button
+              <motion.button
                 key={m.id}
                 type="button"
                 data-role={m.phish ? 'open-phish' : 'open-decoy'}
                 onClick={() => onOpen(m.id)}
+                // 안 읽은 메일만 아주 천천히·살짝 떠올랐다 가라앉습니다(눌러볼 자리 안내)
+                animate={
+                  isRead
+                    ? undefined
+                    : { scale: [1, 1.012, 1], backgroundColor: ['rgba(47,107,224,0)', 'rgba(47,107,224,0.07)', 'rgba(47,107,224,0)'] }
+                }
+                transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
                 className={`flex w-full items-start gap-3 border-b border-[#f2f4f8] px-5 py-4 text-left active:bg-[#eef4ff] ${
                   isRead ? 'opacity-55' : ''
                 }`}
@@ -303,7 +312,7 @@ function Inbox({
                     {(m.doc.body ?? '').split('\n')[0]}
                   </span>
                 </span>
-              </button>
+              </motion.button>
             )
           })}
         </div>
