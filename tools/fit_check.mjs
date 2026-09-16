@@ -111,7 +111,7 @@ async function run([label, w, h, mobile, allowV]) {
 
   await check('1-menu')
   // 타이핑으로 진행되는 주제로 훑습니다(메일은 받은편지함·선택 방식이라 흐름이 다름)
-  await tapText(page, '학회 · 논문')
+  await tapText(page, '장학금 · 지원금')
   await wait(1200)
   await check('2-arrive')
   await page.click('[data-role="open-channel"]')
