@@ -310,7 +310,8 @@ export function ForensicScreen({
                 <li key={i}>
                   <span className="num">{i + 1}</span>
                   <span>
-                    <Strong text={fill(s, { n: EVIDENCE.length, chances: CHANCES })} />
+                    <b className="st">{fill(s.title, { n: EVIDENCE.length, chances: CHANCES })}</b>
+                    <small className="sb">{s.body}</small>
                   </span>
                 </li>
               ))}

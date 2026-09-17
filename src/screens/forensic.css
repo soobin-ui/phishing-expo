@@ -170,6 +170,8 @@
 .fx .steps li { display: flex; gap: 0.7rem; align-items: center; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); border-radius: 0.75rem; padding: 0.65rem 0.8rem; font-size: 1rem; line-height: 1.4; color: rgba(255, 255, 255, 0.86); }
 .fx .steps .num { flex: none; width: 2.2rem; height: 2.2rem; border-radius: 0.55rem; border: 1px solid rgba(254, 202, 54, 0.55); background: #050a18; color: var(--color-gold); font: 700 1.05rem/2.2rem var(--font-display); text-align: center; }
 .fx .steps b { color: var(--color-gold); }
+.fx .steps .st { display: block; color: #fff; font-weight: 700; }
+.fx .steps .sb { display: block; margin-top: 0.15rem; font-size: 0.86rem; color: rgba(255, 255, 255, 0.65); line-height: 1.4; }
 .fx .cta { margin-top: 1rem; width: 100%; min-height: 3.6rem; border: 0; border-radius: 0.9rem; background: var(--color-gold); color: var(--color-navy-deep) !important; font: 700 1.2rem var(--font-display); box-shadow: 0 0.3rem 0 var(--color-gold-deep); }
 .fx .cta:active { transform: translateY(0.15rem); box-shadow: 0 0.15rem 0 var(--color-gold-deep); }
 .fx .evlist { margin-top: 0.9rem; display: flex; flex-direction: column; gap: 0.45rem; text-align: left; }
@@ -208,6 +210,7 @@
   .fx .box h2 { font-size: 1.2rem; }
   .fx .box .lead { font-size: 0.88rem; }
   .fx .case { display: none; }
+  .fx .steps .sb { font-size: 0.8rem; }
   .fx .steps { margin-top: 0.7rem; gap: 0.35rem; }
   .fx .steps li { padding: 0.45rem 0.6rem; font-size: 0.88rem; }
   .fx .steps .num { width: 1.8rem; height: 1.8rem; line-height: 1.8rem; }
