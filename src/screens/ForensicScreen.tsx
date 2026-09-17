@@ -17,6 +17,10 @@ import './forensic.css'
  * ★ 증거는 메시지·카카오톡 두 앱에만 둡니다(설정 앱까지 뒤지게 하면 너무 어렵다는 피드백).
  * ★ 평범한 줄을 누르면 조사 기회 -1, 피해 기록(은행 알림 등)은 벌점 없이 안내만.
  * ★ 이모지 금지 — 아이콘은 모두 SVG.
+ *
+ * ★ 목표는 '모두가 수사관이 되는 것' — 시간 2분이 있지만 힌트 버튼은 언제든 누를 수 있고 감점도 없습니다.
+ *   힌트를 켜면 다음 증거까지 가는 길(앱 → 대화방 → 말풍선)이 차례로 반짝입니다.
+ *   기회 2번 이하 · 남은 시간 1분 이하 · 25초 동안 새 증거 없음 → 힌트 버튼이 반짝입니다.
  */
 type Line = { t?: string; me?: boolean; ev?: string; day?: string; vid?: string; sec?: string; small?: string; info?: boolean; red?: boolean }
 type ListItem = { go: string; av: string; color: string; name: string; last: string; time: string }
@@ -26,6 +30,10 @@ type Evidence = (typeof fx.evidence)[number]
 const EVIDENCE = fx.evidence
 const SCREENS = fx.screens as Record<string, Screen>
 const CHANCES = 5
+/** 조사 시간(초) — 잠금화면을 연 순간부터. 규칙 상자·증거 보드·증거가 날아가는 동안은 세지 않습니다 */
+const TIME_LIMIT = 120
+/** 이만큼 새 증거가 없으면 힌트 버튼이 반짝여 눌러 보라고 알립니다 */
+const STUCK_SEC = 25
 const SPOTS: Array<[number, number]> = [[2, 3], [53, 3], [2, 38], [53, 38]]
 
 export function ForensicScreen({
@@ -54,6 +62,10 @@ export function ForensicScreen({
   const [card, setCard] = useState(false)
   const [misses, setMisses] = useState(0)
   const [wrongs, setWrongs] = useState(0)
+  const [timeLeft, setTimeLeft] = useState(TIME_LIMIT)
+  const [lastFind, setLastFind] = useState(TIME_LIMIT)
+  const [hintOn, setHintOn] = useState(false)
+  const [timedOut, setTimedOut] = useState(false)
   const busy = useRef(false)
   const phoneRef = useRef<HTMLElement>(null)
   const folderRef = useRef<HTMLButtonElement>(null)
@@ -73,6 +85,26 @@ export function ForensicScreen({
   useEffect(() => { if (shake) replay(phoneRef.current, 'shake') }, [shake])
   useEffect(() => { if (flash) replay(flashRef.current, 'go') }, [flash])
   const full = found.length === EVIDENCE.length
+  /** 힌트가 가리키는 다음 증거 — 일어난 순서대로 아직 못 찾은 첫 번째 */
+  const nextEv = EVIDENCE.find((e) => !found.includes(e.id))
+  const hint = hintOn && nextEv && !full ? nextEv : null
+  const running = !rules && cur !== 'lock' && !full && !ended.current
+  const nudge = running && (chances <= 2 || timeLeft <= 60 || lastFind - timeLeft >= STUCK_SEC) && !hintOn
+
+  /* 조사 시간 — 증거가 날아가는 중이거나 폴더 목록을 보는 동안은 멈춥니다 */
+  useEffect(() => {
+    if (!running || snap || evBox) return
+    const id = window.setInterval(() => setTimeLeft((t) => Math.max(0, t - 1)), 1000)
+    return () => window.clearInterval(id)
+  }, [running, snap, evBox])
+  useEffect(() => {
+    if (timeLeft > 0 || !running) return
+    busy.current = true
+    setTimedOut(true)
+    showToast(fx.toast.timeout)
+    window.setTimeout(() => toCard(found.length), 1300)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft])
   useEffect(() => { if (bump && !full) replay(folderRef.current, 'bump') }, [bump]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const go = (id: string) => {
@@ -82,10 +114,10 @@ export function ForensicScreen({
   const back = () => setStack((s) => (s.length > 2 ? s.slice(0, -1) : ['lock', 'home']))
   const home = () => setStack(['lock', 'home'])
 
-  const showToast = (title: string, body = '') => {
+  const showToast = (title: string, body = '', ms = 1700) => {
     const id = Date.now()
     setToast({ id, title, body })
-    window.setTimeout(() => setToast((t) => (t?.id === id ? null : t)), 1700)
+    window.setTimeout(() => setToast((t) => (t?.id === id ? null : t)), ms)
   }
 
   /** 조사 끝 — 검거 카드로(증거를 다 모았으면 보드를 거친 뒤) */
@@ -149,6 +181,8 @@ export function ForensicScreen({
         setSnap(null)
         setFolderOpen(false)
         setFound(next)
+        setLastFind(timeLeft)
+        setHintOn(false)
         setBump((n) => n + 1)
         setPlus({ id: Date.now(), x: f.left + f.height * 0.55, y: f.top - 6 })
         busy.current = false
@@ -178,7 +212,13 @@ export function ForensicScreen({
           <span className="tag">
             <MagnifierIcon />
             {fx.hud.tag}
+            <span className="tagsub"> · {fx.hud.tagSub}</span>
           </span>
+        </div>
+        <div className={`timer ${timeLeft <= 30 ? 'low' : ''}`}>
+          <small>{fx.hud.time}</small>
+          <b>{Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</b>
+          <span className="bar"><i style={{ width: `${(timeLeft / TIME_LIMIT) * 100}%` }} /></span>
         </div>
         <div className="chance">
           <small>{fx.hud.chances}</small>
@@ -204,7 +244,7 @@ export function ForensicScreen({
             <div className="home">
               <Wall />
               {fx.apps.map((a) => (
-                <button key={a.id} type="button" data-app={a.id} className={`icon ${seenApps.includes(a.id) ? 'seen' : ''}`} onClick={() => go(a.id)}>
+                <button key={a.id} type="button" data-app={a.id} className={`icon ${seenApps.includes(a.id) ? 'seen' : ''} ${hint?.app === a.id ? 'hl' : ''}`} onClick={() => go(a.id)}>
                   <span className="i" style={{ background: a.color, color: a.dark ? '#3b2f00' : '#fff' }}>
                     <AppIcon name={a.icon} />
                     {a.badge ? <em>{a.badge}</em> : null}
@@ -214,7 +254,7 @@ export function ForensicScreen({
               ))}
             </div>
           ) : (
-            <AppView screen={SCREENS[cur]} found={found} onGo={go} onInspect={inspect} />
+            <AppView screen={SCREENS[cur]} found={found} hint={hint} onGo={go} onInspect={inspect} />
           )}
         </div>
         {cur !== 'lock' && (
@@ -240,8 +280,26 @@ export function ForensicScreen({
         <div ref={flashRef} className="flash" />
       </section>
 
-      {/* 증거 폴더 */}
+      {/* 힌트 버튼 · 증거 폴더 */}
       <div className={`dock ${done ? 'top' : ''}`}>
+        {!full && (
+          <button
+            type="button"
+            data-role="hint"
+            className={`hintbtn ${nudge ? 'nudge' : ''} ${hintOn ? 'on' : ''}`}
+            onClick={() => {
+              if (rules || cur === 'lock' || !nextEv || busy.current) return
+              setHintOn(true)
+              showToast(fx.hint.title, nextEv.hint, 4500)
+            }}
+          >
+            <BulbIcon />
+            <span>
+              <b>{fx.hint.button}</b>
+              {nudge && <small>{fx.hint.nudge}</small>}
+            </span>
+          </button>
+        )}
         <button
           ref={folderRef}
           type="button"
@@ -310,7 +368,7 @@ export function ForensicScreen({
                 <li key={i}>
                   <span className="num">{i + 1}</span>
                   <span>
-                    <b className="st">{fill(s.title, { n: EVIDENCE.length, chances: CHANCES })}</b>
+                    <b className="st">{fill(s.title, { n: EVIDENCE.length, chances: CHANCES, min: TIME_LIMIT / 60 })}</b>
                     <small className="sb">{s.body}</small>
                   </span>
                 </li>
@@ -361,7 +419,7 @@ export function ForensicScreen({
             }}
             flags={flags}
             solved={found}
-            copy={fx.card}
+            copy={timedOut ? { ...fx.card, failBody: fx.card.timeoutBody } : fx.card}
             onNext={() => onSolved(found.length)}
           />
         )}
@@ -432,11 +490,11 @@ function Wall() {
 }
 
 /** 앱 화면 — 목록(누르면 이동) / 대화 · 줄(누르면 조사) */
-function AppView({ screen, found, onGo, onInspect }: { screen: Screen; found: string[]; onGo: (id: string) => void; onInspect: (l: Line) => void }) {
+function AppView({ screen, found, hint, onGo, onInspect }: { screen: Screen; found: string[]; hint: Evidence | null; onGo: (id: string) => void; onInspect: (l: Line) => void }) {
   let body: ReactNode
   if (screen.list) {
     body = screen.list.map((it) => (
-      <button key={it.go} type="button" className="li" data-go={it.go} onClick={() => onGo(it.go)}>
+      <button key={it.go} type="button" className={`li ${hint?.room === it.go ? 'hl' : ''}`} data-go={it.go} onClick={() => onGo(it.go)}>
         <span className="av" style={{ background: it.color }}>{it.av}</span>
         <span className="tx">
           <b>{it.name}</b>
@@ -454,7 +512,7 @@ function AppView({ screen, found, onGo, onInspect }: { screen: Screen; found: st
           ) : m.vid ? (
             <div key={i} className="vid"><i />{m.vid}</div>
           ) : (
-            <button key={i} type="button" data-i={i} className={`bub ${m.me ? 'me' : ''} ${m.ev && found.includes(m.ev) ? 'found' : ''}`} onClick={() => onInspect(m)}>
+            <button key={i} type="button" data-i={i} className={`bub ${m.me ? 'me' : ''} ${m.ev && found.includes(m.ev) ? 'found' : ''} ${hint && m.ev === hint.id ? 'hl' : ''}`} onClick={() => onInspect(m)}>
               <Linked text={m.t ?? ''} />
             </button>
           ),
@@ -670,6 +728,14 @@ function AppIcon({ name }: { name: string }) {
   if (name === 'bank') return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-5 9 5M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18" strokeLinejoin="round" /></svg>
   if (name === 'photo') return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-8 8" /></svg>
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 10h16M9 3v4M15 3v4" /></svg>
+}
+
+function BulbIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0012 3z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
 }
 
 function MagnifierIcon() {
