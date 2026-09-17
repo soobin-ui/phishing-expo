@@ -6,6 +6,7 @@ import { IntroScreen } from './screens/IntroScreen'
 import { MenuScreen } from './screens/MenuScreen'
 import { ArriveScreen } from './screens/ArriveScreen'
 import { MailScreen } from './screens/MailScreen'
+import { ForensicScreen } from './screens/ForensicScreen'
 import { ChatScreen } from './screens/ChatScreen'
 import { CaughtScreen } from './screens/CaughtScreen'
 import { FindScreen } from './screens/FindScreen'
@@ -131,6 +132,17 @@ export default function App() {
 
         {step === 'menu' && <MenuScreen onPick={start} />}
 
+        {/* 취업·채용 — 포렌식 수사(피해자 휴대폰 조사 → 증거 보드 → 검거 카드) */}
+        {step === 'arrive' && situation === 'job' && (
+          <ForensicScreen
+            onReply={(delta, item) => {
+              setSafety((v) => Math.max(0, Math.min(100, v + delta)))
+              if (item) setGave((prev) => (prev.includes(item) ? prev : [...prev, item]))
+            }}
+            onSolved={finish}
+          />
+        )}
+
         {step === 'arrive' && scenario.channel === 'mail' && (
           <MailScreen
             scenario={scenario}
@@ -142,7 +154,7 @@ export default function App() {
           />
         )}
 
-        {step === 'arrive' && scenario.channel !== 'mail' && (
+        {step === 'arrive' && scenario.channel !== 'mail' && situation !== 'job' && (
           <ArriveScreen
             scenario={scenario}
             onOpen={() => setStep('chat')}

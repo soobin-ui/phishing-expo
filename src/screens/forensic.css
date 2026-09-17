@@ -1,0 +1,221 @@
+/*
+  취업·채용 포렌식 수사 화면 전용 스타일.
+  피해자 휴대폰(문자·카카오톡 모양)은 Tailwind 클래스로 풀면 너무 길어져 여기에 모았습니다.
+  전부 .fx 아래에만 걸리므로 다른 화면에 새지 않습니다.
+*/
+.fx {
+  --fx-ng: #e5484d;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  background: #050a18;
+  color: #fff;
+  padding-bottom: 0.8rem;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.fx button {
+  font-family: inherit;
+  color: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.fx-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 40% at 50% 20%, rgba(47, 168, 255, 0.22), transparent 70%),
+    linear-gradient(rgba(47, 168, 255, 0.07) 1px, transparent 1px) 0 0 / 2.2rem 2.2rem,
+    linear-gradient(90deg, rgba(47, 168, 255, 0.07) 1px, transparent 1px) 0 0 / 2.2rem 2.2rem;
+}
+
+/* ── 상단 ── */
+.fx .hud { position: relative; flex: none; width: 100%; max-width: 44rem; display: flex; align-items: center; gap: 1rem; padding: 0.8rem 1.1rem 0.7rem; }
+.fx .hud .who { flex: 1; min-width: 0; }
+.fx .tag { display: inline-flex; align-items: center; gap: 0.35rem; border: 1px solid rgba(47, 168, 255, 0.6); background: #0b1631; color: #7fd4ff; border-radius: 0.35rem; padding: 0.25rem 0.55rem; font: 700 0.78rem var(--font-display); }
+.fx .chance { text-align: right; }
+.fx .chance small { display: block; font-size: 0.78rem; color: rgba(255, 255, 255, 0.6); }
+.fx .chance .dots { display: flex; gap: 0.3rem; justify-content: flex-end; margin-top: 0.35rem; }
+.fx .chance .dots i { width: 0.8rem; height: 0.8rem; border-radius: 50%; background: var(--color-gold); }
+.fx .chance .dots i.off { background: rgba(255, 255, 255, 0.15); }
+
+/* ── 피해자 휴대폰 ── */
+.fx .phone { position: relative; flex: 1; min-height: 0; width: min(100% - 1.6rem, 25rem); border-radius: 2rem; border: 0.45rem solid #1b2235; background: #fff; color: #1f2430; overflow: hidden; box-shadow: 0 0 2.2rem rgba(47, 168, 255, 0.28); display: flex; flex-direction: column; }
+.fx .phone.shake { animation: fx-shake 0.45s; }
+@keyframes fx-shake { 20% { transform: translateX(-7px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+.fx .status { flex: none; display: flex; justify-content: space-between; padding: 0.45rem 1.1rem 0.2rem; font-size: 0.78rem; font-weight: 600; }
+.fx .scr { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.fx .navbar { flex: none; display: flex; justify-content: space-around; padding: 0.35rem 0 0.45rem; border-top: 1px solid #eef0f4; background: #fff; }
+.fx .navbar button { border: 0; background: transparent; font-size: 0.8rem; color: #4b5563; padding: 0.3rem 0.9rem; border-radius: 0.5rem; display: flex; align-items: center; gap: 0.3rem; }
+.fx .navbar button svg { width: 1rem; height: 1rem; }
+
+/* 잠금화면 */
+.fx .lock { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; padding: 3rem 0.9rem 1.1rem; margin-top: -1.6rem; overflow: hidden; background: #f6e5d5; color: #3b2f22; }
+.fx .lock .clock { font: 700 3rem/1 var(--font-display); }
+.fx .lock .date { margin-top: 0.35rem; color: #7a6552; font-size: 0.9rem; font-weight: 600; }
+.fx .lock .scene { flex: 1 1 auto; min-height: 6rem; width: calc(100% + 1.8rem); margin: 0.5rem -0.9rem 0; display: flex; align-items: flex-end; }
+.fx .lock .scene svg { width: 100%; height: 100%; display: block; }
+.fx .lock .deskarea { flex: none; width: calc(100% + 1.8rem); margin: 0 -0.9rem -1.1rem; padding: 0.2rem 0.9rem 1.1rem; background: #c08a5b; display: flex; flex-direction: column; align-items: center; }
+.fx .lock .pushes { width: 100%; display: flex; flex-direction: column; gap: 0.35rem; padding: 0.6rem 0 0.8rem; }
+.fx .push { width: 100%; display: flex; gap: 0.55rem; align-items: center; background: rgba(20, 26, 44, 0.78); color: #fff; border-radius: 0.8rem; padding: 0.45rem 0.7rem; text-align: left; }
+.fx .push > div { display: flex; flex: 1; justify-content: space-between; gap: 0.5rem; align-items: baseline; }
+.fx .push i { flex: none; width: 1.9rem; height: 1.9rem; border-radius: 0.5rem; background: #d9463e; color: #fff; font: 700 0.68rem/1.9rem var(--font-display); font-style: normal; text-align: center; }
+.fx .push b { font-size: 0.86rem; }
+.fx .push span { font-size: 0.84rem; color: rgba(255, 255, 255, 0.85); }
+.fx .lock .open { margin-top: 0.2rem; border: 0; background: rgba(40, 28, 20, 0.55); color: #fff; border-radius: 99px; padding: 0.7rem 1.4rem; font-weight: 700; font-size: 0.95rem; animation: fx-blink 1.8s ease-in-out infinite; }
+@keyframes fx-blink { 50% { background: rgba(40, 28, 20, 0.8); } }
+
+/* 홈 */
+.fx .home { position: relative; flex: 1; padding: 1.4rem 1.1rem; overflow: hidden; display: grid; grid-template-columns: repeat(3, 1fr); align-content: start; gap: 1.3rem 0.6rem; }
+.fx .wall { position: absolute; inset: 0; z-index: 0; }
+.fx .wall svg { width: 100%; height: 100%; display: block; }
+.fx .home .wall .cal { display: none; }
+.fx .icon { position: relative; z-index: 1; border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: #1f2430; text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8); }
+.fx .icon .i { position: relative; width: 3.4rem; height: 3.4rem; border-radius: 1rem; display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 0.2rem 0.6rem rgba(0, 0, 0, 0.12); }
+.fx .icon .i svg { width: 52%; height: 52%; }
+.fx .icon em { position: absolute; top: -0.3rem; right: -0.3rem; min-width: 1.2rem; height: 1.2rem; border-radius: 99px; background: #e5484d; color: #fff; font: 700 0.7rem/1.2rem var(--font-sans); font-style: normal; padding: 0 0.3rem; text-shadow: none; }
+.fx .icon.seen .i::after { content: ''; position: absolute; inset: -0.25rem; border-radius: 1.2rem; border: 2px solid rgba(47, 168, 255, 0.55); }
+
+/* 앱 화면 */
+.fx .hdr { flex: none; padding: 0.55rem 0.8rem; border-bottom: 1px solid #eef0f4; font-weight: 700; font-size: 1rem; }
+.fx .hdr small { display: block; font-weight: 500; font-size: 0.75rem; color: #6b7280; }
+.fx .body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.fx .body::-webkit-scrollbar { display: none; }
+.fx .li { width: 100%; border: 0; border-bottom: 1px solid #f1f3f6; background: #fff; text-align: left; display: flex; align-items: center; gap: 0.7rem; padding: 0.75rem 0.9rem; }
+.fx .li .av { flex: none; width: 2.4rem; height: 2.4rem; border-radius: 0.9rem; display: flex; align-items: center; justify-content: center; color: #fff; font: 700 0.78rem var(--font-display); }
+.fx .li .tx { flex: 1; min-width: 0; }
+.fx .li b { display: block; font-size: 0.95rem; }
+.fx .li .tx span { display: block; font-size: 0.84rem; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx .li time { flex: none; font-size: 0.74rem; color: #9ca3af; align-self: flex-start; }
+.fx .thread { padding: 0.7rem 0.75rem 1rem; display: flex; flex-direction: column; gap: 0.45rem; min-height: 100%; }
+.fx .thread.k { background: #b2c7d9; }
+.fx .bub { position: relative; max-width: 82%; border: 0; text-align: left; padding: 0.55rem 0.75rem; border-radius: 1rem; font-size: 0.93rem; line-height: 1.45; white-space: pre-line; background: #e9ebf0; color: #1f2430; align-self: flex-start; }
+.fx .bub.me { align-self: flex-end; background: #3478f6; color: #fff; }
+.fx .k .bub { background: #fff; border-radius: 0.25rem 1rem 1rem 1rem; }
+.fx .k .bub.me { background: #fee500; color: #191919; border-radius: 1rem 0.25rem 1rem 1rem; }
+.fx .bub .url { color: #1f5fd1; text-decoration: underline; }
+.fx .day { align-self: center; font-size: 0.74rem; color: #4b5563; background: rgba(255, 255, 255, 0.6); border-radius: 99px; padding: 0.2rem 0.7rem; }
+.fx .vid { align-self: flex-start; display: flex; align-items: center; gap: 0.6rem; background: #fff; border-radius: 0.25rem 1rem 1rem 1rem; padding: 0.5rem 0.6rem; font-size: 0.85rem; }
+.fx .vid i { width: 3.6rem; height: 2.4rem; border-radius: 0.4rem; background: linear-gradient(135deg, #2b3a55, #11192b); }
+.fx .row { position: relative; width: 100%; border: 0; border-bottom: 1px solid #f1f3f6; background: #fff; text-align: left; padding: 0.75rem 0.9rem; font-size: 0.92rem; line-height: 1.45; }
+.fx .row small { display: block; font-size: 0.76rem; color: #6b7280; }
+.fx .row.red { color: #b42318; }
+.fx .sec { padding: 0.6rem 0.9rem 0.3rem; font-size: 0.76rem; color: #6b7280; background: #f7f8fa; }
+.fx .found { box-shadow: 0 0 0 3px var(--color-gold) !important; }
+.fx .found::after { content: '증거'; position: absolute; top: -0.55rem; right: -0.3rem; background: var(--color-gold); color: var(--color-navy-deep); font: 700 0.62rem/1 var(--font-display); padding: 0.2rem 0.35rem; border-radius: 0.3rem; }
+
+/* 헛짚기 알림 */
+.fx .toast { position: absolute; left: 0.7rem; right: 0.7rem; bottom: 3.4rem; z-index: 15; display: flex; gap: 0.6rem; align-items: flex-start; border-radius: 0.8rem; padding: 0.65rem 0.8rem; font-size: 0.88rem; line-height: 1.45; background: #1f2430; color: #fff; animation: fx-pop 0.3s; box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.2); }
+.fx .toast svg { flex: none; width: 1.25rem; height: 1.25rem; margin-top: 0.05rem; }
+.fx .flash { position: absolute; inset: 0; background: #fff; pointer-events: none; opacity: 0; z-index: 20; }
+.fx .flash.go { animation: fx-flash 0.45s ease-out; }
+@keyframes fx-flash { 0% { opacity: 0.85; } 100% { opacity: 0; } }
+
+/* 증거 사진 → 폴더 */
+.fx .snap { position: fixed; z-index: 40; width: min(17rem, 70vw); background: #fff; color: #1f2430; border-radius: 0.4rem; padding: 0.55rem 0.55rem 0.7rem; box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.55); transform: translate(-50%, -50%) rotate(-3deg); animation: fx-snapin 0.35s cubic-bezier(0.2, 1.5, 0.4, 1) both; pointer-events: none; }
+.fx .snap .shot { background: #eef1f6; border-radius: 0.2rem; padding: 0.6rem 0.65rem; font-size: 0.84rem; line-height: 1.45; white-space: pre-line; border-left: 3px solid var(--color-gold); max-height: 7.5rem; overflow: hidden; }
+.fx .snap b { display: flex; align-items: center; gap: 0.35rem; margin-top: 0.5rem; font: 700 0.9rem var(--font-display); }
+.fx .snap b i { font-style: normal; background: var(--color-gold); color: var(--color-navy-deep); border-radius: 0.25rem; padding: 0.12rem 0.35rem; font-size: 0.72rem; }
+.fx .snap small { display: block; margin-top: 0.25rem; font-size: 0.76rem; color: #6b7280; line-height: 1.4; }
+@keyframes fx-snapin { from { transform: translate(-50%, -50%) rotate(-3deg) scale(0.5); opacity: 0; } to { transform: translate(-50%, -50%) rotate(-3deg) scale(1); opacity: 1; } }
+.fx .plus { position: fixed; z-index: 41; font: 700 1.1rem var(--font-display); color: var(--color-gold); text-shadow: 0 0 0.6rem rgba(254, 202, 54, 0.8); pointer-events: none; transform: translate(-50%, -50%); animation: fx-plus 0.9s ease-out forwards; }
+@keyframes fx-plus { from { opacity: 0; transform: translate(-50%, -30%); } 20% { opacity: 1; } to { opacity: 0; transform: translate(-50%, -190%); } }
+
+.fx .dock { position: relative; z-index: 1; flex: none; display: flex; justify-content: center; padding: 0.55rem 0 0.1rem; }
+/* '증거 수집 완료' 팝업이 떠 있을 때만 폴더를 팝업 위로 */
+.fx .dock.top { z-index: 46; }
+.fx .folder { position: relative; display: flex; align-items: center; gap: 0.6rem; border: 1.5px solid rgba(254, 202, 54, 0.45); background: #0b1631; border-radius: 1rem; padding: 0.45rem 1rem 0.45rem 0.6rem; text-align: left; }
+.fx .folder svg { width: 2.6rem; height: 2.6rem; flex: none; }
+.fx .folder b { display: block; font: 700 0.95rem var(--font-display); }
+.fx .folder small { display: block; font-size: 0.76rem; color: rgba(255, 255, 255, 0.6); }
+.fx .folder .cnt { position: absolute; top: -0.45rem; right: -0.45rem; min-width: 1.6rem; height: 1.6rem; border-radius: 99px; background: var(--color-gold); color: var(--color-navy-deep); font: 700 0.78rem/1.6rem var(--font-display); text-align: center; padding: 0 0.3rem; }
+.fx .folder .ff { transform-box: view-box; transform-origin: 24px 40px; transition: transform 0.22s ease-out; }
+.fx .folder .paper { transform-box: view-box; transform: translateY(8px); transition: transform 0.25s ease-out; }
+.fx .folder.open { border-color: var(--color-gold); box-shadow: 0 0 1.2rem rgba(254, 202, 54, 0.55); }
+.fx .folder.open .ff { transform: skewX(-12deg) scaleY(0.68); }
+.fx .folder.open .paper { transform: translateY(-3px); }
+.fx .folder.bump { animation: fx-bump 0.45s cubic-bezier(0.2, 1.8, 0.4, 1); }
+@keyframes fx-bump { 40% { transform: scale(1.14); } }
+.fx .folder.full { border-color: var(--color-gold); animation: fx-fpop 0.6s cubic-bezier(0.2, 1.8, 0.4, 1), fx-fglow 1.3s ease-in-out 0.6s infinite; }
+.fx .folder.full small { color: #ffe9a8; }
+@keyframes fx-fpop { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
+@keyframes fx-fglow { 0%, 100% { box-shadow: 0 0 0 0 rgba(254, 202, 54, 0.7); } 50% { box-shadow: 0 0 1.4rem 0.35rem rgba(254, 202, 54, 0.55); transform: scale(1.05); } }
+
+/* 증거 수집 완료 */
+.fx .done { position: fixed; inset: 0; z-index: 45; display: flex; align-items: center; justify-content: center; padding: 1.2rem; background: rgba(5, 10, 24, 0.45); animation: fx-fade 0.25s; }
+.fx .done .card2 { width: min(21rem, 88vw); text-align: center; border: 2px solid var(--color-gold); background: rgba(11, 22, 49, 0.97); border-radius: 1.1rem; padding: 1.3rem 1.1rem 1.1rem; box-shadow: 0 0 2.6rem rgba(254, 202, 54, 0.45); animation: fx-donepop 0.55s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+.fx .done .ttl { font: 700 1.6rem var(--font-display); color: var(--color-gold); text-shadow: 0 0 1rem rgba(254, 202, 54, 0.6); }
+.fx .done .four { display: flex; justify-content: center; gap: 0.45rem; margin-top: 0.8rem; }
+.fx .done .four span { width: 2.4rem; height: 2.4rem; border-radius: 0.55rem; border: 1.5px solid var(--color-gold); background: rgba(254, 202, 54, 0.14); color: var(--color-gold); display: flex; align-items: center; justify-content: center; animation: fx-donepop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+.fx .done .four svg { width: 55%; height: 55%; }
+.fx .done p { margin: 0.8rem 0 0; color: rgba(255, 255, 255, 0.8); font-size: 0.95rem; line-height: 1.5; white-space: pre-line; }
+.fx .done p b { color: var(--color-gold); }
+.fx .done .arrow { display: block; margin: 0.5rem auto 0; width: 1.4rem; height: 1.4rem; color: var(--color-gold); animation: fx-nudge 1s ease-in-out infinite; }
+@keyframes fx-donepop { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes fx-nudge { 50% { transform: translateY(0.35rem); } }
+@keyframes fx-fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* 상자(규칙·폴더 목록·보드) */
+.fx .dim { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; padding: 1.2rem; background: rgba(5, 10, 24, 0.6); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.fx .box { width: 100%; max-width: 30rem; border: 1px solid rgba(47, 168, 255, 0.6); background: rgba(11, 22, 49, 0.97); border-radius: 1.1rem; padding: 1.3rem 1.3rem 1.2rem; text-align: center; box-shadow: 0 0 2.4rem rgba(47, 168, 255, 0.35); animation: fx-rise 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; max-height: calc(100% - 1rem); overflow-y: auto; }
+.fx .gold-tag { display: inline-flex; align-items: center; gap: 0.35rem; background: var(--color-gold); color: var(--color-navy-deep); border-radius: 0.35rem; padding: 0.3rem 0.6rem; font: 700 0.85rem var(--font-display); }
+.fx .box h2 { margin: 0.7rem 0 0; font: 700 min(1.5rem, 6vw) / 1.35 var(--font-display); white-space: pre-line; text-shadow: 0 0 1rem rgba(47, 168, 255, 0.6); }
+.fx .box .lead { margin: 0.5rem 0 0; color: rgba(255, 255, 255, 0.72); font-size: 0.98rem; line-height: 1.5; white-space: pre-line; }
+.fx .case { margin: 0.7rem 0 0; display: inline-block; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 0.4rem; padding: 0.3rem 0.6rem; font-size: 0.8rem; color: rgba(255, 255, 255, 0.6); }
+.fx .steps { list-style: none; margin: 1rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; text-align: left; }
+.fx .steps li { display: flex; gap: 0.7rem; align-items: center; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.05); border-radius: 0.75rem; padding: 0.65rem 0.8rem; font-size: 1rem; line-height: 1.4; color: rgba(255, 255, 255, 0.86); }
+.fx .steps .num { flex: none; width: 2.2rem; height: 2.2rem; border-radius: 0.55rem; border: 1px solid rgba(254, 202, 54, 0.55); background: #050a18; color: var(--color-gold); font: 700 1.05rem/2.2rem var(--font-display); text-align: center; }
+.fx .steps b { color: var(--color-gold); }
+.fx .cta { margin-top: 1rem; width: 100%; min-height: 3.6rem; border: 0; border-radius: 0.9rem; background: var(--color-gold); color: var(--color-navy-deep) !important; font: 700 1.2rem var(--font-display); box-shadow: 0 0.3rem 0 var(--color-gold-deep); }
+.fx .cta:active { transform: translateY(0.15rem); box-shadow: 0 0.15rem 0 var(--color-gold-deep); }
+.fx .evlist { margin-top: 0.9rem; display: flex; flex-direction: column; gap: 0.45rem; text-align: left; }
+.fx .evlist div { border: 1.5px solid rgba(254, 202, 54, 0.5); background: rgba(254, 202, 54, 0.08); border-radius: 0.6rem; padding: 0.55rem 0.7rem; font-size: 0.9rem; }
+.fx .evlist div.empty { border-style: dashed; border-color: rgba(255, 255, 255, 0.2); background: transparent; color: rgba(255, 255, 255, 0.4); }
+.fx .evlist small { display: block; color: rgba(255, 255, 255, 0.6); font-size: 0.78rem; margin-top: 0.15rem; }
+
+/* 증거 보드 */
+.fx .rebuild .box { padding-top: 1rem; padding-bottom: 1rem; }
+.fx .boardwrap { position: relative; margin-top: 0.9rem; height: clamp(16rem, 44vh, 27rem); border-radius: 0.8rem; background: radial-gradient(circle at 30% 20%, #2a2118, #17120d); box-shadow: inset 0 0 1.6rem rgba(0, 0, 0, 0.6); overflow: hidden; }
+.fx .boardwrap svg.lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.fx .boardwrap line { stroke: #e5484d; stroke-width: 3; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 400; stroke-dashoffset: 400; animation: fx-draw 0.6s ease-out forwards; }
+@keyframes fx-draw { to { stroke-dashoffset: 0; } }
+.fx .ev { position: absolute; width: 45%; border: 0; border-radius: 0.3rem; background: #f7f3e8; color: #2b2419 !important; padding: 0.5rem 0.5rem 0.45rem; text-align: left; font-size: 0.76rem; line-height: 1.35; box-shadow: 0 0.25rem 0.6rem rgba(0, 0, 0, 0.5); }
+.fx .ev::before { content: ''; position: absolute; top: -0.35rem; left: 50%; width: 0.75rem; height: 0.75rem; margin-left: -0.375rem; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff8a80, #c62828); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
+.fx .ev b { display: block; font-size: 0.8rem; padding-right: 1.2rem; }
+.fx .ev small { display: block; margin-top: 0.2rem; color: #7a6b55; font-size: 0.7rem; }
+.fx .ev q { display: block; margin-top: 0.25rem; padding: 0.25rem 0.35rem; background: #fff; border-radius: 0.2rem; font-size: 0.7rem; color: #444; quotes: none; }
+.fx .ev .no { position: absolute; top: 0.3rem; right: 0.35rem; width: 1.3rem; height: 1.3rem; border-radius: 50%; background: #e5484d; color: #fff; font: 700 0.72rem/1.3rem var(--font-display); text-align: center; transform: scale(0); transition: transform 0.25s cubic-bezier(0.2, 1.6, 0.4, 1); }
+.fx .ev.on .no { transform: scale(1); }
+.fx .ev.on { outline: 2.5px solid #e5484d; }
+.fx .ev.bad { animation: fx-shake 0.4s; }
+.fx .ev.dmg { background: #3a1413; color: #ffd9d6 !important; cursor: default; }
+.fx .ev.dmg small { color: #ff9f98; }
+.fx .hint { margin-top: 0.4rem; min-height: 1.2rem; font-size: 0.85rem; color: #ff9f98; text-align: center; }
+.fx .caught { display: inline-block; margin-top: 0.4rem; transform: rotate(-6deg); border: 4px solid var(--color-gold); color: var(--color-gold); background: rgba(11, 22, 49, 0.88); border-radius: 0.5rem; padding: 0.4rem 0.8rem; font: 700 1.15rem var(--font-display); text-align: center; white-space: nowrap; animation: fx-stampin 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both; }
+.fx .caught small { display: block; font: 600 0.72rem var(--font-sans); color: #ffe9a8; margin-top: 0.15rem; }
+@keyframes fx-stampin { from { transform: rotate(-6deg) scale(2.4); opacity: 0; } to { transform: rotate(-6deg) scale(1); opacity: 1; } }
+.fx .rebuild .cta { margin-top: 0.6rem; }
+@media (max-height: 700px) {
+  .fx .rebuild .lead { display: none; }
+  .fx .ev q { display: none; }
+  .fx .lock .clock { font-size: 2.4rem; }
+  .fx .lock { padding-top: 2.4rem; }
+  .fx .box { padding: 1rem 1rem 0.9rem; }
+  .fx .box h2 { font-size: 1.2rem; }
+  .fx .box .lead { font-size: 0.88rem; }
+  .fx .case { display: none; }
+  .fx .steps { margin-top: 0.7rem; gap: 0.35rem; }
+  .fx .steps li { padding: 0.45rem 0.6rem; font-size: 0.88rem; }
+  .fx .steps .num { width: 1.8rem; height: 1.8rem; line-height: 1.8rem; }
+  .fx .cta { min-height: 3rem; margin-top: 0.7rem; }
+}
+
+@keyframes fx-pop { from { opacity: 0; transform: translateY(0.45rem); } to { opacity: 1; transform: none; } }
+@keyframes fx-rise { from { opacity: 0; transform: translateY(1.2rem) scale(0.96); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .fx .folder.full, .fx .lock .open, .fx .done .arrow { animation: none; }
+}

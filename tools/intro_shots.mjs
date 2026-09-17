@@ -72,7 +72,7 @@ for (const [label, w, h, mobile] of DEVICES) {
     await wait(700)
   }
   await page.screenshot({ path: join(OUT, `${label}-4-rnd.png`) })
-  const ok = rulesFit !== null && rulesFit <= h && menuFit.scroll <= 1 && menuFit.rows === 5 && fit.scroll <= 1 && !fit.wide && fit.btnBottom !== null && fit.btnBottom <= h && inbox && !errors.length
+  const ok = rulesFit !== null && rulesFit <= h && menuFit.scroll <= 1 && menuFit.rows === 4 && fit.scroll <= 1 && !fit.wide && fit.btnBottom !== null && fit.btnBottom <= h && inbox && !errors.length
   console.log(`${ok ? '✓' : '✗'} ${label} ${w}×${h} · 스크롤 ${fit.scroll}px · 버튼 아래끝 ${fit.btnBottom}/${h} · 사건 목록 ${menuFit.rows}개 스크롤 ${menuFit.scroll}px 마지막 ${menuFit.last}/${h} · 규칙 버튼 아래끝 ${rulesFit}/${h} · 연구실 받은편지함 ${inbox ? '예' : '아니오'}${errors.length ? ' · 오류 ' + errors.join(' / ') : ''}`)
   await browser.close()
 }

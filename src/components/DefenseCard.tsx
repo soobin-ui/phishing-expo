@@ -33,18 +33,36 @@ export interface Stats {
 
 const clamp = (n: number) => Math.max(1, Math.min(5, n))
 
+/** 주제마다 바뀌는 문구 — 없으면 연구실(메일) 문구를 씁니다 */
+export interface CardCopy {
+  caughtBody?: string
+  failTitle?: string
+  failBody?: string
+  tricks?: string
+  missed?: string
+}
+
 export function DefenseCard({
   stats,
   flags,
   solved,
+  copy = {},
   onNext,
 }: {
   stats: Stats
   flags: RedFlag[]
   solved: string[]
+  copy?: CardCopy
   onNext: () => void
 }) {
   const t = ui.investigate
+  const c = {
+    caughtBody: copy.caughtBody ?? t.caughtBody,
+    failTitle: copy.failTitle ?? t.failTitle,
+    failBody: copy.failBody ?? t.failBody,
+    tricks: copy.tricks ?? t.card.tricks,
+    missed: copy.missed ?? t.card.missed,
+  }
   const all = stats.found >= stats.total
   const [shown, setShown] = useState(false)
   const [flipped, setFlipped] = useState(false)
@@ -85,10 +103,10 @@ export function DefenseCard({
           transition={{ type: 'spring', stiffness: 300, damping: 15 }}
           className="font-display text-[clamp(1.8rem,7vw,2.6rem)] leading-none font-bold text-white [text-shadow:0_0_1.4rem_rgba(47,168,255,0.95),0_0_0.4rem_rgba(255,255,255,0.7)]"
         >
-          {all ? t.caughtTitle : t.failTitle}
+          {all ? t.caughtTitle : c.failTitle}
         </motion.p>
         <p className="mt-1.5 text-[0.92rem] text-sky/75">
-          {all ? fill(t.caughtBody, { n: stats.total }) : t.failBody}
+          {all ? fill(c.caughtBody, { n: stats.total }) : c.failBody}
         </p>
       </div>
 
@@ -184,7 +202,7 @@ export function DefenseCard({
               <div className="flex h-full flex-col text-left">
                 <div className="flex items-center gap-1.5">
                   <span className="flex-1 font-display text-[0.8em] font-bold text-[#7fd4ff]">
-                    {t.card.tricks}
+                    {c.tricks}
                   </span>
                   <span className="font-display text-[0.75em] font-bold text-white tabular-nums">
                     {trick + 1} / {flags.length}
@@ -202,7 +220,7 @@ export function DefenseCard({
                     {flag?.explain}
                   </p>
                   {!solved.includes(flag?.target ?? '') && (
-                    <p className="mt-[0.5em] text-[0.68em] font-bold text-[#ffb4b4]">{t.card.missed}</p>
+                    <p className="mt-[0.5em] text-[0.68em] font-bold text-[#ffb4b4]">{c.missed}</p>
                   )}
                 </div>
 

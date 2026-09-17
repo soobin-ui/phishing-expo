@@ -19,7 +19,8 @@ rmSync(OUT, { recursive: true, force: true })
 mkdirSync(OUT, { recursive: true })
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
-const TOPICS = ['rnd', 'job', 'family', 'agency']
+// 취업·채용(job)은 포렌식 수사라 tools/forensic_shots.mjs 에서 따로 검사합니다
+const TOPICS = ['rnd', 'family', 'agency']
 const DEVICES = [
   ['폰', 390, 844, true],
   ['탭세로', 820, 1180, true],
