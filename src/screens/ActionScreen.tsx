@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { TapButton } from '../components/Buttons'
 import { ScrollScreen } from '../components/Stage'
+import { BadgeIcon } from '../components/Cyber'
 import { fill, ui } from '../lib/content'
 
 const AUTO_RESET = 40 // 초
@@ -45,6 +46,8 @@ export function ActionScreen({
   // '무엇을 답했는가'(안전도)와 '몇 개 찾았는가'를 반씩 봅니다.
   const ratio = (safety / 100) * 0.5 + (total > 0 ? found / total : 0) * 0.5
   const grade = ratio >= 0.8 ? a.gradeHigh : ratio >= 0.45 ? a.gradeMid : a.gradeLow
+  /** 아쉬움 등급만 '미해결' 도장(빨강), 나머지는 CASE CLOSED(금색) */
+  const solved = ratio >= 0.45
 
   return (
     <ScrollScreen className="justify-center">
@@ -56,17 +59,42 @@ export function ActionScreen({
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
           className="shrink-0 text-center wide:flex wide:flex-1 wide:flex-col wide:text-left"
         >
-          <motion.p variants={rise} className="text-[1.05rem] text-white/45">
-            {a.eyebrow}
-          </motion.p>
+          {/* 수사 종료 배지 + 도장 */}
+          <motion.div variants={rise} className="flex items-center justify-center gap-3.5 wide:justify-start">
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-[#2fa8ff]/60 bg-[#0b1631] px-2.5 py-1.5 font-display text-[0.9rem] leading-none font-bold text-[#7fd4ff] shadow-[0_0_1rem_rgba(47,168,255,0.3)]">
+              <BadgeIcon />
+              {a.eyebrow}
+            </span>
+            <motion.span
+              initial={{ scale: 2.2, opacity: 0, rotate: -8 }}
+              animate={{ scale: 1, opacity: 0.95, rotate: -8 }}
+              transition={{ delay: 0.6, type: 'spring', stiffness: 420, damping: 14 }}
+              className={`inline-block rounded-md border-[3px] px-2 py-0.5 font-display text-[0.95rem] font-bold tracking-[0.08em] whitespace-nowrap ${
+                solved ? 'border-gold text-gold' : 'border-[#ff6b6b] text-[#ff6b6b]'
+              }`}
+            >
+              {solved ? a.stampClosed : a.stampOpen}
+            </motion.span>
+          </motion.div>
           <motion.p
             variants={rise}
-            className="mt-1.5 font-display text-[1.7rem] font-bold text-white wide:text-[2rem]"
+            className="mt-3 font-display text-[min(2.1rem,8vw)] leading-tight font-bold text-white [text-shadow:0_0_1.1rem_rgba(47,168,255,0.7)] wide:text-[min(2.3rem,3.4vw)]"
           >
             {grade}
           </motion.p>
-          <motion.p variants={rise} className="mt-1.5 text-[1.1rem] text-gold tabular-nums">
-            {fill(a.score, { found, total, safety: Math.round(safety) })}
+          <motion.p
+            variants={rise}
+            className="mt-2 flex items-center justify-center gap-2 text-[1.1rem] text-gold tabular-nums wide:justify-start"
+          >
+            {fill(a.score, { found, total })}
+            <span className="inline-flex gap-1" aria-hidden="true">
+              {Array.from({ length: total }, (_, i) => (
+                <span
+                  key={i}
+                  className={`h-[0.85rem] w-[0.85rem] rounded-[0.2rem] ${i < found ? 'bg-gold' : 'bg-white/15'}`}
+                />
+              ))}
+            </span>
           </motion.p>
 
           <motion.div variants={rise} className="mx-auto my-[min(1.5rem,2.5vh)] h-px w-16 bg-white/20 wide:mx-0 wide:my-6" />
