@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { EmailBody } from '../channels/MailView'
-import { TapButton } from '../components/Buttons'
 import { DefenseCard } from '../components/DefenseCard'
 import { splitByFlags } from '../lib/highlight'
 import { fill, ui } from '../lib/content'
@@ -10,7 +9,7 @@ import type { MailDoc, RedFlag, Scenario } from '../types'
 /**
  * [메일] 연구실·산학협력 — **피싱 전문 수사관** 모드.
  *
- * 브리핑 → 받은편지함 → 새로 온 메일을 열어 수상한 곳 4군데를 조사 → 잡았다 카드.
+ * (역할 소개는 첫 화면에서 끝났습니다) 받은편지함 → 새로 온 메일을 열어 수상한 곳 4군데를 조사 → 잡았다 카드.
  *
  * ★ 돋보기(조사 기회)에 개수 제한이 있습니다.
  *   제한이 없으면 "전부 눌러보면 성공"하는 다 눌러보기 게임이 됩니다.
@@ -22,7 +21,7 @@ import type { MailDoc, RedFlag, Scenario } from '../types'
  *
  * 다른 네 주제(문자·메신저·전화)는 직접 당해보는 방식입니다. 메일만 이 방식입니다.
  */
-type View = 'brief' | 'inbox' | 'mail'
+type View = 'inbox' | 'mail'
 type Pop = { flag: RedFlag; x: number; y: number; below: boolean; wrong: number | null }
 
 const PHISH = '__phish__'
@@ -44,7 +43,7 @@ export function MailScreen({
   const flags = scenario.redFlags
   const total = flags.length
 
-  const [view, setView] = useState<View>('brief')
+  const [view, setView] = useState<View>('inbox')
   const [solved, setSolved] = useState<string[]>([])
   const [used, setUsed] = useState(0)
   const [pop, setPop] = useState<Pop | null>(null)
@@ -65,9 +64,9 @@ export function MailScreen({
     ...decoys.map((d, i) => ({ id: d.id ?? `d${i}`, doc: d, phish: false })),
   ]
 
-  const showToast = (msg: string) => {
+  const showToast = (msg: string, ms = 1800) => {
     setToast(msg)
-    window.setTimeout(() => setToast(''), 1800)
+    window.setTimeout(() => setToast(''), ms)
   }
 
   /** 조사 끝 — 다 잡았거나 돋보기가 떨어졌거나 */
@@ -156,55 +155,9 @@ export function MailScreen({
       ),
     )
 
-  /** 브리핑 본문 두 줄 — 사이에 편지 그림이 들어갑니다 */
-  const briefLines = t.briefBody.split(String.fromCharCode(10))
-
   const flagOf = (target: string) => flags.find((f) => f.target === target)
   const linkFlag = flagOf('link')
   const fileFlag = flagOf('attachment')
-
-  /* ── 브리핑 ── */
-  if (view === 'brief') {
-    return (
-      <div className="flex h-full w-full flex-col items-center justify-center px-6 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-[34rem]"
-        >
-          <span className="inline-flex items-center gap-2 rounded-full bg-gold px-4 py-1.5 font-display text-[0.95rem] font-bold text-navy-deep">
-            <Magnifier className="h-[1rem] w-[1rem]" />
-            {t.badge}
-          </span>
-          <h1 className="mt-6 font-display text-[min(2.1rem,7.5vw)] leading-snug font-bold text-white">
-            {t.briefTitle}
-          </h1>
-          {/* 편지 아이콘은 이모지가 아니라 그림입니다(기종에 따라 이모지가 네모로 깨짐) */}
-          <p className="mt-4 text-[1.2rem] leading-relaxed text-white/75">
-            {briefLines[0]}
-            <Envelope />
-            <br />
-            {briefLines[1]}
-          </p>
-
-          <div className="mt-8 rounded-2xl border border-white/15 bg-white/[0.06] px-5 py-4 text-center">
-            <p className="flex items-center justify-center gap-2 font-display text-[1.1rem] font-bold text-gold">
-              <Magnifier className="h-[1.1rem] w-[1.1rem]" />
-              {fill(t.toolTitle, { n: TOOLS })}
-            </p>
-            <p className="mt-2 text-[1rem] leading-snug whitespace-pre-line text-white/70">
-              {t.toolBody}
-            </p>
-          </div>
-
-          <div className="mt-7">
-            <TapButton onClick={() => setView('inbox')}>{t.start}</TapButton>
-          </div>
-        </motion.div>
-      </div>
-    )
-  }
 
   /* ── 받은편지함 / 메일 조사 ── */
   return (
@@ -243,7 +196,12 @@ export function MailScreen({
             mails={mails}
             title={c.inbox}
             hint={c.arrive.openHint}
-            onOpen={(id) => (id === PHISH ? setView('mail') : showToast(t.openDecoy))}
+            onOpen={(id) => {
+              if (id !== PHISH) return showToast(t.openDecoy)
+              setView('mail')
+              // 브리핑이 없어졌으니 처음 열 때 돋보기 규칙을 한 번 알려 줍니다
+              if (used === 0) showToast(fill(t.toolHint, { n: TOOLS }), 3200)
+            }}
           />
         ) : (
           <div className="flex h-full min-h-0 flex-col text-[#1f2430]">
@@ -470,21 +428,6 @@ function Inbox({
         {hint}
       </p>
     </div>
-  )
-}
-
-/** 브리핑 문장 속 편지 그림 */
-function Envelope() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      className="ml-1.5 inline-block h-[1em] w-[1em] -translate-y-[0.06em] align-middle text-gold"
-      fill="currentColor"
-      aria-hidden="true"
-    >
-      <path d="M3 6.2A1.2 1.2 0 014.2 5h15.6A1.2 1.2 0 0121 6.2v.4l-9 5.2-9-5.2z" />
-      <path d="M21 8.6V17.8A1.2 1.2 0 0119.8 19H4.2A1.2 1.2 0 013 17.8V8.6l8.5 4.9a1 1 0 001 0z" />
-    </svg>
   )
 }
 

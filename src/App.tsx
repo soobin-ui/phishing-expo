@@ -2,6 +2,7 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Stage } from './components/Stage'
 import { TapButton } from './components/Buttons'
+import { IntroScreen } from './screens/IntroScreen'
 import { MenuScreen } from './screens/MenuScreen'
 import { ArriveScreen } from './screens/ArriveScreen'
 import { MailScreen } from './screens/MailScreen'
@@ -29,6 +30,7 @@ const START_TOPIC = (() => {
 
 /** 화면마다 배경 색감이 바뀝니다. 밝게 시작해서 어두워집니다. */
 const ACT_OF: Record<Step, Act> = {
+  intro: 'dark',
   menu: 'bright',
   arrive: 'dark',
   chat: 'dark',
@@ -40,14 +42,14 @@ const ACT_OF: Record<Step, Act> = {
 
 /**
  * 흐름은 한 줄기입니다.
- *   상황 고르기 → 문자 받고 직접 답장 → 넘어갔나 → 그 문자에서 3곳 찾기 → 정리
+ *   역할 소개 → 사건 고르기 → 문자 받고 직접 답장 → 넘어갔나 → 그 문자에서 3곳 찾기 → 정리
  *
  * ★ '찾기'를 앞으로 빼거나 따로 떼어내지 마세요.
  *   직접 당해본 직후여야 찾을 마음이 생깁니다.
  */
 export default function App() {
   // 링크로 주제를 정해 열면(?topic=rnd) 첫 화면을 건너뛰고 바로 그 주제가 시작됩니다 — 시연·검토용
-  const [step, setStep] = useState<Step>(() => (START_TOPIC ? 'arrive' : 'menu'))
+  const [step, setStep] = useState<Step>(() => (START_TOPIC ? 'arrive' : 'intro'))
   const [situation, setSituation] = useState(START_TOPIC)
   const [safety, setSafety] = useState(100)
   const [found, setFound] = useState(0)
@@ -72,18 +74,16 @@ export default function App() {
     setFound(0)
     setGave([])
     setHungUp(false)
-    setStep('menu')
+    setStep('intro')
   }, [])
 
   // 채팅 중에는 타이핑하느라 화면을 안 건드릴 수 있어 자동 리셋을 걸지 않습니다
   const idleRemaining = useIdleTimer({
-    enabled: step !== 'menu' && step !== 'admin' && step !== 'action' && step !== 'chat',
+    enabled: step !== 'intro' && step !== 'admin' && step !== 'action' && step !== 'chat',
     onReset: reset,
   })
 
   const start = (situationId: string) => {
-    // 전체화면 시도 (태블릿에서 주소창 숨김 — 실패해도 체험은 그대로 진행됩니다)
-    document.documentElement.requestFullscreen?.().catch(() => {})
     sessionRef.current = { id: newSessionId(), startedAt: Date.now() }
     setSituation(situationId)
     setStep('arrive')
@@ -119,6 +119,16 @@ export default function App() {
         transition={{ duration: 0.22 }}
         className="absolute inset-0"
       >
+        {step === 'intro' && (
+          <IntroScreen
+            onStart={() => {
+              // 전체화면 시도 (태블릿에서 주소창 숨김 — 실패해도 체험은 그대로 진행됩니다)
+              document.documentElement.requestFullscreen?.().catch(() => {})
+              setStep('menu')
+            }}
+          />
+        )}
+
         {step === 'menu' && <MenuScreen onPick={start} />}
 
         {step === 'arrive' && scenario.channel === 'mail' && (

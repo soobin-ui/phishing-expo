@@ -135,7 +135,20 @@ button {
   }
 }
 
+/* 첫 화면 수사 테이프 — 글자가 천천히 흘러갑니다(두 벌을 이어 붙여 끊김 없이) */
+.tape-marquee {
+  animation: tape 28s linear infinite;
+}
+@keyframes tape {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .tape-marquee {
+    animation: none;
+  }
   .spark {
     animation: none;
     opacity: 0.7;
