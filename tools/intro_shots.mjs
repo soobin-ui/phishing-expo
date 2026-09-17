@@ -48,6 +48,11 @@ for (const [label, w, h, mobile] of DEVICES) {
   await page.screenshot({ path: join(OUT, `${label}-1-intro.png`) })
   await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('수사 시작하기'))?.click())
   await wait(1000)
+  const menuFit = await page.evaluate(() => {
+    const sc = document.querySelector('[data-scroll-screen]')
+    const rows = [...document.querySelectorAll('button')].filter((b) => b.innerText.includes('CASE'))
+    return { scroll: sc ? sc.scrollHeight - sc.clientHeight : -1, rows: rows.length, last: Math.round(rows.at(-1)?.getBoundingClientRect().bottom ?? 0) }
+  })
   await page.screenshot({ path: join(OUT, `${label}-2-menu.png`) })
   await page.evaluate(() => [...document.querySelectorAll('button')].find((b) => b.innerText.includes('연구실'))?.click())
   await wait(1000)
@@ -57,7 +62,7 @@ for (const [label, w, h, mobile] of DEVICES) {
     await wait(700)
   }
   await page.screenshot({ path: join(OUT, `${label}-3-rnd.png`) })
-  const ok = fit.scroll <= 1 && !fit.wide && fit.btnBottom !== null && fit.btnBottom <= h && inbox && !errors.length
-  console.log(`${ok ? '✓' : '✗'} ${label} ${w}×${h} · 스크롤 ${fit.scroll}px · 버튼 아래끝 ${fit.btnBottom}/${h} · 연구실 바로 시작 ${inbox ? '예' : '아니오'}${errors.length ? ' · 오류 ' + errors.join(' / ') : ''}`)
+  const ok = menuFit.scroll <= 1 && menuFit.rows === 5 && fit.scroll <= 1 && !fit.wide && fit.btnBottom !== null && fit.btnBottom <= h && inbox && !errors.length
+  console.log(`${ok ? '✓' : '✗'} ${label} ${w}×${h} · 스크롤 ${fit.scroll}px · 버튼 아래끝 ${fit.btnBottom}/${h} · 사건 목록 ${menuFit.rows}개 스크롤 ${menuFit.scroll}px 마지막 ${menuFit.last}/${h} · 연구실 바로 시작 ${inbox ? '예' : '아니오'}${errors.length ? ' · 오류 ' + errors.join(' / ') : ''}`)
   await browser.close()
 }

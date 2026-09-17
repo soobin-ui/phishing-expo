@@ -31,7 +31,7 @@ const START_TOPIC = (() => {
 /** 화면마다 배경 색감이 바뀝니다. 밝게 시작해서 어두워집니다. */
 const ACT_OF: Record<Step, Act> = {
   intro: 'dark',
-  menu: 'bright',
+  menu: 'dark',
   arrive: 'dark',
   chat: 'dark',
   caught: 'dark',
