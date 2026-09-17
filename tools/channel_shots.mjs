@@ -70,9 +70,12 @@ async function run(topic, [label, w, h, mobile]) {
   }
 
   if (topic === 'rnd') {
-    // 메일 — 수사관 모드: 역할 소개는 첫 화면에서 끝났으니 받은편지함부터 바로 시작
-    await page.waitForSelector('[data-role="open-phish"]', { timeout: 10000 })
-    await wait(700)
+    // 메일 — 수사관 모드: 규칙 상자(뒤에 흐린 받은편지함) → [수사 시작하기] → 받은편지함
+    await page.waitForSelector('[data-role="rules-start"]', { timeout: 10000 })
+    await wait(1300)
+    await shot('0-rules')
+    await page.click('[data-role="rules-start"]')
+    await wait(800)
     await shot('1-inbox')
     await page.click('[data-role="open-phish"]')
     await wait(800)
