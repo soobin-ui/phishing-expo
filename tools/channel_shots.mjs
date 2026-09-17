@@ -19,7 +19,7 @@ rmSync(OUT, { recursive: true, force: true })
 mkdirSync(OUT, { recursive: true })
 
 const wait = (ms) => new Promise((r) => setTimeout(r, ms))
-const TOPICS = ['rnd', 'grant', 'job', 'family', 'agency']
+const TOPICS = ['rnd', 'job', 'family', 'agency']
 const DEVICES = [
   ['폰', 390, 844, true],
   ['탭세로', 820, 1180, true],

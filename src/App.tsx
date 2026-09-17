@@ -16,7 +16,7 @@ import { useIdleTimer } from './lib/useIdleTimer'
 import { newSessionId, saveRecord } from './lib/stats'
 import type { Act, Step } from './types'
 
-/** ?topic=rnd|journal|job|family|agency — 시연용 바로가기(키오스크는 주소에 아무것도 붙이지 않음) */
+/** ?topic=rnd|job|family|agency —시연용 바로가기(키오스크는 주소에 아무것도 붙이지 않음) */
 const START_TOPIC = (() => {
   try {
     const q = new URLSearchParams(window.location.search).get('topic')
