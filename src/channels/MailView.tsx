@@ -113,7 +113,14 @@ export function EmailBody({
         </div>
       )}
 
-      {/* 서명 */}
+      {/* 맺음말 — 본문과 같은 글자로 ("본 조치는 … 드림") */}
+      {mail.closing && (
+        <div className="mt-5 text-[1.05rem] leading-relaxed whitespace-pre-line text-[#2b3140]">
+          {render(mail.closing)}
+        </div>
+      )}
+
+      {/* 발신전용 안내·주소·저작권 — 실제 기관 메일처럼 회색 작은 글자 */}
       {mail.signature && (
         <p className="mt-6 border-t border-[#eceff4] pt-4 text-[0.9rem] leading-relaxed whitespace-pre-line text-[#8a93a5]">
           {mail.signature}

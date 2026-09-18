@@ -4,6 +4,7 @@ import { Stage } from './components/Stage'
 import { TapButton } from './components/Buttons'
 import { IntroScreen } from './screens/IntroScreen'
 import { MenuScreen } from './screens/MenuScreen'
+import { NameScreen, cleanName } from './screens/NameScreen'
 import { ArriveScreen } from './screens/ArriveScreen'
 import { MailScreen } from './screens/MailScreen'
 import { ForensicScreen } from './screens/ForensicScreen'
@@ -12,20 +13,26 @@ import { CaughtScreen } from './screens/CaughtScreen'
 import { FindScreen } from './screens/FindScreen'
 import { ActionScreen } from './screens/ActionScreen'
 import { AdminScreen } from './screens/AdminScreen'
-import { fill, scenarioFor, situations, ui } from './lib/content'
+import { fill, personalize, scenarioFor, situations, ui } from './lib/content'
 import { useIdleTimer } from './lib/useIdleTimer'
 import { newSessionId, saveRecord } from './lib/stats'
 import type { Act, Step } from './types'
 
-/** ?topic=rnd|job|family|agency —시연용 바로가기(키오스크는 주소에 아무것도 붙이지 않음) */
-const START_TOPIC = (() => {
+/**
+ * ?topic=rnd|job|family|agency  — 시연용 바로가기(키오스크는 주소에 아무것도 붙이지 않음)
+ * &name=홍길동                  — 이름 입력 화면까지 건너뛰고 바로 사건 시작
+ */
+const START = (() => {
   try {
-    const q = new URLSearchParams(window.location.search).get('topic')
-    const w = (window as { __TOPIC__?: string }).__TOPIC__
-    const id = q ?? w ?? ''
-    return situations.some((s) => s.id === id) ? id : ''
+    const q = new URLSearchParams(window.location.search)
+    const w = window as { __TOPIC__?: string; __NAME__?: string }
+    const id = q.get('topic') ?? w.__TOPIC__ ?? ''
+    return {
+      topic: situations.some((s) => s.id === id) ? id : '',
+      name: cleanName(q.get('name') ?? w.__NAME__ ?? ''),
+    }
   } catch {
-    return ''
+    return { topic: '', name: '' }
   }
 })()
 
@@ -33,6 +40,7 @@ const START_TOPIC = (() => {
 const ACT_OF: Record<Step, Act> = {
   intro: 'dark',
   menu: 'dark',
+  name: 'dark',
   arrive: 'dark',
   chat: 'dark',
   caught: 'dark',
@@ -43,15 +51,19 @@ const ACT_OF: Record<Step, Act> = {
 
 /**
  * 흐름은 한 줄기입니다.
- *   역할 소개 → 사건 고르기 → 문자 받고 직접 답장 → 넘어갔나 → 그 문자에서 3곳 찾기 → 정리
+ *   역할 소개 → 사건 고르기 → 이름 입력 → 문자 받고 직접 답장 → 넘어갔나 → 그 문자에서 수상한 문구 찾기 → 정리
  *
  * ★ '찾기'를 앞으로 빼거나 따로 떼어내지 마세요.
  *   직접 당해본 직후여야 찾을 마음이 생깁니다.
+ * ★ 이름은 시나리오 글의 {name} 자리에만 들어가고 기록에는 남기지 않습니다.
  */
 export default function App() {
-  // 링크로 주제를 정해 열면(?topic=rnd) 첫 화면을 건너뛰고 바로 그 주제가 시작됩니다 — 시연·검토용
-  const [step, setStep] = useState<Step>(() => (START_TOPIC ? 'arrive' : 'intro'))
-  const [situation, setSituation] = useState(START_TOPIC)
+  // 링크로 주제를 정해 열면(?topic=rnd) 첫 화면을 건너뜁니다 — 이름까지 주면(&name=) 바로 사건 시작
+  const [step, setStep] = useState<Step>(() =>
+    START.topic ? (START.name ? 'arrive' : 'name') : 'intro',
+  )
+  const [situation, setSituation] = useState(START.topic)
+  const [name, setName] = useState(START.name)
   const [safety, setSafety] = useState(100)
   const [found, setFound] = useState(0)
   /** 대화 중 넘겨준 것들 — 당한 직후 '이걸 넘겼습니다'로 보여줍니다 */
@@ -62,7 +74,8 @@ export default function App() {
   const sessionRef = useRef({ id: newSessionId(), startedAt: Date.now() })
   const savedRef = useRef(false)
 
-  const scenario = useMemo(() => scenarioFor(situation), [situation])
+  /** 고른 사건에 관람객 이름을 넣은 시나리오 */
+  const scenario = useMemo(() => personalize(scenarioFor(situation), name), [situation, name])
 
   /** 안전도 60 이상이거나 전화를 끊었으면 넘어가지 않은 것으로 봅니다 */
   const defended = hungUp || safety >= 60
@@ -71,6 +84,7 @@ export default function App() {
     sessionRef.current = { id: newSessionId(), startedAt: Date.now() }
     savedRef.current = false
     setSituation('')
+    setName('')
     setSafety(100)
     setFound(0)
     setGave([])
@@ -79,18 +93,29 @@ export default function App() {
   }, [])
 
   // 채팅 중에는 타이핑하느라 화면을 안 건드릴 수 있어 자동 리셋을 걸지 않습니다
+  // (이름 입력은 키 입력도 활동으로 치므로 그대로 둡니다)
+  // ★ 수사 화면(arrive)은 제한 시간이 2분이라, 메일을 읽느라 60초 손을 안 대도 리셋되면 안 됩니다
+  //   → 150초. 버려진 태블릿은 2분 종료 → 카드가 뜬 뒤 그래도 손을 안 대면 처음으로.
   const idleRemaining = useIdleTimer({
     enabled: step !== 'intro' && step !== 'admin' && step !== 'action' && step !== 'chat',
+    idleMs: step === 'arrive' ? 150_000 : 60_000,
     onReset: reset,
   })
 
-  const start = (situationId: string) => {
-    sessionRef.current = { id: newSessionId(), startedAt: Date.now() }
+  /** 사건을 고르면 먼저 이름을 받습니다 */
+  const pick = (situationId: string) => {
     setSituation(situationId)
+    setStep('name')
+  }
+
+  /** 이름을 받으면 사건 시작 — 소요시간은 여기서부터 잽니다 */
+  const begin = (who: string) => {
+    sessionRef.current = { id: newSessionId(), startedAt: Date.now() }
+    setName(who)
     setStep('arrive')
   }
 
-  /** 마무리 화면으로 넘어가면서 기록을 남깁니다(개인정보 없음 — 쓴 글은 저장하지 않습니다). */
+  /** 마무리 화면으로 넘어가면서 기록을 남깁니다(개인정보 없음 — 이름·쓴 글은 저장하지 않습니다). */
   const finish = (foundCount: number) => {
     if (!savedRef.current) {
       savedRef.current = true
@@ -130,7 +155,11 @@ export default function App() {
           />
         )}
 
-        {step === 'menu' && <MenuScreen onPick={start} />}
+        {step === 'menu' && <MenuScreen onPick={pick} />}
+
+        {step === 'name' && (
+          <NameScreen situationId={situation} onSubmit={begin} onBack={() => setStep('menu')} />
+        )}
 
         {/* 취업·채용 — 포렌식 수사(피해자 휴대폰 조사 → 증거 보드 → 검거 카드) */}
         {step === 'arrive' && situation === 'job' && (

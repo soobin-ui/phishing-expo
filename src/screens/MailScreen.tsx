@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { EmailBody } from "../channels/MailView";
 import { DefenseCard } from "../components/DefenseCard";
@@ -9,7 +10,15 @@ import type { MailDoc, RedFlag, Scenario } from "../types";
 /**
  * [메일] 연구실·산학협력 — **피싱 전문 수사관** 모드.
  *
- * 규칙 설명(받은편지함은 흐리게 뒤에 깔림) → 받은편지함 → 새로 온 메일을 열어 수상한 곳 4군데를 조사 → 잡았다 카드.
+ * 규칙 설명(받은편지함은 흐리게 뒤에 깔림) → 받은편지함 → 새로 온 메일을 열어 수상한 문구 4개를 조사 → 잡았다 카드.
+ *
+ * ★ 머리글에 '지금 할 일'을 크게 씁니다(STEP 1 메일 열기 → STEP 2 수상한 문구 4개 찾기).
+ *   작게 쓰니 아무도 못 보고 "메일만 보고 뭘 해야 할지 모르겠다"는 피드백이 왔습니다(2026-09-18).
+ *   남은 시간·찾은 문구·남은 기회도 같은 줄에 큰 숫자로.
+ *
+ * ★ 제한 시간 2분 — 수상한 메일을 여는 순간부터 잽니다.
+ *   조사 말풍선(어떻게 조사할까요?)이 떠 있는 동안과 결과 카드에서는 멈춥니다.
+ *   시간이 다 되면 그때까지 찾은 것으로 카드가 뜹니다(놓친 문구는 카드 뒷면에서 알려줌).
  *
  * ★ 돋보기(조사 기회)에 개수 제한이 있습니다.
  *   제한이 없으면 "전부 눌러보면 성공"하는 다 눌러보기 게임이 됩니다.
@@ -31,8 +40,13 @@ type Pop = {
 };
 
 const PHISH = "__phish__";
-/** 돋보기 개수 — 찾을 곳 4곳 + 헛짚을 여유 2번 */
+/** 돋보기 개수 — 찾을 문구 4개 + 헛짚을 여유 2번 */
 const TOOLS = 6;
+/** 제한 시간(초) — 수상한 메일을 연 순간부터 */
+const TIME_LIMIT = 120;
+
+const mmss = (s: number) =>
+  `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
 export function MailScreen({
   scenario,
@@ -70,6 +84,13 @@ export function MailScreen({
   const paneRef = useRef<HTMLElement>(null);
   const done = useRef(false);
 
+  /** 제한 시간 — 수상한 메일을 열면 시작, 말풍선·카드 동안은 멈춤 */
+  const [started, setStarted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
+  const [timedOut, setTimedOut] = useState(false);
+  const low = timeLeft <= 30;
+  const running = started && !card && !pop && !timedOut;
+
   const left = TOOLS - used;
   const decoys = scenario.inbox ?? [];
   const mails: Array<{ id: string; doc: MailDoc; phish: boolean }> = [
@@ -82,13 +103,30 @@ export function MailScreen({
     window.setTimeout(() => setToast(""), ms);
   };
 
-  /** 조사 끝 — 다 잡았거나 돋보기가 떨어졌거나 */
+  /** 조사 끝 — 다 잡았거나, 돋보기가 떨어졌거나, 시간이 다 됐거나 */
   const finish = (foundCount: number) => {
     if (done.current) return;
     done.current = true;
     onReply(-15 * (total - foundCount), null);
     setCard(true);
   };
+
+  useEffect(() => {
+    if (!running) return;
+    const id = window.setInterval(
+      () => setTimeLeft((v) => Math.max(0, v - 1)),
+      1000,
+    );
+    return () => window.clearInterval(id);
+  }, [running]);
+
+  useEffect(() => {
+    if (timeLeft > 0 || !started || done.current) return;
+    setTimedOut(true);
+    showToast(t.timeoutToast, 1300);
+    window.setTimeout(() => finish(solved.length), 1200);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft]);
 
   /** 돋보기 한 개 쓰기 — 누른 자리에 남은 개수를 띄웁니다 */
   const spend = (e?: { clientX: number; clientY: number }): number => {
@@ -114,7 +152,7 @@ export function MailScreen({
     el: HTMLElement,
     at?: { clientX: number; clientY: number },
   ) => {
-    if (pop || card || solved.includes(flag.target)) return;
+    if (pop || card || timedOut || solved.includes(flag.target)) return;
     const pane = paneRef.current?.getBoundingClientRect();
     if (!pane) return;
     const r = el.getBoundingClientRect();
@@ -132,7 +170,7 @@ export function MailScreen({
 
   /** 수상하지 않은 곳을 눌렀을 때 — 돋보기만 닳습니다 */
   const tapMiss = (at?: { clientX: number; clientY: number }) => {
-    if (pop || card) return;
+    if (pop || card || timedOut) return;
     const remain = spend(at);
     setMisses((m) => m + 1);
     setMiss(true);
@@ -163,9 +201,10 @@ export function MailScreen({
         <span
           key={i}
           onClick={(e) => tapFlag(seg.flag!, e.currentTarget, e)}
-          className={`cursor-pointer rounded px-0.5 ${
+          // ★ 찾기 전에는 여백을 주지 않습니다 — 틈이 생기면 "있음 을"처럼 보이고 자리가 새어 나갑니다
+          className={`cursor-pointer rounded ${
             solved.includes(seg.flag.target)
-              ? "bg-red-100 font-bold text-red-700 underline decoration-red-400 decoration-2"
+              ? "bg-red-100 px-0.5 font-bold text-red-700 underline decoration-red-400 decoration-2"
               : ""
           }`}
         >
@@ -191,26 +230,92 @@ export function MailScreen({
           rules ? "pointer-events-none blur-[6px] select-none" : ""
         }`}
       >
-        <header className="shrink-0 px-5 pt-[max(0.9rem,2vh)] pb-3">
-          <div className="mx-auto flex w-full max-w-[62rem] items-center gap-3">
+        <header className="shrink-0 px-4 pt-[max(0.7rem,1.4vh)] pb-2.5">
+          <div className="mx-auto flex w-full max-w-[62rem] flex-col gap-2.5 wide:flex-row wide:items-center wide:gap-5">
+            {/* 지금 할 일 — 크게. 받은편지함에서는 '메일 열기', 메일 안에서는 '수상한 문구 찾기' */}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[0.95rem] font-semibold text-sky">
-                {fill(t.goal, { n: total })}
+              <p className="font-display text-[0.78rem] font-bold tracking-[0.16em] text-[#6f93c4] tabular-nums">
+                {fill(t.step, { n: view === "inbox" ? 1 : 2 })}
               </p>
-              <p className="mt-0.5 text-[0.85rem] text-white/45 tabular-nums">
-                {fill(t.progress, { found: solved.length, total })}
+              <motion.h2
+                key={view}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-0.5 font-display text-[clamp(1.2rem,4.4vw,1.65rem)] leading-tight font-bold text-white [text-shadow:0_0_1rem_rgba(47,168,255,0.55)]"
+              >
+                <Strong
+                  text={view === "inbox" ? t.openGoal : fill(t.goal, { n: total })}
+                />
+              </motion.h2>
+              <p className="mt-0.5 text-[0.95rem] leading-snug text-white/60">
+                {view === "inbox" ? t.openSub : t.goalSub}
               </p>
             </div>
-            <div
-              className="flex shrink-0 items-center gap-1"
-              aria-label={fill(t.left, { n: left })}
-            >
-              {Array.from({ length: TOOLS }, (_, i) => (
-                <Magnifier
-                  key={i}
-                  className={`h-[1.3rem] w-[1.3rem] ${i < left ? "text-gold" : "text-white/15"}`}
-                />
-              ))}
+
+            {/* 남은 시간 · 찾은 문구 · 남은 기회 — 큰 숫자 */}
+            <div className="flex shrink-0 items-stretch gap-2">
+              <Stat label={t.time} low={low && started}>
+                <motion.b
+                  animate={low && running ? { scale: [1, 1.08, 1] } : { scale: 1 }}
+                  transition={
+                    low && running
+                      ? { duration: 1, repeat: Infinity, ease: "easeInOut" }
+                      : { duration: 0.2 }
+                  }
+                  data-role="timer"
+                  className={`mt-0.5 font-display text-[1.9rem] leading-none font-bold tabular-nums ${
+                    low && started ? "text-[#ff8080]" : "text-white"
+                  }`}
+                >
+                  {mmss(timeLeft)}
+                </motion.b>
+                <span className="mt-1.5 h-[0.3rem] w-full overflow-hidden rounded-full bg-white/12">
+                  <span
+                    className={`block h-full rounded-full transition-[width] duration-1000 ease-linear ${
+                      low && started ? "bg-[#ff8080]" : "bg-gold"
+                    }`}
+                    style={{ width: `${(timeLeft / TIME_LIMIT) * 100}%` }}
+                  />
+                </span>
+              </Stat>
+
+              <Stat label={t.progressLabel}>
+                <b
+                  data-role="found-count"
+                  className="mt-0.5 font-display text-[1.9rem] leading-none font-bold text-gold tabular-nums"
+                >
+                  {solved.length}
+                  <span className="text-[1rem] font-bold text-white/50"> / {total}</span>
+                </b>
+                <span className="mt-2 flex gap-1" aria-hidden="true">
+                  {Array.from({ length: total }, (_, i) => (
+                    <span
+                      key={i}
+                      className={`h-[0.5rem] w-[0.5rem] rounded-full ${
+                        i < solved.length ? "bg-gold" : "bg-white/20"
+                      }`}
+                    />
+                  ))}
+                </span>
+              </Stat>
+
+              <Stat label={t.chances}>
+                <b className="mt-0.5 font-display text-[1.9rem] leading-none font-bold text-white tabular-nums">
+                  {left}
+                  <span className="text-[1rem] font-bold text-white/50"> / {TOOLS}</span>
+                </b>
+                <span
+                  className="mt-1.5 flex gap-[0.15rem]"
+                  aria-label={fill(t.left, { n: left })}
+                >
+                  {Array.from({ length: TOOLS }, (_, i) => (
+                    <Magnifier
+                      key={i}
+                      className={`h-[0.95rem] w-[0.95rem] ${i < left ? "text-gold" : "text-white/15"}`}
+                    />
+                  ))}
+                </span>
+              </Stat>
             </div>
           </div>
         </header>
@@ -231,6 +336,7 @@ export function MailScreen({
               onOpen={(id) => {
                 if (id !== PHISH) return showToast(t.openDecoy);
                 setView("mail");
+                setStarted(true); // 여기서부터 2분
               }}
             />
           ) : (
@@ -286,6 +392,7 @@ export function MailScreen({
                 }}
                 flags={flags}
                 solved={solved}
+                copy={timedOut ? { failBody: t.timeout } : undefined}
                 onNext={() => onSolved(solved.length)}
               />
             )}
@@ -370,7 +477,9 @@ function Rules({ total, onStart }: { total: number; onStart: () => void }) {
                 {icons[i]}
               </span>
               <span className="min-w-0 flex-1 text-[1.08rem] leading-snug text-white/85">
-                <Strong text={fill(step, { n: total, tools: TOOLS })} />
+                <Strong
+                  text={fill(step, { n: total, tools: TOOLS, min: TIME_LIMIT / 60 })}
+                />
               </span>
             </li>
           ))}
@@ -406,6 +515,32 @@ function Rules({ total, onStart }: { total: number; onStart: () => void }) {
         </button>
       </motion.div>
     </motion.div>
+  );
+}
+
+/** 머리글의 숫자 상자 한 칸 — 남은 시간 / 찾은 문구 / 남은 기회. 시간이 얼마 안 남으면 붉게 */
+function Stat({
+  label,
+  low = false,
+  children,
+}: {
+  label: string;
+  low?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={`flex min-w-0 flex-1 flex-col items-center justify-center rounded-xl border px-2 py-1.5 transition-colors wide:min-w-[7.5rem] wide:flex-none ${
+        low
+          ? "border-red-400/70 bg-red-500/15"
+          : "border-[#2fa8ff]/40 bg-[#0b1631]/85"
+      }`}
+    >
+      <span className="text-[0.72rem] font-semibold tracking-wide text-white/55">
+        {label}
+      </span>
+      {children}
+    </div>
   );
 }
 

@@ -2,7 +2,8 @@
  * 화면 흐름 — 한 줄기입니다.
  *
  *   [-] intro  역할 소개 — 당신은 피싱 전문 수사관입니다
- *   [0] menu   체험할 주제(사건)를 고른다 — 고르면 바로 시작
+ *   [0] menu   체험할 주제(사건)를 고른다
+ *   [0'] name  이름을 입력한다 — 시나리오 글의 {name} 자리에 들어간다(저장 안 함)
  *   [1] chat   문자가 오고, 직접 답장을 타이핑한다
  *   [2] caught 넘어갔는지 / 안 넘어갔는지
  *   [3] find   ★ 방금 그 문자에서 수상한 곳 3군데를 찾는다
@@ -14,6 +15,7 @@
 export type Step =
   | 'intro' // 첫 화면 — 역할 소개
   | 'menu'
+  | 'name' // 이름 입력 — 사건 브리핑 전
   | 'arrive' // 도착 화면(받은편지함·알림·울리는 전화) — 관람객이 직접 엶
   | 'chat'
   | 'caught'
@@ -72,6 +74,9 @@ export interface MailDoc {
   body?: string
   link?: { label: string; url: string }
   attachment?: { name: string; meta: string }
+  /** 링크·첨부 아래에 오는 맺음말(본문과 같은 글자) — "본 조치는 … 드림" */
+  closing?: string
+  /** 맨 아래 회색 안내 블록 — 발신전용 안내·주소·저작권 */
   signature?: string
 }
 
@@ -98,7 +103,9 @@ export interface Scenario {
   link?: { label: string; url: string }
   /** 첨부파일 카드 (mail) */
   attachment?: { name: string; meta: string }
-  /** 본문 아래 서명 블록 (mail) */
+  /** 링크·첨부 아래 맺음말 (mail) */
+  closing?: string
+  /** 맨 아래 회색 안내 블록 (mail) */
   signature?: string
   /** 메일 도착 시각 표시 (mail) */
   time?: string

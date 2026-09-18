@@ -5,7 +5,7 @@ import mascot2 from '../assets/mascot2.webp'
 import { EventPill, TapButton } from '../components/Buttons'
 import { ScrollScreen } from '../components/Stage'
 import { ui } from '../lib/content'
-import { BadgeIcon, CautionTape, CyberBackdrop, Magnifier, MailIcon, PhoneIcon, SmsIcon } from '../components/Cyber'
+import { CautionTape, CyberBackdrop, Magnifier, MailIcon, PhoneIcon, SmsIcon } from '../components/Cyber'
 
 const rise = {
   hidden: { opacity: 0, y: 18 },
@@ -24,6 +24,7 @@ const stagger = {
  * [수사 시작하기] → 사건(주제) 고르기 → 고르면 바로 시작.
  *
  * ★ 행사 이름(알약)은 첫 화면에 꼭 보여야 합니다. 빼지 마세요.
+ * ★ '피싱 전문 수사관' 뱃지는 제목과 중복이라 뺐습니다(2026-09-18 피드백). 다시 넣지 마세요.
  * ★ 캐릭터는 QR 페이지의 두 친구 그대로입니다(돋보기 든 친구가 수사관 역할).
  * ★ 이모지 금지 — 아이콘은 모두 SVG 로 그립니다.
  *
@@ -62,17 +63,9 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
               <ZoneTitle />
             </motion.div>
 
-            <motion.span
-              variants={rise}
-              className="mt-[min(0.6rem,1vh)] inline-flex items-center gap-2 rounded-md border border-[#2fa8ff]/60 bg-[#0b1631] px-3 py-1.5 font-display text-[0.95rem] font-bold tracking-[0.02em] text-[#7fd4ff] shadow-[0_0_1rem_rgba(47,168,255,0.35)] wide:mt-6"
-            >
-              <BadgeIcon />
-              {t.badge}
-            </motion.span>
-
             <motion.h1
               variants={rise}
-              className="mt-[min(0.9rem,1.6vh)] font-display text-[min(2.25rem,8.2vw)] leading-[1.25] font-bold text-white [text-shadow:0_0_1.2rem_rgba(47,168,255,0.75)] wide:text-[min(2.7rem,4.2vw)]"
+              className="mt-[min(1.2rem,2.2vh)] font-display text-[min(2.25rem,8.2vw)] leading-[1.25] font-bold text-white [text-shadow:0_0_1.2rem_rgba(47,168,255,0.75)] wide:mt-7 wide:text-[min(2.7rem,4.2vw)]"
             >
               {t.title}
             </motion.h1>

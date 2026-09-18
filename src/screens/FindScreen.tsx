@@ -83,8 +83,9 @@ export function FindScreen({
         <span
           key={i}
           onClick={() => tapFlag(seg.flag!)}
-          className={`cursor-pointer rounded px-0.5 ${
-            showAnswer(seg.flag) ? (dark ? FOUND_DARK : FOUND_LIGHT) : ''
+          // 찾기 전에는 여백 없음 — 틈이 생기면 수상한 자리가 새어 나갑니다
+          className={`cursor-pointer rounded ${
+            showAnswer(seg.flag) ? `px-0.5 ${dark ? FOUND_DARK : FOUND_LIGHT}` : ''
           }`}
         >
           {seg.text}
@@ -112,10 +113,19 @@ export function FindScreen({
             ? ui.find.timeUp
             : fill(defended ? ui.find.titleSafe : ui.find.title, { n: total, medium })}
       </motion.h2>
-      <p className="mt-2 text-[1.15rem] font-semibold text-gold tabular-nums">
-        {fill(ui.find.found, { n: found.length, total })}
+      <p className="mt-2 flex items-center justify-center gap-4 wide:justify-start">
+        <span className="text-[1.15rem] font-semibold text-gold tabular-nums">
+          {fill(ui.find.found, { n: found.length, total })}
+        </span>
+        {/* 남은 시간 — 작게 두면 아무도 못 봅니다. 크게, 10초 남으면 붉게 */}
         {!done && (
-          <span className="ml-3 text-white/40">{fill(ui.find.hintTime, { n: left })}</span>
+          <span
+            className={`font-display text-[1.7rem] leading-none font-bold tabular-nums ${
+              left <= 10 ? 'text-[#ff8080]' : 'text-white/85'
+            }`}
+          >
+            {fill(ui.find.hintTime, { n: left })}
+          </span>
         )}
       </p>
     </div>
