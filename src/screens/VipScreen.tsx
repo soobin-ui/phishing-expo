@@ -9,25 +9,22 @@ import type { RedFlag, Scenario } from '../types'
 /**
  * [4번 기관·기업 사칭] 가짜 통신사 'KTT' VIP 초청 사이트.
  *
- * ★ 3번 스미싱과 같은 '직접 피해자가 되어 보는' 체험입니다(2026-09-18 사용자 결정).
- *   수상한 곳을 찾는 게 아니라, 본인확인부터 결제까지 **실제로 다 해보고** 그 결말(해외결제·명의도용)을 겪습니다.
+ * ★ 3번 스미싱과 같은 '직접 피해자가 되어 보는' 선택형 체험입니다(2026-09-18 사용자 결정).
+ *   사건 브리핑(3번과 같은 상자) → KTT VIP 멤버십 페이지 + VIP 초청 팝업에서 **직접 선택**:
+ *     ① VIP 초청 확인하기 → 본인확인(직접 입력) → 초청석 확보 → 보증금 5만원 결제(직접 입력)
+ *        → 초청 완료 → 해외결제·명의도용 알림 폭탄 → **피해 화면** → [다시 해보기] → 팝업으로
+ *     ② 공식 고객센터에 먼저 확인하기 → 가짜로 판명 → 사이트 닫기·신고 → **검거 완료 카드**  ← 정답
+ *     ③ 팝업 닫고 그냥 보기 → 잠시 뒤 초청 팝업이 다시 뜸(무시만으로는 안 끝남)
  *
- *   사건 브리핑(1번과 같은 상자) → KTT 홈페이지 + VIP INVITATION 팝업
- *     ├─ [VIP 초청 확인하기] → ① 본인확인(주민번호 전체) → ② 초청석 확보(타이머·자동배정 압박)
- *     │    → ③ 예약 보증금 5만원 결제(카드 전부) → 초청 완료 빵빠레 → 해외결제·새 기기 로그인 알림 폭탄
- *     │    → **피해 화면**(넘긴 정보 목록 + 교훈) → [다시 해보기] → 팝업으로
- *     └─ [이 초청이 진짜인지 확인] → 공식 고객센터에 물어봄 → 가짜로 드러남 → 사이트 닫기·신고
- *          → 위험 차단 → [다음] → **검거 완료 카드**(1·2·3번과 같은 DefenseCard, 뒷면 옆에 그 사이트 다시 보기)
- *
- * ★ 결제까지 가도 끝이 아니라 피해를 보여 주고 다시 고르게 합니다. 결제 전에 멈추고 확인해야 검거 카드로 갑니다.
- * ★ 입력칸은 누르면 체험용 가상값이 자동으로 채워집니다 — 실제 주민번호·카드번호를 치는 일은 없고, 저장·전송도 없습니다.
- * ★ KTT · 스페셜 T 는 지어낸 이름입니다(실존 통신사 금지). 콘서트만 사용자 지시로 임영웅 IM HERO THE STADIUM 2 를 씁니다(글자만, 포스터 이미지 없음).
+ * ★ 본인확인·결제 입력칸은 관람객이 직접 칩니다(체험용이라 아무 숫자나). 화면 상태로만 있다가 사라지며 저장·전송하지 않습니다.
+ * ★ KTT · 스페셜 T 는 지어낸 이름입니다(실존 통신사 금지). 콘서트만 사용자 지시로 임영웅 IM HERO THE STADIUM 2 를 씀.
+ *   ★ 실제 포스터의 사진·로고는 복제하지 않고, 무대 조명 + 얼굴이 보이지 않는 일반 실루엣 + 공연명 글자로 새로 그림.
  * ★ 이모지 금지 — 아이콘·빵빠레 모두 SVG/도형.
  */
 type Stage = 'home' | 'verify' | 'seat' | 'pay' | 'done'
 type Phase = 'none' | 'damage' | 'safe' | 'card'
 
-/** 가짜 사이트가 띄우는 마감 타이머(초) — 압박 연출용(찾는 대상 아님) */
+/** 가짜 사이트가 띄우는 마감 타이머(초) — 압박 연출용 */
 const SITE_LIMIT = 180
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
@@ -39,18 +36,18 @@ export function VipScreen({
 }: {
   scenario: Scenario
   name: string
-  /** 정보를 넘기면 안전도를 깎습니다(마무리 화면 안전도에 반영) */
   onReply: (delta: number, gave: string | null) => void
   onSolved: (foundCount: number) => void
 }) {
   const flags = scenario.redFlags
 
-  const [rules, setRules] = useState(true)
+  const [brief, setBrief] = useState(true)
   const [stage, setStage] = useState<Stage>('home')
   const [phase, setPhase] = useState<Phase>('none')
+  const [popupOpen, setPopupOpen] = useState(true)
+  const [nagging, setNagging] = useState(false)
   const [siteLeft, setSiteLeft] = useState(SITE_LIMIT)
   const [alerts, setAlerts] = useState(0)
-  /** 끝까지 결제해서 당한 횟수 · 그동안 넘긴 정보 — 검거 카드 별점에 씁니다 */
   const [falls, setFalls] = useState(0)
   const [gave, setGave] = useState<string[]>([])
   const timers = useRef<number[]>([])
@@ -80,20 +77,30 @@ export function VipScreen({
     later(() => setPhase('damage'), 1700 + n * 360 + 1400)
   }
 
-  /** [다시 해보기] — 팝업(홈)으로 돌아갑니다. 넘긴 정보·당한 횟수는 그대로 두어 카드 별점에 반영 */
+  /** [다시 해보기] — 팝업(홈)으로 돌아갑니다 */
   const retry = () => {
     setPhase('none')
     setStage('home')
     setAlerts(0)
     setSiteLeft(SITE_LIMIT)
+    setPopupOpen(true)
+  }
+
+  /** ③ 팝업 닫고 그냥 보기 — 잠시 뒤 다시 뜹니다(무시만으로는 안 끝남) */
+  const closePopup = () => {
+    setPopupOpen(false)
+    later(() => {
+      setNagging(true)
+      setPopupOpen(true)
+    }, 3500)
   }
 
   return (
     <div className="relative h-full w-full">
       <div
-        aria-hidden={rules}
+        aria-hidden={brief}
         className={`flex h-full w-full flex-col transition-[filter] duration-500 ${
-          rules ? 'pointer-events-none blur-[6px] select-none' : ''
+          brief ? 'pointer-events-none blur-[6px] select-none' : ''
         }`}
       >
         {/* 브라우저 창 — 화면을 꽉 채웁니다(실제 사이트처럼) */}
@@ -114,14 +121,30 @@ export function VipScreen({
             </div>
           </div>
 
-          {/* 가짜 마감 타이머 — 본인확인부터 상단에 계속(압박 연출) */}
+          {/* 가짜 마감 타이머 — 본인확인부터 상단에 계속 · 크게 · 계속 반짝(거슬리게) */}
           {stage !== 'home' && stage !== 'done' && (
-            <div className="flex shrink-0 items-center justify-center gap-3 bg-[#d4143a] px-3 py-2 text-[1rem] font-bold text-white">
+            <motion.div
+              animate={{ backgroundColor: ['#d4143a', '#ff2350', '#d4143a'] }}
+              transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
+              className="flex shrink-0 items-center justify-center gap-3 px-3 py-2.5 text-white"
+            >
               <ClockIcon />
-              <span>{vip.site.bar.label}</span>
-              <b className={`font-display text-[1.25rem] tabular-nums ${siteLeft <= 60 ? 'timer-shake' : ''}`}>{mmss(siteLeft)}</b>
-              <span className="rounded-full bg-white/20 px-2 py-0.5 text-[0.9rem]">{fill(vip.site.bar.seats, { n: seats })}</span>
-            </div>
+              <span className="text-[1.05rem] font-bold">{vip.site.bar.label}</span>
+              <motion.b
+                animate={{ scale: [1, 1.18, 1], opacity: [1, 0.55, 1] }}
+                transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
+                className="font-display text-[2rem] leading-none font-black tabular-nums [text-shadow:0_0_0.6rem_rgba(255,255,255,0.7)]"
+              >
+                {mmss(siteLeft)}
+              </motion.b>
+              <motion.span
+                animate={{ opacity: [1, 0.4, 1] }}
+                transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
+                className="rounded-full bg-white px-2.5 py-1 text-[0.95rem] font-bold text-[#d4143a]"
+              >
+                {fill(vip.site.bar.seats, { n: seats })}
+              </motion.span>
+            </motion.div>
           )}
 
           <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
@@ -148,13 +171,15 @@ export function VipScreen({
             {stage === 'done' && <Done name={name} />}
           </div>
 
-          {/* VIP INVITATION 팝업 — 홈에서만 */}
+          {/* VIP 초청 팝업 — 홈에서만. 여기서 직접 선택합니다 */}
           <AnimatePresence>
-            {stage === 'home' && phase === 'none' && !rules && (
+            {stage === 'home' && phase === 'none' && !brief && popupOpen && (
               <Invitation
                 name={name}
+                nagging={nagging}
                 onOpen={() => setStage('verify')}
                 onSafe={() => setPhase('safe')}
+                onClose={closePopup}
               />
             )}
           </AnimatePresence>
@@ -165,9 +190,7 @@ export function VipScreen({
       </div>
 
       {/* 피해 화면 — 결제까지 갔을 때 */}
-      <AnimatePresence>
-        {phase === 'damage' && <DamageScene gave={gave} onRetry={retry} />}
-      </AnimatePresence>
+      <AnimatePresence>{phase === 'damage' && <DamageScene gave={gave} onRetry={retry} />}</AnimatePresence>
 
       {/* 먼저 확인하기 — 공식 고객센터 확인 → 위험 차단 */}
       <AnimatePresence>{phase === 'safe' && <SafeScene onDone={() => setPhase('card')} />}</AnimatePresence>
@@ -179,7 +202,6 @@ export function VipScreen({
             stats={{
               found: flags.length,
               total: flags.length,
-              // 보안 대응력 — 결제까지 당한 횟수만큼 / 정보 보호력 — 넘긴 정보 개수만큼 / 악성 차단력 — 한 번도 결제 안 했으면 만점
               wrongs: falls * 2,
               misses: gave.length,
               blocked: falls > 0 ? 0 : 2,
@@ -187,13 +209,13 @@ export function VipScreen({
             flags={flags}
             solved={flags.map((f) => f.target)}
             copy={vip.card}
-            review={(flag) => <ReviewSite flag={flag} who={name} />}
+            review={(flag) => <ReviewSite flag={flag} />}
             onNext={() => onSolved(flags.length)}
           />
         )}
       </AnimatePresence>
 
-      <AnimatePresence>{rules && <Rules onStart={() => setRules(false)} />}</AnimatePresence>
+      <AnimatePresence>{brief && <Brief name={name} onStart={() => setBrief(false)} />}</AnimatePresence>
     </div>
   )
 }
@@ -205,7 +227,6 @@ function SiteHeader() {
   const s = vip.site
   return (
     <div className="shrink-0 border-b border-[#eef0f4] bg-white">
-      {/* 상단 유틸바 — 기업·공공 | 소상공인 | 회사소개 */}
       <div className="mx-auto flex max-w-[70rem] items-center justify-end gap-2.5 px-4 pt-2 text-[0.76rem] font-semibold text-[#6b7386]" aria-hidden="true">
         {s.utility.map((u, i) => (
           <span key={u} className="flex items-center gap-2.5">
@@ -217,7 +238,6 @@ function SiteHeader() {
           </span>
         ))}
       </div>
-      {/* 로고 + GNB + 아이콘 */}
       <div className="mx-auto flex max-w-[70rem] items-center gap-5 px-4 py-2.5">
         <b className="font-display text-[1.7rem] leading-none font-black tracking-tight text-[#e01a3c] lowercase">{s.brand}</b>
         <nav className="ml-2 hidden flex-1 items-center gap-6 text-[1rem] font-bold text-[#2a3040] wide:flex" aria-hidden="true">
@@ -228,15 +248,10 @@ function SiteHeader() {
           ))}
         </nav>
         <span className="ml-auto flex items-center gap-3.5 text-[#3a4256]" aria-hidden="true">
-          {/* 로그인 */}
           <svg viewBox="0 0 24 24" className="h-[1.3rem] w-[1.3rem]" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          {/* 검색 */}
           <svg viewBox="0 0 24 24" className="h-[1.3rem] w-[1.3rem]" fill="none" stroke="currentColor" strokeWidth="1.9"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-          {/* 상담 */}
           <svg viewBox="0 0 24 24" className="hidden h-[1.3rem] w-[1.3rem] wide:block" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M4 13a8 8 0 0116 0M4 13v3a2 2 0 002 2M20 13v3a2 2 0 01-2 2h-3" strokeLinecap="round" /></svg>
-          {/* 장바구니 */}
           <svg viewBox="0 0 24 24" className="h-[1.3rem] w-[1.3rem]" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M6 6h15l-1.5 9h-12z M6 6L5 3H3M9 20a1 1 0 100-2 1 1 0 000 2zM18 20a1 1 0 100-2 1 1 0 000 2z" strokeLinecap="round" strokeLinejoin="round" /></svg>
-          {/* 햄버거 */}
           <svg viewBox="0 0 24 24" className="h-[1.4rem] w-[1.4rem]" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7h16M4 12h16M4 17h16" strokeLinecap="round" /></svg>
         </span>
       </div>
@@ -249,11 +264,9 @@ function Home() {
   const s = vip.site
   return (
     <div className="bg-white pb-8">
-      {/* 히어로 — 연한 복숭아·크림 그라데이션 */}
       <div className="relative overflow-hidden bg-[linear-gradient(180deg,#f6dfe0_0%,#faeede_55%,#ffffff_100%)] px-4 pt-3 pb-12 text-center">
         <div className="pointer-events-none absolute -left-10 top-8 h-48 w-48 rounded-full bg-white/40" aria-hidden="true" />
         <div className="pointer-events-none absolute right-4 top-2 h-40 w-40 rounded-full bg-white/30" aria-hidden="true" />
-        {/* 브레드크럼 */}
         <div className="relative mx-auto flex max-w-[64rem] items-center justify-end gap-1.5 text-[0.8rem] text-[#8a7f7a]" aria-hidden="true">
           <svg viewBox="0 0 24 24" className="h-[0.9rem] w-[0.9rem]" fill="none" stroke="currentColor" strokeWidth="1.9"><path d="M4 11l8-7 8 7M6 10v9h12v-9" strokeLinecap="round" strokeLinejoin="round" /></svg>
           {s.breadcrumb.map((b, i) => (
@@ -268,13 +281,11 @@ function Home() {
       </div>
 
       <div className="mx-auto max-w-[64rem] px-4">
-        {/* VVIP 초이스 / VIP 초이스 탭 */}
         <div className="-mt-6 grid grid-cols-2 overflow-hidden rounded-lg shadow-[0_0.3rem_1rem_rgba(20,30,60,0.12)]" aria-hidden="true">
           <div className="border-2 border-[#e01a3c] bg-white py-3.5 text-center font-display text-[1.15rem] font-bold text-[#e01a3c]">{s.tabs[0]}</div>
           <div className="bg-[#7c8291] py-3.5 text-center font-display text-[1.15rem] font-bold text-white">{s.tabs[1]}</div>
         </div>
 
-        {/* VVIP 초이스란? 표 */}
         <h3 className="mt-8 font-display text-[1.4rem] font-black text-[#1c1f2a]">{s.tableTitle}</h3>
         <div className="mt-3 border-t-2 border-[#2a3040]">
           <div className="grid grid-cols-[0.8fr_1.6fr_1.4fr] bg-[#eef0f4] text-center text-[0.95rem] font-bold text-[#3a4256]">
@@ -295,7 +306,6 @@ function Home() {
           </div>
         </div>
 
-        {/* 각주 */}
         <ul className="mt-4 flex flex-col gap-1.5">
           {s.notes.map((n, i) => (
             <li key={i} className="flex gap-1.5 text-[0.82rem] leading-snug text-[#8a93a6]">
@@ -306,7 +316,6 @@ function Home() {
         </ul>
       </div>
 
-      {/* 푸터 */}
       <div className="mx-auto mt-8 max-w-[64rem] border-t border-[#e3e6ee] px-4 pt-4">
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-[0.8rem] font-semibold text-[#5a6377]" aria-hidden="true">
           {s.footer.links.map((l) => (
@@ -323,59 +332,107 @@ function Home() {
   )
 }
 
-/** VIP INVITATION — 검정·금색 초청장 팝업 (진짜 확인 vs 먼저 확인) */
-function Invitation({ name, onOpen, onSafe }: { name: string; onOpen: () => void; onSafe: () => void }) {
+/** VIP 초청 팝업 — 여기서 직접 선택합니다(3번의 선택지와 같은 역할) */
+function Invitation({
+  name,
+  nagging,
+  onOpen,
+  onSafe,
+  onClose,
+}: {
+  name: string
+  nagging: boolean
+  onOpen: () => void
+  onSafe: () => void
+  onClose: () => void
+}) {
   const p = vip.popup
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="absolute inset-0 z-20 flex items-center justify-center bg-black/55 px-5 py-4"
+      className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 px-4 py-4"
     >
       <motion.div
-        initial={{ opacity: 0, scale: 0.8, y: 30 }}
+        initial={{ opacity: 0, scale: 0.82, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.5 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 20, delay: nagging ? 0 : 0.4 }}
         role="dialog"
         data-role="vip-popup"
-        className="no-scrollbar max-h-full w-full max-w-[25rem] overflow-y-auto rounded-2xl border border-[#d8b35a] bg-gradient-to-b from-[#16120a] to-[#0a0806] px-5 py-6 text-center text-white shadow-[0_0_2.4rem_rgba(216,179,90,0.45)]"
+        className="no-scrollbar relative max-h-full w-full max-w-[24rem] overflow-y-auto rounded-2xl border border-[#d8b35a] bg-gradient-to-b from-[#16120a] to-[#0a0806] px-5 pb-5 pt-9 text-center text-white shadow-[0_0_2.4rem_rgba(216,179,90,0.5)]"
       >
+        {/* 닫기 */}
+        <button
+          type="button"
+          data-role="vip-close"
+          onClick={onClose}
+          aria-label={vip.popup.close}
+          className="absolute right-3 top-3 flex h-[2rem] w-[2rem] items-center justify-center rounded-full text-white/60 active:bg-white/10"
+        >
+          <svg viewBox="0 0 24 24" className="h-[1.2rem] w-[1.2rem]" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" /></svg>
+        </button>
+
+        {nagging && (
+          <p className="mb-1 font-display text-[0.9rem] font-bold text-[#ff8a9c]">{vip.nag.eyebrow}</p>
+        )}
         <p className="font-display text-[0.95rem] font-bold tracking-[0.42em] text-[#e6c77a]">{p.eyebrow}</p>
         <div className="mx-auto mt-2 h-px w-[60%] bg-gradient-to-r from-transparent via-[#d8b35a] to-transparent" />
-        <p className="mt-4 font-display text-[1.35rem] leading-snug font-bold">{fill(p.hello, { name })}</p>
-        <p className="mt-1.5 text-[1rem] leading-snug text-white/80">{p.selected}</p>
+        <p className="mt-3.5 font-display text-[1.3rem] leading-snug font-bold">{fill(p.hello, { name })}</p>
+        <p className="mt-1.5 text-[0.98rem] leading-snug text-white/80">{p.selected}</p>
 
-        {/* 콘서트 포스터 — 오리지널 그래픽(실제 포스터 사진·로고를 쓰지 않고 무대 조명+일반 실루엣으로 새로 그림) */}
-        <div className="mx-auto mt-4 w-[64%] overflow-hidden rounded-lg border border-[#d8b35a]/60 shadow-[0_0.4rem_1.2rem_rgba(0,0,0,0.5)]">
+        {/* 콘서트 포스터 — 오리지널 그래픽(실제 포스터 사진·로고 미사용) */}
+        <div className="mx-auto mt-4 w-[74%] overflow-hidden rounded-lg border border-[#d8b35a]/50 shadow-[0_0.4rem_1.4rem_rgba(0,0,0,0.6)]">
           <ConcertPoster p={p} />
         </div>
-        <p className="mt-2.5 inline-block rounded-full bg-[#e6c77a] px-3 py-1 font-display text-[1.05rem] font-bold text-[#2a1f08]">{p.ticketSeat}</p>
-        <p className="mt-2 text-[0.85rem] text-white/70">{p.ticketDate}</p>
+        <p className="mt-3 inline-block rounded-full bg-[#e6c77a] px-3.5 py-1 font-display text-[1.05rem] font-bold text-[#2a1f08]">{p.ticketSeat}</p>
 
         <motion.p
-          animate={{ opacity: [1, 0.45, 1] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          className="mt-3 text-[0.98rem] font-bold text-[#ff8a9c]"
+          animate={{ opacity: [1, 0.4, 1] }}
+          transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
+          className="mt-2.5 text-[0.98rem] font-bold text-[#ff8a9c]"
         >
           {p.rush}
         </motion.p>
 
-        <button
+        {/* ① 초청 확인하기 — 반짝반짝(미끼) */}
+        <motion.button
           type="button"
           data-role="vip-open"
           onClick={onOpen}
-          className="mt-3 min-h-[3.5rem] w-full rounded-xl bg-gradient-to-b from-[#f2d88e] to-[#c99a3a] px-4 font-display text-[1.2rem] font-bold text-[#2a1f08] shadow-[0_0.25rem_0_#8a6a1e] active:translate-y-[0.12rem] active:shadow-[0_0.12rem_0_#8a6a1e]"
+          animate={{
+            scale: [1, 1.035, 1],
+            boxShadow: [
+              '0 0.25rem 0 #8a6a1e, 0 0 0 0 rgba(255,225,150,0)',
+              '0 0.25rem 0 #8a6a1e, 0 0 1.6rem 0.3rem rgba(255,225,150,0.95)',
+              '0 0.25rem 0 #8a6a1e, 0 0 0 0 rgba(255,225,150,0)',
+            ],
+          }}
+          transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+          whileTap={{ scale: 0.97 }}
+          className="mt-3.5 min-h-[3.6rem] w-full rounded-xl bg-gradient-to-b from-[#ffe6a3] to-[#c99a3a] px-4 font-display text-[1.25rem] font-black text-[#2a1f08]"
         >
           {p.cta}
-        </button>
+        </motion.button>
+
+        {/* ② 공식 고객센터에 먼저 확인하기 — 정답 */}
         <button
           type="button"
           data-role="vip-safe"
           onClick={onSafe}
-          className="mt-2.5 w-full py-1.5 text-[0.9rem] font-semibold text-white/55 underline decoration-white/30 underline-offset-2 active:text-white"
+          className="mt-2.5 min-h-[3.2rem] w-full rounded-xl border border-white/35 bg-white/5 px-4 text-[1.02rem] font-bold text-white active:bg-white/15"
         >
-          {p.safe}
+          {vip.options.verify.label}
+        </button>
+
+        {/* ③ 팝업 닫고 그냥 보기 */}
+        <button
+          type="button"
+          data-role="vip-ignore"
+          onClick={onClose}
+          className="mt-2 w-full py-1.5 text-[0.9rem] font-semibold text-white/50 underline decoration-white/25 underline-offset-2 active:text-white"
+        >
+          {vip.options.close.label}
         </button>
       </motion.div>
     </motion.div>
@@ -384,38 +441,49 @@ function Invitation({ name, onOpen, onSafe }: { name: string; onOpen: () => void
 
 /**
  * 콘서트 포스터 — 전부 오리지널 그래픽입니다.
- * ★ 실제 공연 포스터의 사진·로고·디자인을 복제하지 않습니다. 무대 조명 그라데이션과
- *   특정인을 알아볼 수 없는 일반 가수 실루엣(마이크 스탠드)을 직접 그리고, 공연명은 글자로만 얹습니다.
+ * ★ 실제 공연 포스터의 사진·로고·디자인을 복제하지 않습니다. 무대 조명과 얼굴이 보이지 않는(역광)
+ *   일반 가수 실루엣을 직접 그리고, 공연명은 큰 글자로만 얹습니다. IM HERO 를 가장 크게.
  */
 function ConcertPoster({ p }: { p: typeof vip.popup }) {
   return (
-    <div className="relative aspect-[3/4] w-full bg-[radial-gradient(120%_80%_at_50%_18%,#4a74c8_0%,#243b74_45%,#0e1a3c_100%)]">
-      {/* 무대 조명 빔 */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-70" aria-hidden="true">
-        <div className="absolute -top-6 left-1/2 h-[130%] w-16 -translate-x-1/2 rotate-[16deg] bg-[linear-gradient(180deg,rgba(255,255,255,0.55),transparent)] blur-md" />
-        <div className="absolute -top-6 left-1/2 h-[130%] w-12 -translate-x-1/2 -rotate-[18deg] bg-[linear-gradient(180deg,rgba(255,255,255,0.4),transparent)] blur-md" />
+    <div className="relative aspect-[3/4] w-full overflow-hidden bg-[radial-gradient(90%_60%_at_50%_28%,#6d93d6_0%,#2a4a8c_38%,#0b1636_78%)]">
+      {/* 무대 조명 빔(머리 뒤가 가장 밝아 얼굴이 역광으로 안 보이게) */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute left-1/2 top-[6%] h-[70%] w-[38%] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(220,235,255,0.85),transparent)] blur-[2px]" />
+        <div className="absolute left-1/2 -top-8 h-[120%] w-14 -translate-x-1/2 rotate-[15deg] bg-[linear-gradient(180deg,rgba(255,255,255,0.4),transparent)] blur-md" />
+        <div className="absolute left-1/2 -top-8 h-[120%] w-10 -translate-x-1/2 -rotate-[17deg] bg-[linear-gradient(180deg,rgba(255,255,255,0.3),transparent)] blur-md" />
       </div>
-      {/* 일반 가수 실루엣(오리지널) — 마이크 스탠드 앞의 인물, 특정인 아님 */}
-      <svg viewBox="0 0 120 160" className="absolute inset-x-0 bottom-0 mx-auto h-[72%]" aria-hidden="true">
-        <g fill="#0a1330">
-          <ellipse cx="60" cy="52" rx="15" ry="16" />
-          <path d="M42 78c0-10 8-16 18-16s18 6 18 16v40c0 6-4 10-10 10H52c-6 0-10-4-10-10z" />
-          <path d="M42 84l-12 30c-1 3-5 2-5-1l8-34c1-4 4-6 9-6z" />
-          <path d="M78 84l10 24c1 3-2 5-4 3l-14-22z" />
+
+      {/* 얼굴이 보이지 않는 역광 실루엣(오리지널) — 마이크를 든 가수 */}
+      <svg viewBox="0 0 120 160" className="absolute inset-x-0 bottom-0 mx-auto h-[80%]" aria-hidden="true">
+        <g fill="#060c1f">
+          <ellipse cx="58" cy="46" rx="14" ry="15" />
+          <path d="M40 74c0-11 8-17 18-17s18 6 18 17l3 46c0 4-3 7-7 7H44c-4 0-7-3-7-7z" />
+          {/* 마이크로 올린 팔 */}
+          <path d="M74 78c6 2 9 8 8 16l-1 10c-1 5-8 4-8-1l1-9-6-10z" />
+          {/* 반대 팔 */}
+          <path d="M40 80l-9 26c-1 4-6 3-6-1l6-28c1-4 4-6 9-5z" />
         </g>
-        {/* 마이크 스탠드 */}
-        <g stroke="#0a1330" strokeWidth="2.4" fill="#0a1330">
-          <line x1="70" y1="70" x2="82" y2="150" strokeLinecap="round" />
-          <ellipse cx="69" cy="66" rx="4.5" ry="6" />
+        {/* 마이크 */}
+        <g fill="#060c1f">
+          <rect x="78" y="60" width="4" height="20" rx="2" transform="rotate(18 80 70)" />
+          <ellipse cx="83" cy="58" rx="4.5" ry="5.5" />
         </g>
       </svg>
-      {/* 글자 — 공연명(오리지널 타이포, 실제 로고 아님) */}
-      <div className="absolute inset-x-0 top-0 px-2 pt-4 text-center">
-        <p className="font-display text-[0.62rem] font-bold tracking-[0.3em] text-white/90">{p.ticketTour}</p>
-      </div>
-      <div className="absolute inset-x-0 bottom-0 px-2 pb-3 text-center">
-        <p className="font-display text-[1.05rem] leading-none font-black tracking-tight text-white [text-shadow:0_0_0.5rem_rgba(120,170,255,0.9)]">{p.ticketTitle}</p>
-        <p className="mt-1 text-[0.5rem] font-semibold tracking-wide text-white/70">{p.ticketDate}</p>
+
+      {/* 아티스트명(작게, 위) */}
+      <p className="absolute inset-x-0 top-[7%] text-center font-display text-[0.72rem] font-bold tracking-[0.42em] text-white/95">{p.ticketArtist}</p>
+
+      {/* IM HERO — 가장 크게 */}
+      <p className="absolute inset-x-0 top-[15%] text-center font-display text-[2.5rem] leading-none font-black tracking-tight text-white [text-shadow:0_0_0.9rem_rgba(150,190,255,0.95)]">
+        {p.ticketTour}
+      </p>
+
+      {/* THE STADIUM 2 + 일정/장소(아래) */}
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#060c1f] via-[#060c1f]/80 to-transparent px-2 pb-2.5 pt-6 text-center">
+        <p className="font-display text-[1.15rem] leading-none font-black tracking-tight text-white">{p.ticketTitle}</p>
+        <p className="mt-1.5 text-[0.5rem] font-semibold leading-tight text-white/85">{p.ticketDates.join('  ')}</p>
+        <p className="mt-0.5 text-[0.5rem] font-semibold tracking-[0.2em] text-white/70">{p.ticketVenue}</p>
       </div>
     </div>
   )
@@ -431,72 +499,100 @@ function StageHead({ step, title }: { step: string; title: string }) {
   )
 }
 
-type Field = { id: string; label: string; value: string; gave: string }
+type Field = { id: string; label: string; ph: string; gave: string }
 
-/** 누르면 체험용 가상 정보가 한 글자씩 채워지는 입력칸 */
-function useAutoFill(fields: Field[], who: string) {
-  const [typed, setTyped] = useState<Record<string, string>>({})
-  const busy = useRef<Record<string, boolean>>({})
-  const ids = useRef<number[]>([])
-  useEffect(() => () => ids.current.forEach((t) => window.clearInterval(t)), [])
-  const valueOf = (f: Field) => fill(f.value, { name: who })
-  const start = (f: Field) => {
-    if (busy.current[f.id]) return
-    busy.current[f.id] = true
-    const full = valueOf(f)
-    let n = 0
-    const id = window.setInterval(() => {
-      n += 1
-      setTyped((prev) => ({ ...prev, [f.id]: full.slice(0, n) }))
-      if (n >= full.length) window.clearInterval(id)
-    }, 55)
-    ids.current.push(id)
-  }
-  const complete = fields.every((f) => (typed[f.id] ?? '') === valueOf(f))
-  return { typed, start, complete }
+/** 입력값 정리·형식 — 체험용이라 아무 숫자나 칠 수 있게, 자릿수만 제한 */
+const MIN: Record<string, number> = { name: 1, phone: 10, rrn: 13, card: 15, exp: 4, cvc: 3, pw: 2 }
+const MAXD: Record<string, number> = { phone: 11, rrn: 13, card: 16, exp: 4, cvc: 3, pw: 2 }
+function clean(id: string, v: string) {
+  if (id === 'name') return v.slice(0, 12)
+  return v.replace(/\D/g, '').slice(0, MAXD[id] ?? 20)
+}
+function display(id: string, raw: string) {
+  if (id === 'name') return raw
+  const d = raw
+  if (id === 'phone') return d.replace(/^(\d{3})(\d{0,4})(\d{0,4}).*$/, (_m, a, b, c) => [a, b, c].filter(Boolean).join('-'))
+  if (id === 'rrn') return d.length > 6 ? `${d.slice(0, 6)}-${d.slice(6)}` : d
+  if (id === 'card') return (d.match(/.{1,4}/g) ?? []).join(' ')
+  if (id === 'exp') return d.length > 2 ? `${d.slice(0, 2)} / ${d.slice(2)}` : d
+  return d
 }
 
-function AutoField({ field, typed, onFill }: { field: Field; typed: string; onFill: () => void }) {
+function useForm(fields: Field[]) {
+  const [raw, setRaw] = useState<Record<string, string>>({})
+  const setField = (id: string, v: string) => setRaw((p) => ({ ...p, [id]: clean(id, v) }))
+  const complete = fields.every((f) => (raw[f.id]?.length ?? 0) >= (MIN[f.id] ?? 1))
+  return { raw, setField, complete }
+}
+
+/** 직접 입력하는 입력칸 */
+function InputField({ field, value, onChange }: { field: Field; value: string; onChange: (v: string) => void }) {
   return (
     <div>
       <p className="mb-1.5 text-[0.95rem] font-bold text-[#3a4256]">{field.label}</p>
-      <button
-        type="button"
+      <input
         data-role={`vip-field-${field.id}`}
-        onClick={onFill}
-        className="flex min-h-[3.2rem] w-full items-center rounded-xl border border-[#d5d9e3] bg-white px-4 text-left text-[1.1rem] tabular-nums active:border-[#d4143a]"
-      >
-        {typed ? <span className="text-[#1c1f2a]">{typed}</span> : <span className="text-[#a3abb8]">{vip.site.tapToFill}</span>}
-      </button>
+        value={display(field.id, value)}
+        onChange={(e) => onChange(e.target.value)}
+        inputMode={field.id === 'name' ? 'text' : 'numeric'}
+        placeholder={field.ph}
+        autoComplete="off"
+        className="min-h-[3.2rem] w-full rounded-xl border border-[#d5d9e3] bg-white px-4 text-[1.1rem] text-[#1c1f2a] outline-none placeholder:text-[#a3abb8] focus:border-[#d4143a]"
+      />
     </div>
   )
 }
 
-function SiteButton({ role, disabled, onClick, children }: { role: string; disabled?: boolean; onClick: () => void; children: ReactNode }) {
+function SiteButton({
+  role,
+  disabled,
+  blink,
+  onClick,
+  children,
+}: {
+  role: string
+  disabled?: boolean
+  blink?: boolean
+  onClick: () => void
+  children: ReactNode
+}) {
   return (
-    <button
+    <motion.button
       type="button"
       data-role={role}
       disabled={disabled}
       onClick={onClick}
-      className="mt-4 min-h-[3.5rem] w-full rounded-xl bg-[#d4143a] px-4 text-[1.15rem] font-bold text-white shadow-[0_0.2rem_0_#8f0d27] active:translate-y-[0.1rem] active:shadow-[0_0.1rem_0_#8f0d27] disabled:opacity-35"
+      animate={
+        blink && !disabled
+          ? {
+              boxShadow: [
+                '0 0.2rem 0 #8f0d27, 0 0 0 0 rgba(255,90,120,0)',
+                '0 0.2rem 0 #8f0d27, 0 0 1.4rem 0.25rem rgba(255,90,120,0.85)',
+                '0 0.2rem 0 #8f0d27, 0 0 0 0 rgba(255,90,120,0)',
+              ],
+            }
+          : undefined
+      }
+      transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
+      whileTap={{ scale: 0.98 }}
+      className="mt-4 min-h-[3.5rem] w-full rounded-xl bg-[#d4143a] px-4 text-[1.15rem] font-bold text-white shadow-[0_0.2rem_0_#8f0d27] active:translate-y-[0.1rem] disabled:opacity-35"
     >
       {children}
-    </button>
+    </motion.button>
   )
 }
 
-/** ① VIP 본인확인 — 주민등록번호 전체를 요구합니다 */
+/** ① VIP 본인확인 — 이름·전화·주민등록번호 전체를 직접 입력 */
 function Verify({ name, onNext }: { name: string; onNext: () => void }) {
   const v = vip.verify
-  const { typed, start, complete } = useAutoFill(v.fields, name)
+  const { raw, setField, complete } = useForm(v.fields)
   return (
     <div className="mx-auto w-full max-w-[32rem] px-5 py-5">
       <StageHead step={v.step} title={v.title} />
-      <p className="mt-1.5 text-[1rem] text-[#5a6377]">{v.body}</p>
+      <p className="mt-1.5 text-[1rem] text-[#5a6377]">{fill(v.body, { name })}</p>
       <div className="mt-4 flex flex-col gap-3.5">
         {v.fields.map((f: Field) => (
-          <AutoField key={f.id} field={f} typed={typed[f.id] ?? ''} onFill={() => start(f)} />
+          <InputField key={f.id} field={f} value={raw[f.id] ?? ''} onChange={(val) => setField(f.id, val)} />
         ))}
       </div>
       <p className="mt-3 text-[0.82rem] leading-snug text-[#8a93a6]">{vip.site.demoNote}</p>
@@ -507,7 +603,7 @@ function Verify({ name, onNext }: { name: string; onNext: () => void }) {
   )
 }
 
-/** ② 초청석 확보 — 남은 좌석 · 자동 배정 압박 */
+/** ② 초청석 확보 — 남은 좌석 · 자동 배정 압박, 확보 버튼 반짝 */
 function Seat({ name, seats, onNext }: { name: string; seats: number; onNext: () => void }) {
   const s = vip.seat
   return (
@@ -536,17 +632,17 @@ function Seat({ name, seats, onNext }: { name: string; seats: number; onNext: ()
       </div>
 
       <p className="mt-3.5 rounded-xl border border-[#f3c2cb] bg-[#fff1f3] px-3.5 py-3 text-[0.98rem] leading-snug text-[#5a1222]">{s.notice}</p>
-      <SiteButton role="vip-seat-next" onClick={onNext}>
+      <SiteButton role="vip-seat-next" blink onClick={onNext}>
         {s.cta}
       </SiteButton>
     </div>
   )
 }
 
-/** ③ 예약 보증금 결제 — 환급해 준다며 카드 정보 전부를 받습니다 */
+/** ③ 예약 보증금 결제 — 카드 정보 전부를 직접 입력 */
 function Pay({ onPay }: { onPay: () => void }) {
   const p = vip.pay
-  const { typed, start, complete } = useAutoFill(p.fields, '')
+  const { raw, setField, complete } = useForm(p.fields)
   const [paying, setPaying] = useState(false)
   const t = useRef(0)
   useEffect(() => () => window.clearTimeout(t.current), [])
@@ -566,12 +662,12 @@ function Pay({ onPay }: { onPay: () => void }) {
       <div className="mt-3.5 grid grid-cols-2 gap-3">
         {p.fields.map((f: Field, i: number) => (
           <div key={f.id} className={i === 0 ? 'col-span-2' : i === 3 ? 'col-span-2' : ''}>
-            <AutoField field={f} typed={typed[f.id] ?? ''} onFill={() => start(f)} />
+            <InputField field={f} value={raw[f.id] ?? ''} onChange={(val) => setField(f.id, val)} />
           </div>
         ))}
       </div>
       <p className="mt-3 text-[0.82rem] leading-snug text-[#8a93a6]">{vip.site.demoNote}</p>
-      <SiteButton role="vip-pay" disabled={!complete || paying} onClick={pay}>
+      <SiteButton role="vip-pay" blink disabled={!complete || paying} onClick={pay}>
         {paying ? p.paying : p.cta}
       </SiteButton>
     </div>
@@ -654,10 +750,7 @@ function Flood({ count }: { count: number }) {
 
 /* ─────────────── 결말 상자들 ─────────────── */
 
-/**
- * 결제까지 간 결말 — 피해 화면. "초청 완료"로 끝내지 않고, 그 뒤 무슨 일이 생기는지 보여 줍니다.
- * [다시 해보기] → 팝업으로 돌아가 다른 선택(먼저 확인하기)을 해 보게 합니다.
- */
+/** 결제까지 간 결말 — 피해 화면. [다시 해보기] → 팝업으로 돌아가 다른 선택을 해 보게 합니다. */
 function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void }) {
   const d = vip.damage
   const [shown, setShown] = useState(0)
@@ -679,7 +772,7 @@ function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void })
       <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#ff6b6b]/60 bg-[#1f0a10]/95 px-[clamp(1.1rem,4vw,1.7rem)] py-[clamp(1.1rem,3vh,1.7rem)] text-white shadow-[0_0_2.4rem_rgba(255,107,107,0.35)]">
         <div className="text-center">
           <span className="inline-block rounded-md bg-[#ff6b6b] px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-[#2a0509]">{d.tag}</span>
-          <h2 className="mt-3 font-display text-[min(1.45rem,5.6vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(255,107,107,0.6)]">{d.title}</h2>
+          <h2 className="mt-3 font-display text-[min(1.4rem,5.4vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(255,107,107,0.6)]">{d.title}</h2>
         </div>
 
         <div className="mt-4 rounded-xl bg-[#2b3246] p-3">
@@ -755,7 +848,6 @@ function SafeScene({ onDone }: { onDone: () => void }) {
           <h2 className="mt-3 font-display text-[min(1.45rem,5.6vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(47,168,255,0.6)]">{v.title}</h2>
         </div>
 
-        {/* 고객센터 상담 */}
         <div className="mt-4 rounded-xl bg-[#e6eaf0] p-3 text-[#1f2430]">
           <p className="mb-2 flex items-center justify-center gap-1.5 text-[0.8rem] font-bold text-[#47607a]">
             <PhoneIcon />
@@ -804,10 +896,9 @@ function SafeScene({ onDone }: { onDone: () => void }) {
   )
 }
 
-/** 사건 브리핑 — 1번(연구실 메일)과 같은 상자 (체험형으로 문구만 바뀜) */
-function Rules({ onStart }: { onStart: () => void }) {
-  const r = vip.rules
-  const icons = [<GlobeIcon key="g" />, <FormIcon key="f" />, <EyeIcon key="e" />]
+/** 사건 브리핑 — 3번 스미싱과 같은 상자(번호 단계). {name} 치환, **굵게**는 금색 */
+function Brief({ name, onStart }: { name: string; onStart: () => void }) {
+  const b = vip.brief
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -819,7 +910,6 @@ function Rules({ onStart }: { onStart: () => void }) {
       <motion.div
         role="dialog"
         aria-modal="true"
-        aria-labelledby="vip-rules-title"
         initial={{ opacity: 0, y: 24, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
@@ -827,29 +917,31 @@ function Rules({ onStart }: { onStart: () => void }) {
       >
         <span className="inline-flex items-center gap-1.5 rounded-md bg-gold px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-navy-deep">
           <GlobeIcon className="h-[0.95rem] w-[0.95rem]" />
-          {r.tag}
+          사건 브리핑
         </span>
-        <h2 id="vip-rules-title" className="mt-3 font-display text-[min(1.6rem,6vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(47,168,255,0.6)]">
-          {r.title}
+        <h2 className="mt-3 font-display text-[min(1.6rem,6vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(47,168,255,0.6)]">
+          {fill(b.title, { name })}
         </h2>
         <ol className="mt-5 flex flex-col gap-2.5 text-left">
-          {r.steps.map((step, i) => (
+          {b.steps.map((step, i) => (
             <li key={i} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-3">
-              <span className="flex h-[2.3rem] w-[2.3rem] shrink-0 items-center justify-center rounded-lg border border-[#2fa8ff]/50 bg-[#050a18] text-[#9fe0ff]">{icons[i]}</span>
-              <span className="min-w-0 flex-1 text-[1.08rem] leading-snug text-white/85">
+              <span className="flex h-[2.3rem] w-[2.3rem] shrink-0 items-center justify-center rounded-lg border border-[#2fa8ff]/50 bg-[#050a18] font-display text-[1.05rem] font-bold text-[#9fe0ff]">
+                {i + 1}
+              </span>
+              <span className="min-w-0 flex-1 text-[1.08rem] leading-snug whitespace-pre-line text-white/85">
                 <Strong text={step} />
               </span>
             </li>
           ))}
         </ol>
-        <p className="mt-4 text-[0.9rem] leading-snug text-white/55">{r.note}</p>
+        <p className="mt-3 text-[0.9rem] leading-snug text-white/55">{b.note}</p>
         <button
           type="button"
-          data-role="rules-start"
+          data-role="brief-start"
           onClick={onStart}
-          className="mt-4 min-h-[3.8rem] w-full rounded-xl bg-gold px-4 font-display text-[1.25rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]"
+          className="mt-5 min-h-[3.8rem] w-full rounded-xl bg-gold px-4 font-display text-[1.25rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]"
         >
-          {r.start}
+          체험 시작하기
         </button>
       </motion.div>
     </motion.div>
@@ -858,13 +950,18 @@ function Rules({ onStart }: { onStart: () => void }) {
 
 /**
  * 검거 카드 뒷면 옆 '다시 보기' — 사이트의 수법 네 곳을 한 장에 모아 보여 줍니다.
- * 카드가 가리키는 수법의 자리는 붉게 빛나고(.focus-glow → DefenseCard 가 그리로 스크롤), 나머지는 옅은 붉은 밑줄.
+ * 카드가 가리키는 수법의 자리는 붉게 빛나고(.focus-glow), 나머지는 옅은 붉은 밑줄.
  */
-function ReviewSite({ flag, who }: { flag: RedFlag; who: string }) {
+function ReviewSite({ flag }: { flag: RedFlag }) {
   const mark = (target: string) =>
     flag.target === target
       ? 'focus-glow rounded px-0.5 font-bold text-red-700'
       : 'rounded px-0.5 bg-red-50 text-red-700 underline decoration-red-300 decoration-2'
+  const sample: Record<string, string> = {
+    name: '홍○○',
+    phone: '010-●●●●-●●●●',
+    rrn: '●●●●●●-●●●●●●●',
+  }
   return (
     <div className="flex flex-col gap-3 text-[#1c1f2a]" data-role="review-site">
       <div className="flex items-center gap-2 rounded-full bg-[#eef0f5] px-3.5 py-2 text-[0.98rem] text-[#4a5368]">
@@ -884,7 +981,7 @@ function ReviewSite({ flag, who }: { flag: RedFlag; who: string }) {
           {vip.verify.fields.map((f: Field) => (
             <li key={f.id} className="flex items-center justify-between gap-2 rounded-lg bg-[#f4f5f8] px-3 py-2">
               <span className={f.id === 'rrn' ? mark('overask') : ''}>{f.label}</span>
-              <span className="text-[#8a93a6] tabular-nums">{fill(f.value, { name: who })}</span>
+              <span className="text-[#8a93a6] tabular-nums">{sample[f.id]}</span>
             </li>
           ))}
         </ul>
@@ -926,22 +1023,6 @@ function GlobeIcon({ className = 'h-[1.25rem] w-[1.25rem]' }: { className?: stri
     </svg>
   )
 }
-function FormIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-[1.25rem] w-[1.25rem]" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <rect x="4" y="3" width="16" height="18" rx="2" />
-      <path d="M8 8h8M8 12h8M8 16h5" strokeLinecap="round" />
-    </svg>
-  )
-}
-function EyeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-[1.25rem] w-[1.25rem]" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  )
-}
 function LockIcon() {
   return (
     <svg viewBox="0 0 24 24" className="h-[0.95rem] w-[0.95rem] shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
@@ -952,7 +1033,7 @@ function LockIcon() {
 }
 function ClockIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="h-[1.15rem] w-[1.15rem] shrink-0" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+    <svg viewBox="0 0 24 24" className="h-[1.3rem] w-[1.3rem] shrink-0" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5.5l3.5 2" strokeLinecap="round" />
     </svg>

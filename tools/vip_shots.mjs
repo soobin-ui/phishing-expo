@@ -62,9 +62,15 @@ async function open([label, w, h, mobile]) {
     if (bad.length) problems.push(`${name}: ${bad.join(', ')}`)
     await page.screenshot({ path: join(OUT, `${label}-${name}.png`) })
   }
+  /** 입력칸에 체험용 값을 직접 칩니다(마스킹 입력이라 한 글자씩) */
+  const VALUES = { name: '전수빈', phone: '01012345678', rrn: '9001011234567', card: '5327123412340412', exp: '0929', cvc: '123', pw: '12' }
   const fillAll = async () => {
-    await page.evaluate(() => document.querySelectorAll('[data-role^="vip-field-"]').forEach((b) => b.click()))
-    await wait(1500)
+    const ids = await page.evaluate(() => [...document.querySelectorAll('input[data-role^="vip-field-"]')].map((i) => i.getAttribute('data-role').slice(10)))
+    for (const id of ids) {
+      await page.click(`input[data-role="vip-field-${id}"]`)
+      await page.type(`input[data-role="vip-field-${id}"]`, VALUES[id] ?? '1234', { delay: 15 })
+    }
+    await wait(300)
   }
   const spot = async (target) => {
     await click(`[data-spot="${target}"]`)
@@ -78,7 +84,7 @@ async function runA(device) {
   const s = await open(device)
   await wait(1200)
   await s.shot('A0-브리핑')
-  await s.click('[data-role="rules-start"]')
+  await s.click('[data-role="brief-start"]')
   await wait(1600)
   await s.shot('A1-팝업')
   await s.click('[data-role="vip-safe"]')
@@ -98,7 +104,7 @@ async function runA(device) {
 /** 경로 B — 끝까지 결제해서 당한 뒤, 다시 해보기 → 먼저 확인 */
 async function runB(device) {
   const s = await open(device)
-  await s.click('[data-role="rules-start"]')
+  await s.click('[data-role="brief-start"]')
   await wait(1500)
   await s.click('[data-role="vip-open"]')
   await wait(800)
