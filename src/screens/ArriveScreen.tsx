@@ -184,7 +184,7 @@ function Brief({ brief, onStart }: { brief: { title: string; steps: string[]; no
               <span className="flex h-[2.3rem] w-[2.3rem] shrink-0 items-center justify-center rounded-lg border border-[#2fa8ff]/50 bg-[#050a18] font-display text-[1.05rem] font-bold text-[#9fe0ff]">
                 {i + 1}
               </span>
-              <span className="min-w-0 flex-1 text-[1.08rem] leading-snug text-white/85">
+              <span className="min-w-0 flex-1 text-[1.08rem] leading-snug whitespace-pre-line text-white/85">
                 {step.split('**').map((part, k) =>
                   k % 2 ? (
                     <b key={k} className="font-bold whitespace-nowrap text-gold">{part}</b>
