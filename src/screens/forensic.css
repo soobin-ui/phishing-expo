@@ -340,7 +340,8 @@
   .fx .side { grid-area: side; justify-self: start; display: grid; grid-template-columns: 1fr 1fr; grid-template-areas: 'time time' 'chance hint' 'folder folder'; gap: 0.6rem; width: min(100%, 18rem); }
   .fx .side .stats, .fx .side .dock { display: contents; }
   .fx .stat { padding: 0.55rem 0.6rem 0.65rem; }
-  .fx .stat.time { grid-area: time; }
+  /* 남은 시간은 따로 떼어 둠 — 아래 도구 묶음(남은 기회·힌트·증거 폴더)과 간격 */
+  .fx .stat.time { grid-area: time; margin-bottom: 1.1rem; }
   .fx .stat.time small { font-size: 1.2rem; }
   .fx .stat.time b { font-size: 3.6rem; }
   .fx .stat.time .bar { margin-top: 0.55rem; height: 0.42rem; }
@@ -349,13 +350,16 @@
   .fx .stat.chance b { font-size: 2.6rem; }
   .fx .stat.chance .dots { margin-top: 0.5rem; gap: 0.3rem; }
   .fx .stat.chance .dots i { width: 0.7rem; height: 0.7rem; }
-  /* 힌트 — 남은 기회와 똑같은 크기·모양의 타일(하늘색) */
-  .fx .hintbtn { grid-area: hint; flex-direction: column; justify-content: center; gap: 0.25rem; border: 2px solid rgba(47, 168, 255, 0.8); border-radius: 0.75rem; background: rgba(13, 44, 94, 0.9); box-shadow: 0 0 1.2rem rgba(47, 168, 255, 0.3); padding: 0.55rem 0.6rem 0.65rem; text-align: center; }
-  .fx .hintbtn svg { width: 2.5rem; height: 2.5rem; order: 2; }
+  /* 힌트 — 남은 기회와 똑같은 크기·모양의 타일. 색은 청록(남은 시간의 하늘색과 구분) */
+  .fx .hintbtn { grid-area: hint; flex-direction: column; justify-content: center; gap: 0.25rem; border: 2px solid rgba(45, 212, 191, 0.8); border-radius: 0.75rem; background: rgba(8, 56, 56, 0.9); box-shadow: 0 0 1.2rem rgba(45, 212, 191, 0.3); padding: 0.55rem 0.6rem 0.65rem; text-align: center; }
+  .fx .hintbtn svg { width: 2.5rem; height: 2.5rem; order: 2; color: #5eead4; }
   .fx .hintbtn > span { display: contents; }
-  .fx .hintbtn b { order: 1; font: 700 1.05rem var(--font-sans); letter-spacing: 0.02em; color: #9fe0ff; }
+  .fx .hintbtn b { order: 1; font: 700 1.05rem var(--font-sans); letter-spacing: 0.02em; color: #99f6e4; }
   .fx .hintbtn small { display: none; }
   .fx .hintbtn .hcap { display: block; order: 3; font-style: normal; font-size: 0.78rem; color: rgba(255, 255, 255, 0.65); }
+  .fx .hintbtn.on { border-color: #5eead4; background: rgba(13, 84, 80, 0.95); }
+  .fx .hintbtn.nudge { border-color: var(--color-gold); }
+  .fx .hintbtn.nudge svg { color: var(--color-gold); }
   .fx .hintbtn.nudge b, .fx .hintbtn.nudge .hcap { color: #ffe9a8; }
   /* 증거를 다 찾아 힌트가 사라지면 남은 기회가 그 줄을 다 씁니다 */
   .fx .side:not(:has(.hintbtn)) .stat.chance { grid-column: 1 / -1; }
