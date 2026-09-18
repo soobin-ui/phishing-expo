@@ -5,7 +5,7 @@
  *
  * ① 힌트를 누르면 앱 아이콘 → 대화방 → 말풍선이 차례로 반짝이는지
  * ② 남은 시간이 줄어드는지, 25초 동안 못 찾으면 힌트 버튼이 반짝이는지(시계를 빨리 돌려 확인)
- * ③ 시간이 다 되면 '증거가 부족합니다' 검거 카드로 넘어가는지
+ * ③ 시간이 다 되면 '수사 완료' 검거 카드로 넘어가는지
  */
 import { mkdirSync } from 'node:fs'
 import { dirname, join } from 'node:path'
@@ -63,7 +63,7 @@ async function open(fast) {
   await wait(2600) // 시간 끝
   await wait(4500)
   const text = await page.evaluate(() => document.body.innerText)
-  check('시간 끝 → 증거가 부족합니다 카드', text.includes('증거가 부족합니다') && text.includes('조사 시간이 끝났습니다'))
+  check('시간 끝 → 수사 완료 카드', text.includes('수사 완료') && text.includes('조사 시간이 끝났습니다'))
   await page.screenshot({ path: join(OUT, '힌트-4-timeout.png') })
   check('오류 없음(빠른 시계)', !errors.length)
   await page.close()

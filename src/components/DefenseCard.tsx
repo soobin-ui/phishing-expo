@@ -81,6 +81,12 @@ export function DefenseCard({
   const [shown, setShown] = useState(false)
   const [flipped, setFlipped] = useState(false)
   const [trick, setTrick] = useState(0)
+  /** 뒷면에서 본 수법 번호 — 전부 보고 나면 [이렇게 예방하세요] 버튼이 깜빡여 다음으로 이끕니다 */
+  const [seen, setSeen] = useState<number[]>([])
+  useEffect(() => {
+    if (flipped) setSeen((v) => (v.includes(trick) ? v : [...v, trick]))
+  }, [flipped, trick])
+  const allSeen = seen.length >= flags.length
   const flag = flags[Math.min(trick, flags.length - 1)]
   const reviewRef = useRef<HTMLDivElement>(null)
   /** 메일 판은 카드와 같은 높이 — 카드 높이를 재서 맞춥니다(내용이 길어도 판이 커지지 않게) */
@@ -165,7 +171,8 @@ export function DefenseCard({
           transition={{ type: 'spring', stiffness: 300, damping: 15 }}
           className="font-display text-[clamp(1.8rem,7vw,2.6rem)] leading-none font-bold text-white [text-shadow:0_0_1.4rem_rgba(47,168,255,0.95),0_0_0.4rem_rgba(255,255,255,0.7)]"
         >
-          {t.caughtTitle}
+          {/* 전부 찾았을 때만 '검거 완료' — 못 찾은 게 있으면 '수사 완료' */}
+          {all ? t.caughtTitle : c.failTitle}
         </motion.p>
         <p className="mt-1.5 text-[0.92rem] text-sky/75">
           {fill(all ? c.caughtBody : c.failBody, { n: stats.total })}
@@ -405,7 +412,9 @@ export function DefenseCard({
           <button
             type="button"
             onClick={onNext}
-            className="min-w-0 flex-1 rounded-xl border-2 border-transparent bg-gold px-3 py-3 font-display text-[clamp(0.95rem,2.4vh,1.1rem)] font-bold whitespace-nowrap text-navy-deep active:bg-gold-deep"
+            data-role="card-next"
+            data-blink={allSeen ? 'on' : undefined}
+            className={`${allSeen ? 'next-blink ' : ''}min-w-0 flex-1 rounded-xl border-2 border-transparent bg-gold px-3 py-3 font-display text-[clamp(0.95rem,2.4vh,1.1rem)] font-bold whitespace-nowrap text-navy-deep active:bg-gold-deep`}
           >
             {t.cardNext}
           </button>

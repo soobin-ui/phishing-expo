@@ -61,6 +61,8 @@ export function ForensicScreen({
   const [bump, setBump] = useState(0)
   const [plus, setPlus] = useState<{ id: number; x: number; y: number } | null>(null)
   const [done, setDone] = useState(false)
+  /** 한 앱의 증거를 다 찾았는데 다른 앱에 남아 있으면 — '이제 ○○에서 찾아보세요' 안내 팝업 */
+  const [move, setMove] = useState<{ from: string; to: string; n: number } | null>(null)
   const [evBox, setEvBox] = useState(false)
   const [board, setBoard] = useState(false)
   const [card, setCard] = useState(false)
@@ -114,10 +116,10 @@ export function ForensicScreen({
 
   /* 조사 시간 — 증거가 날아가는 중이거나 폴더 목록을 보는 동안은 멈춥니다 */
   useEffect(() => {
-    if (!running || snap || evBox) return
+    if (!running || snap || evBox || move) return
     const id = window.setInterval(() => setTimeLeft((t) => Math.max(0, t - 1)), 1000)
     return () => window.clearInterval(id)
-  }, [running, snap, evBox])
+  }, [running, snap, evBox, move])
   useEffect(() => {
     if (timeLeft > 0 || !running) return
     busy.current = true
@@ -208,6 +210,13 @@ export function ForensicScreen({
         setPlus({ id: Date.now(), x: f.left + f.height * 0.55, y: f.top - 6 })
         busy.current = false
         if (next.length === EVIDENCE.length) window.setTimeout(() => setDone(true), 450)
+        else {
+          // 이 앱의 증거는 끝났고 다른 앱에 남아 있으면 그쪽으로 안내(메시지 → 카카오톡, 카카오톡 → 메시지)
+          const leftIn = (app: string) => EVIDENCE.filter((e) => e.app === app && !next.includes(e.id)).length
+          const from = snap.ev.app
+          const other = fx.apps.find((a) => a.id !== from && leftIn(a.id) > 0)
+          if (leftIn(from) === 0 && other) window.setTimeout(() => setMove({ from, to: other.id, n: leftIn(other.id) }), 400)
+        }
       }
     }, 1700)
     return () => window.clearTimeout(t)
@@ -382,6 +391,36 @@ export function ForensicScreen({
       )}
 
       {/* 사건 브리핑 — 연구실(메일) 화면과 같은 짧은 3줄 + 기회 5개 */}
+      {move && (() => {
+        const from = fx.apps.find((a) => a.id === move.from)!
+        const to = fx.apps.find((a) => a.id === move.to)!
+        return (
+          <div className="done" data-role="move-popup">
+            <div className="card2 move">
+              <span className="mvicon" style={{ background: to.color, color: to.dark ? '#1c1c1e' : '#fff' }}>
+                <AppIcon name={to.icon} />
+              </span>
+              <div className="ttl">{fill(fx.move.title, { from: from.name })}</div>
+              <p>
+                <Strong text={fill(fx.move.body, { to: to.name, n: move.n })} />
+              </p>
+              <button
+                type="button"
+                className="cta"
+                data-role="move-app"
+                onClick={() => {
+                  setSeenApps((v) => (v.includes(to.id) ? v : [...v, to.id]))
+                  setStack(['lock', 'home', to.id])
+                  setMove(null)
+                }}
+              >
+                {fill(fx.move.go, { to: to.name })}
+              </button>
+            </div>
+          </div>
+        )
+      })()}
+
       {rules && (
         <div className="dim">
           <div className="box brief" role="dialog" aria-modal="true">

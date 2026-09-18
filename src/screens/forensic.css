@@ -318,12 +318,12 @@
   .fx .dock { grid-area: dock; justify-self: start; flex-direction: column; align-items: flex-start; padding: 0; }
 }
 
-/* '증거 수집 완료' 화살표 — 가로 화면에서는 증거 폴더가 오른쪽에 있으므로 팝업 오른쪽 가장자리에서 오른쪽을 가리킴 */
+/* '증거 수집 완료' 화살표 — 가로 화면에서는 증거 폴더가 오른쪽에 있으므로 오른쪽을 가리킴.
+   팝업 바깥에 두면 증거 폴더 버튼(위 레이어)에 가려지므로 팝업 안쪽 문구 아래에 둡니다 */
 @media (orientation: landscape) and (min-width: 700px) {
-  .fx .done .card2 { position: relative; }
-  .fx .done .arrow { position: absolute; right: -2.6rem; top: 50%; margin: 0; transform: translateY(-50%) rotate(-90deg); animation: fx-nudge-r 1s ease-in-out infinite; }
+  .fx .done .arrow { width: 1.8rem; height: 1.8rem; transform: rotate(-90deg); animation: fx-nudge-r 1s ease-in-out infinite; }
 }
-@keyframes fx-nudge-r { 50% { transform: translateY(-50%) translateX(0.35rem) rotate(-90deg); } }
+@keyframes fx-nudge-r { 0%, 100% { transform: translateX(0) rotate(-90deg); } 50% { transform: translateX(0.5rem) rotate(-90deg); } }
 
 /* 검거 카드 뒷면 오른쪽 — 방금 그 대화방을 다시 띄움. 카드가 가리키는 증거 말풍선은 붉게 빛나고(.focus-glow) 나머지 증거는 금테 */
 .fx .review { display: flex; flex-direction: column; gap: 0.45rem; }
@@ -333,3 +333,10 @@
 .fx .review .bub { cursor: default; }
 .fx .review .bub.focus-glow { box-shadow: 0 0 0 3px #e5484d !important; }
 .fx .review .bub.focus-glow::after { content: '증거'; position: absolute; top: -0.55rem; right: -0.3rem; background: #e5484d; color: #fff; font: 700 0.62rem/1 var(--font-display); padding: 0.2rem 0.35rem; border-radius: 0.3rem; }
+
+/* '이제 ○○에서 찾아보세요' 안내 팝업 — 증거 수집 완료 팝업과 같은 금테 상자 + 갈 앱 아이콘 */
+.fx .done .move .ttl { font-size: 1.3rem; line-height: 1.35; }
+.fx .done .move p { font-size: 1.05rem; }
+.fx .done .move .mvicon { display: flex; align-items: center; justify-content: center; width: 4rem; height: 4rem; margin: 0 auto 0.7rem; border-radius: 1.1rem; box-shadow: 0 0 1.4rem rgba(254, 202, 54, 0.6); animation: fx-appop 1.5s cubic-bezier(0.35, 0, 0.25, 1) infinite; }
+.fx .done .move .mvicon svg { width: 56%; height: 56%; }
+.fx .done .move .cta { margin-top: 0.9rem; }

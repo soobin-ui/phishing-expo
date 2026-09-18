@@ -41,7 +41,7 @@ for (const [label, w, h, mobile] of DEVICES) {
   await page.click('[data-role="nav-back"]'); await wait(200)
   await page.click('[data-go="sms_scam"]'); await wait(200); await tapText('카카오톡 ID'); await wait(900); await shot('3-snap')
   await wait(2300)
-  await page.click('[data-role="nav-home"]'); await wait(200); await page.click('[data-app="talk"]'); await wait(200); await page.click('[data-go="talk_scam"]'); await wait(200)
+  await page.waitForSelector('[data-role="move-app"]'); await wait(500); await shot('3b-move'); await page.click('[data-role="move-app"]'); await wait(300); await page.click('[data-go="talk_scam"]'); await wait(200)
   for (const t of ['haeon-interview', '모두 허용해', '482913']) { await tapText(t); await wait(3100) }
   await wait(700)
   const done = !!(await page.$('[data-role="evidence-done"]'))
