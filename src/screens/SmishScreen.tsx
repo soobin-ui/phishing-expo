@@ -437,14 +437,6 @@ function FakePage({
 
       <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-[30rem] px-5 py-5">
-          {/* 체험 안내 — 실제 정보를 넣지 않도록 */}
-          <p className="mb-3 flex items-start gap-2 rounded-xl border border-[#cfe0ff] bg-[#eef4ff] px-3.5 py-2.5 text-[0.9rem] leading-snug font-semibold text-[#2f55b8]">
-            <svg viewBox="0 0 24 24" className="mt-0.5 h-[1.1rem] w-[1.1rem] shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 8h.01M11 12h1v4h1" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span>{p.demoNote}</span>
-          </p>
           <p className="text-center text-[0.95rem] font-bold text-[#3478f6]">{p.site}</p>
 
           {/* 공유한 사람 + 잠긴 사진 3장 */}
@@ -537,6 +529,9 @@ function FakePage({
                 )}
               </motion.label>
             )}
+
+            {/* 체험 안내 — 실제 정보를 넣지 않도록. 4번 결제 화면과 같은 회색 안내문 */}
+            <p className="mt-1 text-[0.82rem] leading-snug text-[#8a93a6]">{p.demoNote}</p>
 
             <button type="button" data-role="smish-view" onClick={view} disabled={!verified || loading} className="mt-1 min-h-[3.4rem] w-full rounded-xl bg-[#1f2a44] px-4 text-[1.1rem] font-bold text-white active:bg-[#151d31] disabled:opacity-35">
               {loading ? p.loading : p.view}
