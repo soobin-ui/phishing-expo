@@ -194,14 +194,14 @@
 
 .fx .dock { position: relative; z-index: 1; flex: none; display: flex; justify-content: center; padding: 0.55rem 0 0.1rem; }
 .fx .dock { gap: 0.6rem; align-items: center; }
-.fx .hintbtn { display: flex; align-items: center; gap: 0.4rem; border: 1.5px solid rgba(127, 212, 255, 0.5); background: #0b1631; color: #cfeaff; border-radius: 1rem; padding: 0.55rem 0.8rem; text-align: left; }
-.fx .hintbtn svg { width: 1.5rem; height: 1.5rem; flex: none; color: #7fd4ff; }
+.fx .hintbtn { display: flex; align-items: center; gap: 0.4rem; border: 1.5px solid rgba(45, 212, 191, 0.7); background: #08302f; color: #ccfbf1; border-radius: 1rem; padding: 0.55rem 0.8rem; text-align: left; }
+.fx .hintbtn svg { width: 1.5rem; height: 1.5rem; flex: none; color: #5eead4; }
 .fx .hintbtn b { display: block; font: 700 0.95rem var(--font-display); }
 .fx .hintbtn small { display: block; font-size: 0.7rem; color: #ffe9a8; }
 .fx .hintbtn .hcap { display: none; }
 .fx .hintbtn.nudge { border-color: var(--color-gold); animation: fx-hglow 1.2s ease-in-out infinite; }
 .fx .hintbtn.nudge svg { color: var(--color-gold); }
-.fx .hintbtn.on { border-color: #7fd4ff; background: #12305a; }
+.fx .hintbtn.on { border-color: #5eead4; background: #0d5450; }
 @keyframes fx-hglow { 0%, 100% { box-shadow: 0 0 0 0 rgba(254, 202, 54, 0.6); } 50% { box-shadow: 0 0 1.1rem 0.25rem rgba(254, 202, 54, 0.5); } }
 /* 힌트가 가리키는 길: 앱 아이콘 → 대화방 → 말풍선 */
 .fx .icon.hl .i { animation: fx-hpulse 1.1s ease-in-out infinite; }
@@ -341,7 +341,7 @@
   .fx .side .stats, .fx .side .dock { display: contents; }
   .fx .stat { padding: 0.55rem 0.6rem 0.65rem; }
   /* 남은 시간은 따로 떼어 둠 — 아래 도구 묶음(남은 기회·힌트·증거 폴더)과 간격 */
-  .fx .stat.time { grid-area: time; margin-bottom: 1.1rem; }
+  .fx .stat.time { grid-area: time; margin-bottom: 2.2rem; }
   .fx .stat.time small { font-size: 1.2rem; }
   .fx .stat.time b { font-size: 3.6rem; }
   .fx .stat.time .bar { margin-top: 0.55rem; height: 0.42rem; }
