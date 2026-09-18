@@ -92,6 +92,7 @@ export function DefenseCard({
   /** 메일 판은 카드와 같은 높이 — 카드 높이를 재서 맞춥니다(내용이 길어도 판이 커지지 않게) */
   const cardRef = useRef<HTMLDivElement>(null)
   const [cardH, setCardH] = useState(0)
+  const [cardW, setCardW] = useState(0)
   /** 버튼 두 개는 카드(뒷면이면 카드+메일 판) 폭에 딱 맞춥니다 — 폭이 따로 놀면 동떨어져 보입니다 */
   const rowRef = useRef<HTMLDivElement>(null)
   const [rowW, setRowW] = useState(0)
@@ -101,6 +102,7 @@ export function DefenseCard({
     if (!card || !row) return
     const ro = new ResizeObserver(() => {
       setCardH(card.offsetHeight)
+      setCardW(card.offsetWidth)
       setRowW(row.offsetWidth)
     })
     ro.observe(card)
@@ -141,6 +143,9 @@ export function DefenseCard({
     const id = window.setTimeout(() => setShown(true), 700)
     return () => window.clearTimeout(id)
   }, [])
+
+  /** 뒷면 옆 판이 보이는 상태 — 행이 카드보다 넓어졌는지로 판단(좁은 폰에서는 판이 숨겨져 행 = 카드) */
+  const split = flipped && hasReview && cardW > 0 && rowW > cardW + 24
 
   const rows = [
     { label: t.card.detect, sub: 'PHISHING DETECTION', icon: <IconDetect />, n: clamp(Math.round((stats.found / stats.total) * 5)) },
@@ -383,18 +388,20 @@ export function DefenseCard({
         )}
         </div>
 
-        {/* 버튼 두 개 — 좌우로 나란히, 폭은 위 카드(+메일 판)와 똑같이. 아주 좁은 폰만 세로 */}
+        {/* 버튼 두 개 — 좌우로 나란히, 폭은 위 카드(+메일 판)와 똑같이. 아주 좁은 폰만 세로
+            ★ 뒷면에서 옆 판이 보일 때는 [앞면 보기]를 카드 폭에, [이렇게 예방하세요]를 옆 판 폭에 맞춥니다(사용자 요청, 1~4번 공통) */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: shown ? 1 : 0, y: shown ? 0 : 10 }}
           transition={{ delay: 1.5 }}
           // 폭은 카드 행과 같게 — 단, 낮은 노트북 화면(카드가 작아짐)에서는 글자가 버튼 밖으로 삐져나오므로 최소 폭을 보장
           style={{ width: rowW ? `max(${rowW}px, min(26rem, 92vw))` : undefined }}
-          className="flex max-w-full gap-2.5 max-[420px]:flex-col"
+          className={`flex max-w-full max-[420px]:flex-col ${split ? 'gap-4' : 'gap-2.5'}`}
         >
           <motion.button
             type="button"
             data-role="flip-card"
+            style={split ? { flex: `0 0 ${cardW}px` } : undefined}
             onClick={() => setFlipped((v) => !v)}
             animate={{
               boxShadow: [
