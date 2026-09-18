@@ -40,6 +40,9 @@ export interface CardCopy {
   failBody?: string
   tricks?: string
   missed?: string
+  missedShort?: string
+  allSeen?: string
+  allSeenSub?: string
 }
 
 export function DefenseCard({
@@ -62,11 +65,25 @@ export function DefenseCard({
     failBody: copy.failBody ?? t.failBody,
     tricks: copy.tricks ?? t.card.tricks,
     missed: copy.missed ?? t.card.missed,
+    missedShort: copy.missedShort ?? t.card.missedShort,
+    allSeen: copy.allSeen ?? t.card.allSeen,
+    allSeenSub: copy.allSeenSub ?? t.card.allSeenSub,
   }
   const all = stats.found >= stats.total
   const [shown, setShown] = useState(false)
   const [flipped, setFlipped] = useState(false)
   const [trick, setTrick] = useState(0)
+  /** 오른쪽 칸에 꽂힌 수법 번호들 — [다음]을 누른 순서대로 */
+  const [dealt, setDealt] = useState<number[]>([])
+  const allDealt = dealt.length >= flags.length
+  const flag = flags[Math.min(trick, flags.length - 1)]
+
+  /** [다음] — 지금 보던 카드를 칸으로 돌리고, 다음 수법을 큰 카드에 */
+  const deal = () => {
+    if (allDealt) return
+    setDealt((d) => (d.includes(trick) ? d : [...d, trick]))
+    if (trick < flags.length - 1) setTrick(trick + 1)
+  }
 
   useEffect(() => {
     const id = window.setTimeout(() => setShown(true), 700)
@@ -109,10 +126,20 @@ export function DefenseCard({
         </p>
       </div>
 
-      {/* ②③ 카드 + 버튼 — 버튼 폭을 카드와 똑같이 맞추려고 한 상자에 담습니다 */}
+      {/* ②③ 카드 + 버튼.
+          앞면: 카드 한 장이 가운데.
+          뒷면(flipped): 큰 카드가 왼쪽으로 밀려나고 오른쪽에 2×2 빈 칸이 생깁니다.
+          [다음]을 누를 때마다 지금 보던 수법 카드가 작은 카드가 되어 빈 칸으로 날아가 꽂히고(카드 게임에서 패 돌리듯),
+          큰 카드에는 다음 수법이 나타납니다. 1번 왼쪽 위 → 2번 오른쪽 위 → 3번 왼쪽 아래 → 4번 오른쪽 아래.
+          ★ 날아가는 움직임은 framer-motion 의 layoutId 공유(큰 카드 속 내용 ↔ 칸 속 작은 카드가 같은 id). */}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-3">
-        <div className="flex w-[min(24rem,86vw,40vh)] flex-col gap-2.5">
-        <div className="w-full [perspective:1400px]">
+        <div className="flex w-full max-w-[46rem] flex-col items-center gap-2.5">
+        <div className="flex w-full items-center justify-center gap-[4%]">
+        <motion.div
+          layout
+          transition={{ type: 'spring', stiffness: 210, damping: 26 }}
+          className={`[perspective:1400px] ${flipped ? 'w-[min(22rem,50%,40vh)]' : 'w-[min(24rem,86vw,40vh)]'}`}
+        >
         {shown && (
           <motion.div
             initial={{ rotateY: 900, scale: 0.35, opacity: 0 }}
@@ -196,7 +223,7 @@ export function DefenseCard({
               </div>
             </CardFace>
 
-            {/* ── 뒷면 — 수법 한 장씩 ── */}
+            {/* ── 뒷면 — 지금 보는 수법 한 장 (다 돌리고 나면 '모두 확인') ── */}
             <CardFace back>
               <div className="flex h-full flex-col text-left">
                 <div className="flex items-center gap-1.5">
@@ -204,85 +231,117 @@ export function DefenseCard({
                     {c.tricks}
                   </span>
                   <span className="font-display text-[0.75em] font-bold text-white tabular-nums">
-                    {trick + 1} / {flags.length}
+                    {Math.min(dealt.length + 1, flags.length)} / {flags.length}
                   </span>
                 </div>
 
-                {/* 수법 4장을 옆으로 이어 붙인 띠 — [다음]을 누르면 본 장은 왼쪽으로 밀리고 다음 장이 오른쪽에서 들어옵니다 */}
-                <div className="relative min-h-0 flex-1 overflow-hidden">
-                  {/* ⚠️ framer-motion 의 % 단위 x 는 거의 즉시 끝나 버려(0.1초) 밀리는 게 안 보였음 → CSS transition 으로 0.7초 */}
-                  <div
-                    data-role="trick-track"
-                    className="flex h-full"
-                    style={{
-                      transform: `translateX(-${trick * 100}%)`,
-                      transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
-                    }}
-                  >
-                    {flags.map((f, i) => (
-                      <div
-                        key={f.target}
-                        data-role="trick-slide"
-                        aria-hidden={i !== trick}
-                        className="flex h-full w-full shrink-0 flex-col justify-center pr-[0.3em]"
-                      >
-                        <span className="flex h-[2.2em] w-[2.2em] items-center justify-center rounded-full bg-[#2fa8ff] font-display text-[1em] font-bold text-[#050a18]">
-                          {i + 1}
-                        </span>
-                        <p className="mt-[0.6em] text-[1em] leading-snug font-bold text-white">
-                          {f.label}
-                        </p>
-                        <p className="mt-[0.45em] text-[0.78em] leading-relaxed text-[#b9cbe6]">
-                          {f.explain}
-                        </p>
-                        {!solved.includes(f.target) && (
-                          <p className="mt-[0.5em] text-[0.68em] font-bold text-[#ffb4b4]">{c.missed}</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                <div className="relative min-h-0 flex-1">
+                  {allDealt ? (
+                    <motion.div
+                      key="all-seen"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.35, type: 'spring', stiffness: 260, damping: 18 }}
+                      data-role="all-seen"
+                      className="flex h-full flex-col items-center justify-center text-center"
+                    >
+                      <span className="flex h-[3em] w-[3em] items-center justify-center rounded-full bg-[#2fa8ff] text-[#050a18]">
+                        <svg viewBox="0 0 24 24" className="h-[60%] w-[60%]" fill="none" stroke="currentColor" strokeWidth="3.2" aria-hidden="true">
+                          <path d="M5 12.5l4.5 4.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </span>
+                      <p className="mt-[0.8em] font-display text-[1.05em] leading-snug font-bold whitespace-pre-line text-white">
+                        {fill(c.allSeen, { n: flags.length })}
+                      </p>
+                      <p className="mt-[0.5em] text-[0.72em] leading-relaxed text-[#b9cbe6]">{c.allSeenSub}</p>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key={`big-${trick}`}
+                      layoutId={`deal-${trick}`}
+                      data-role="trick-slide"
+                      className="flex h-full flex-col justify-center"
+                    >
+                      <span className="flex h-[2.2em] w-[2.2em] items-center justify-center rounded-full bg-[#2fa8ff] font-display text-[1em] font-bold text-[#050a18]">
+                        {trick + 1}
+                      </span>
+                      <p className="mt-[0.6em] text-[1em] leading-snug font-bold text-white">{flag.label}</p>
+                      <p className="mt-[0.45em] text-[0.78em] leading-relaxed text-[#b9cbe6]">{flag.explain}</p>
+                      {!solved.includes(flag.target) && (
+                        <p className="mt-[0.5em] text-[0.68em] font-bold text-[#ffb4b4]">{c.missed}</p>
+                      )}
+                    </motion.div>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <div className="flex flex-1 gap-[0.3em]">
-                    {flags.map((f, i) => (
-                      <button
-                        key={f.target}
-                        type="button"
-                        data-role="pick-trick"
-                        aria-label={`${i + 1}번 수법 보기`}
-                        onClick={() => setTrick(i)}
-                        className="flex-1 py-[0.5em]"
-                      >
-                        <span
-                          className={`block h-[0.4em] w-full rounded-full ${
-                            i === trick ? 'bg-[#2fa8ff]' : 'bg-white/25'
-                          }`}
-                        />
-                      </button>
-                    ))}
+                {!allDealt && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      data-role="next-trick"
+                      onClick={deal}
+                      className="rounded-full bg-[#2fa8ff] px-[1.1em] py-[0.4em] font-display text-[0.75em] font-bold text-[#050a18] active:bg-[#1d8ede]"
+                    >
+                      {t.card.nextTrick}
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    data-role="next-trick"
-                    onClick={() => setTrick((v) => (v + 1) % flags.length)}
-                    className="rounded-full bg-[#2fa8ff] px-[0.9em] py-[0.35em] font-display text-[0.7em] font-bold text-[#050a18] active:bg-[#1d8ede]"
-                  >
-                    {t.card.nextTrick}
-                  </button>
-                </div>
+                )}
               </div>
             </CardFace>
           </motion.div>
         )}
+        </motion.div>
+
+        {/* 오른쪽 2×2 칸 — 뒷면을 볼 때만. 돌린 카드가 차례로 꽂힙니다 */}
+        {flipped && (
+          <motion.div
+            layout
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: 'spring', stiffness: 210, damping: 26, delay: 0.45 }}
+            data-role="deal-grid"
+            className="grid w-[min(17rem,40%)] grid-cols-2 gap-[0.5rem]"
+          >
+            {flags.map((f, k) => (
+              <div
+                key={f.target}
+                data-role="deal-slot"
+                className="relative rounded-[0.6rem] border-2 border-dashed border-[#2fa8ff]/35"
+                style={{ aspectRatio: '5 / 7' }}
+              >
+                <span className="absolute top-1 left-1.5 font-display text-[0.7rem] font-bold text-[#2fa8ff]/45 tabular-nums">
+                  {k + 1}
+                </span>
+                {dealt.includes(k) && (
+                  <motion.div
+                    layoutId={`deal-${k}`}
+                    transition={{ type: 'spring', stiffness: 170, damping: 22 }}
+                    data-role="dealt-card"
+                    className="absolute inset-0 flex flex-col overflow-hidden rounded-[0.6rem] border-2 border-[#2fa8ff] bg-[linear-gradient(160deg,#0a1226_0%,#0d1c3c_55%,#081022_100%)] p-[0.45rem] text-[clamp(0.6rem,1.9vh,0.85rem)] shadow-[0_0_1.2rem_rgba(47,168,255,0.55)]"
+                  >
+                    <span className="flex h-[1.9em] w-[1.9em] items-center justify-center rounded-full bg-[#2fa8ff] font-display text-[0.9em] font-bold text-[#050a18]">
+                      {k + 1}
+                    </span>
+                    <p className="mt-[0.5em] text-[0.95em] leading-snug font-bold text-white">{f.label}</p>
+                    {!solved.includes(f.target) && (
+                      <span className="mt-auto inline-block self-start rounded-full bg-[#ffb4b4]/20 px-[0.5em] py-[0.15em] text-[0.7em] font-bold text-[#ffb4b4]">
+                        {c.missedShort}
+                      </span>
+                    )}
+                  </motion.div>
+                )}
+              </div>
+            ))}
+          </motion.div>
+        )}
         </div>
 
-        {/* 버튼 — 카드와 같은 폭 */}
+        {/* 버튼 — 앞면 카드와 같은 폭 */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: shown ? 1 : 0, y: shown ? 0 : 10 }}
           transition={{ delay: 1.5 }}
-          className="flex w-full flex-col gap-2"
+          className="flex w-[min(24rem,86vw,40vh)] flex-col gap-2"
         >
           <motion.button
             type="button"
