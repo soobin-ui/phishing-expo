@@ -36,7 +36,7 @@ async function open(fast) {
 // ① 힌트 길 안내
 {
   const { page, errors } = await open(false)
-  const t0 = await page.$eval('.timer b', (e) => e.textContent)
+  const t0 = await page.$eval('[data-role="timer"]', (e) => e.textContent)
   await page.click('[data-role="hint"]'); await wait(300)
   check('힌트 → 메시지 앱 반짝', await page.$eval('[data-app="sms"]', (e) => e.classList.contains('hl')))
   await page.screenshot({ path: join(OUT, '힌트-1-home.png') })
@@ -48,7 +48,7 @@ async function open(fast) {
   await page.screenshot({ path: join(OUT, '힌트-2-bubble.png') })
   await page.evaluate(() => document.querySelector('.bub.hl').click()); await wait(3200)
   check('증거 찾으면 힌트 꺼짐', (await page.$$('.hl')).length === 0)
-  const t1 = await page.$eval('.timer b', (e) => e.textContent)
+  const t1 = await page.$eval('[data-role="timer"]', (e) => e.textContent)
   check(`남은 시간 줄어듦 (${t0} → ${t1})`, t0 !== t1)
   check('오류 없음', !errors.length)
   await page.close()
