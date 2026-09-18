@@ -277,7 +277,7 @@ export function ForensicScreen({
               {cur === 'lock' ? (
                 <Lock onOpen={() => go('home')} />
               ) : cur === 'home' ? (
-                <Home seen={seenApps} hint={hint} onGo={go} onDecoy={() => showToast(fx.toast.decoyTitle, fx.toast.decoyBody)} />
+                <Home seen={seenApps} found={found} hint={hint} onGo={go} onDecoy={() => showToast(fx.toast.decoyTitle, fx.toast.decoyBody)} />
               ) : (
                 <AppView screen={SCREENS[cur]} found={found} hint={hint} onGo={go} onInspect={inspect} />
               )}
@@ -389,7 +389,9 @@ export function ForensicScreen({
               <MagnifierIcon />
               {fx.rules.tag}
             </span>
-            <h2>{fill(fx.rules.title, { name: who })}</h2>
+            <h2>
+              <Strong text={fill(fx.rules.title, { name: who })} />
+            </h2>
             <ol className="steps">
               {fx.rules.steps.map((s, i) => (
                 <li key={i}>
@@ -506,23 +508,33 @@ function Lock({ onOpen }: { onOpen: () => void }) {
   )
 }
 
-/** 홈 화면 — 아이폰처럼 4열 격자 + 아래 고정 줄. 증거가 있는 앱 3개는 빨간 숫자 배지, 나머지는 눌러도 '증거 없음' 안내만 */
-function Home({ seen, hint, onGo, onDecoy }: { seen: string[]; hint: Evidence | null; onGo: (id: string) => void; onDecoy: () => void }) {
-  const icon = (a: { id: string; name: string; icon: string; color: string; dark?: boolean; badge?: number }, real: boolean) => (
-    <button
-      key={a.id}
-      type="button"
-      data-app={real ? a.id : undefined}
-      className={`icon ${real && seen.includes(a.id) ? 'seen' : ''} ${real && hint?.app === a.id ? 'hl' : ''}`}
-      onClick={() => (real ? onGo(a.id) : onDecoy())}
-    >
-      <span className="i" style={{ background: a.color, color: a.dark ? '#1c1c1e' : '#fff' }}>
-        <AppIcon name={a.icon} />
-        {a.badge ? <em>{a.badge}</em> : null}
-      </span>
-      {a.name}
-    </button>
-  )
+/**
+ * 홈 화면 — 아이폰처럼 4열 격자 + 아래 고정 줄. 나머지 앱은 눌러도 '증거 없음' 안내만.
+ * 증거가 아직 남아 있는 앱(메시지·카카오톡)은 팝업처럼 반짝이고 배지에 남은 증거 수가 뜹니다.
+ * 그 앱의 증거를 다 찾으면 반짝임이 멈추고 배지도 사라져, 남은 쪽만 반짝입니다.
+ */
+function Home({ seen, found, hint, onGo, onDecoy }: { seen: string[]; found: string[]; hint: Evidence | null; onGo: (id: string) => void; onDecoy: () => void }) {
+  const icon = (a: { id: string; name: string; icon: string; color: string; dark?: boolean; badge?: number }, real: boolean) => {
+    const hasEv = EVIDENCE.some((e) => e.app === a.id)
+    const left = EVIDENCE.filter((e) => e.app === a.id && !found.includes(e.id)).length
+    const badge = hasEv ? left : a.badge
+    return (
+      <button
+        key={a.id}
+        type="button"
+        data-app={real ? a.id : undefined}
+        data-left={hasEv ? left : undefined}
+        className={`icon ${real && seen.includes(a.id) ? 'seen' : ''} ${real && hint?.app === a.id ? 'hl' : ''} ${left > 0 ? 'live' : ''}`}
+        onClick={() => (real ? onGo(a.id) : onDecoy())}
+      >
+        <span className="i" style={{ background: a.color, color: a.dark ? '#1c1c1e' : '#fff' }}>
+          <AppIcon name={a.icon} />
+          {badge ? <em>{badge}</em> : null}
+        </span>
+        {a.name}
+      </button>
+    )
+  }
   return (
     <div className="home">
       <div className="grid">
