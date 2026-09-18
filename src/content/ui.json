@@ -207,6 +207,8 @@
     "chances": "남은 기회",
     "timeoutToast": "시간 종료",
     "scrollHint": "아래로 내려 끝까지 읽어보세요",
+    "hint": "힌트",
+    "hintToast": "노랗게 빛나는 곳을 눌러 보세요",
     "timeout": "제한 시간이 끝났습니다. 놓친 문구를 알려드릴게요.",
     "progress": "{found} / {total} 확인",
     "left": "남은 돋보기 {n}개",
@@ -217,7 +219,7 @@
     "retry": "다시 고르기",
     "confirmed": "확인했습니다",
     "caughtTitle": "검거 완료",
-    "caughtBody": "이 메일에 숨어 있던 피싱 수법 {n}가지를 모두 찾아냈습니다.",
+    "caughtBody": "이메일에 숨어 있던 피싱 수법 {n}가지를 모두 찾아냈습니다.",
     "failTitle": "조사를 마쳤습니다",
     "failBody": "돋보기를 다 썼습니다. 놓친 곳을 알려드릴게요.",
     "cardNext": "이렇게 예방하세요",
@@ -233,11 +235,11 @@
       "protect": "정보 보호력",
       "block": "악성 차단력",
       "footer": "2026 산학연협력 EXPO · 안전체험관",
-      "tricks": "이 메일에 숨어 있던 피싱 수법",
+      "tricks": "이메일에 숨어 있던 피싱 수법",
       "flipBack": "카드 뒷면 보기",
       "flipFront": "카드 앞면 보기",
       "nextTrick": "다음",
-      "missed": "이 수법은 놓치셨습니다"
+      "missed": "이번에는 찾지 못한 수법입니다. 꼭 기억해 두세요"
     },
     "rules": {
       "tag": "사건 브리핑",

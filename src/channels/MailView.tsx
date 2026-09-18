@@ -47,6 +47,8 @@ export function EmailBody({
   onAttachment,
   solvedLink = false,
   solvedFile = false,
+  hintLink = false,
+  hintFile = false,
 }: {
   mail: MailDoc
   render: (t: string) => ReactNode
@@ -58,6 +60,9 @@ export function EmailBody({
   /** 수사 모드에서 이미 확인된 곳은 빨갛게 표시 */
   solvedLink?: boolean
   solvedFile?: boolean
+  /** 힌트 — 노랗게 빛나게 */
+  hintLink?: boolean
+  hintFile?: boolean
 }) {
   const c = ui.channels.mail
   const initial = mail.sender.name.slice(0, 1)
@@ -87,7 +92,7 @@ export function EmailBody({
 
       {/* 파란 링크 버튼 — 주소는 꾹 눌러야 보입니다 */}
       {mail.link && (
-        <LinkButton link={mail.link} revealUrl={revealUrl} onLink={onLink} solved={solvedLink} />
+        <LinkButton link={mail.link} revealUrl={revealUrl} onLink={onLink} solved={solvedLink} hint={hintLink} />
       )}
 
       {/* 첨부파일 */}
@@ -99,7 +104,7 @@ export function EmailBody({
             data-role="attachment"
             onClick={(e) => onAttachment?.(e.currentTarget, e)}
             className={`flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left active:bg-[#f2f5f9] ${
-              solvedFile ? 'border-red-400 bg-red-50' : 'border-[#dfe3ea]'
+              solvedFile ? 'border-red-400 bg-red-50' : hintFile ? 'hint-glow border-gold' : 'border-[#dfe3ea]'
             }`}
           >
             <span className="flex h-[2.4rem] w-[2rem] shrink-0 items-end justify-center rounded-md bg-[#e05c4b] pb-1 text-[0.6rem] font-extrabold text-white">
@@ -141,11 +146,13 @@ function LinkButton({
   revealUrl,
   onLink,
   solved = false,
+  hint = false,
 }: {
   link: { label: string; url: string }
   revealUrl: boolean
   onLink?: (el: HTMLElement, at: { clientX: number; clientY: number }) => void
   solved?: boolean
+  hint?: boolean
 }) {
   const [peek, setPeek] = useState(false)
   const timer = useRef<number | undefined>(undefined)
@@ -193,7 +200,7 @@ function LinkButton({
           onLink?.(e.currentTarget, e)
         }}
         className={`rounded-lg px-6 py-3 text-[1.02rem] font-bold text-white ${
-          solved ? 'bg-red-600 ring-2 ring-red-300' : 'bg-[#2f6be0] active:bg-[#2459c2]'
+          solved ? 'bg-red-600 ring-2 ring-red-300' : hint ? 'hint-glow bg-[#2f6be0]' : 'bg-[#2f6be0] active:bg-[#2459c2]'
         }`}
       >
         {link.label}

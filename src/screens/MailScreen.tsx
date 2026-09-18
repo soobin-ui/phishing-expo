@@ -87,6 +87,21 @@ export function MailScreen({
   /** 제한 시간 — 수상한 메일을 열면 시작, 말풍선·카드 동안은 멈춤 */
   const [started, setStarted] = useState(false);
 
+  /** 힌트 — 아직 못 찾은 첫 번째 수상한 문구를 노랗게 빛나게 합니다(감점 없음, 찾으면 꺼짐) */
+  const [hint, setHint] = useState<string | null>(null);
+  const showHint = () => {
+    if (pop || card || timedOut) return;
+    const next = flags.find((f) => !solved.includes(f.target));
+    if (!next) return;
+    setHint(next.target);
+    showToast(t.hintToast, 2200);
+    window.setTimeout(() => {
+      paneRef.current
+        ?.querySelector(".hint-glow")
+        ?.scrollIntoView({ block: "center", behavior: "smooth" });
+    }, 50);
+  };
+
   /** 메일 본문 아래에 더 남았는지 — 스크롤 힌트 표시용 */
   const scrollRef = useRef<HTMLDivElement>(null);
   const [moreBelow, setMoreBelow] = useState(false);
@@ -106,7 +121,8 @@ export function MailScreen({
   }, [view]);
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
   const [timedOut, setTimedOut] = useState(false);
-  const low = timeLeft <= 30;
+  /** 1분 남으면 붉게 + 흔들림 */
+  const low = timeLeft <= 60;
   const running = started && !card && !pop && !timedOut;
 
   const left = TOOLS - used;
@@ -208,6 +224,7 @@ export function MailScreen({
     const next = [...solved, pop.flag.target];
     setSolved(next);
     setPop(null);
+    if (hint === pop.flag.target) setHint(null);
     if (next.length >= total || left <= 0)
       window.setTimeout(() => finish(next.length), 500);
   };
@@ -223,7 +240,9 @@ export function MailScreen({
           className={`cursor-pointer rounded ${
             solved.includes(seg.flag.target)
               ? "bg-red-100 px-0.5 font-bold text-red-700 underline decoration-red-400 decoration-2"
-              : ""
+              : hint === seg.flag.target
+                ? "hint-glow px-0.5"
+                : ""
           }`}
         >
           {seg.text}
@@ -309,6 +328,16 @@ export function MailScreen({
                 >
                   ‹ {c.inbox}
                 </button>
+                <button
+                  type="button"
+                  data-role="hint"
+                  onClick={showHint}
+                  disabled={!!pop || card || timedOut}
+                  className="ml-auto flex items-center gap-1.5 rounded-full border-2 border-gold bg-[#fff6d6] px-4 py-1.5 font-display text-[1.05rem] font-bold text-[#7a5a00] shadow-[0_0.2rem_0_#e9b21c] active:translate-y-[0.1rem] active:shadow-none disabled:opacity-40"
+                >
+                  <BulbIcon />
+                  {t.hint}
+                </button>
               </div>
               <div className="relative min-h-0 flex-1">
                 <div
@@ -326,6 +355,8 @@ export function MailScreen({
                       }
                       solvedLink={!!linkFlag && solved.includes(linkFlag.target)}
                       solvedFile={!!fileFlag && solved.includes(fileFlag.target)}
+                      hintLink={hint === "link"}
+                      hintFile={hint === "attachment"}
                     />
                   </div>
                 </div>
@@ -871,6 +902,14 @@ function Inbox({
         {hint}
       </p>
     </div>
+  );
+}
+
+function BulbIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-[1.15rem] w-[1.15rem]" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+      <path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.6 10.8c.7.5 1.1 1.3 1.1 2.2h5c0-.9.4-1.7 1.1-2.2A6 6 0 0012 3z" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
