@@ -3,9 +3,9 @@
  *
  *   node tools/vip_shots.mjs http://localhost:5186/
  *
- * 경로 A(수사 성공): 브리핑 → 팝업 → 본인확인(주민번호 찾기) → 좌석(압박 찾기) → 결제(보증금·주소 찾기)
- *                    → '만약 결제했다면?' → 빵빠레 → 알림 폭탄 → 진실 → 검거 카드(앞·뒤)
- * 경로 B(그냥 결제):  아무것도 안 찾고 끝까지 결제 → 알림 폭탄 → 진실 → 검거 카드
+ * 경로 A(먼저 확인): 브리핑 → 팝업 → [진짜인지 먼저 확인] → 고객센터 상담 → 위험 차단 → 검거 카드(앞·뒤)
+ * 경로 B(당하고 배움): 팝업 → 본인확인 → 좌석 → 보증금 결제 → 빵빠레 → 알림 폭탄 → 피해 화면 → [다시 해보기]
+ *                      → 팝업 → [먼저 확인] → 검거 카드(별점 낮음)
  * 기기 3종으로 찍습니다 → tools/shots/vip/
  */
 import { mkdirSync, rmSync } from 'node:fs'
@@ -36,7 +36,7 @@ async function open([label, w, h, mobile]) {
   const errors = []
   page.on('pageerror', (e) => errors.push(String(e)))
   const click = async (sel) => {
-    await page.waitForSelector(sel, { timeout: 10000 })
+    await page.waitForSelector(sel, { timeout: 20000 })
     await page.evaluate((s) => document.querySelector(s).click(), sel)
   }
   const shot = async (name) => {
@@ -73,7 +73,7 @@ async function open([label, w, h, mobile]) {
   return { browser, page, click, shot, fillAll, spot, problems, errors, label }
 }
 
-/** 경로 A — 네 곳을 다 찾고 '만약 결제했다면?' */
+/** 경로 A — 결제 전에 먼저 확인 */
 async function runA(device) {
   const s = await open(device)
   await wait(1200)
@@ -81,48 +81,21 @@ async function runA(device) {
   await s.click('[data-role="rules-start"]')
   await wait(1600)
   await s.shot('A1-팝업')
-  await s.click('[data-role="vip-open"]')
-  await wait(900)
-  await s.fillAll()
-  await s.shot('A2-본인확인')
-  await s.spot('overask')
-  await s.shot('A3-발견말풍선')
-  await s.click('[data-role="vip-found-ok"]')
-  await wait(400)
-  await s.click('[data-role="vip-verify-next"]')
-  await wait(900)
-  await s.shot('A4-좌석')
-  await s.spot('pressure')
-  await s.click('[data-role="vip-found-ok"]')
-  await wait(400)
-  await s.click('[data-role="vip-seat-next"]')
-  await wait(700)
-  await s.fillAll()
-  await s.shot('A5-결제')
-  await s.spot('deposit')
-  await s.click('[data-role="vip-found-ok"]')
-  await wait(400)
-  await s.spot('fake_domain')
-  await s.click('[data-role="vip-found-ok"]')
-  await wait(900)
-  await s.shot('A6-전부찾음')
-  await s.click('[data-role="vip-sim"]')
-  await wait(1600)
-  await s.shot('A7-초청완료')
-  await wait(2600)
-  await s.shot('A8-알림폭탄')
-  await s.click('[data-role="vip-reveal-next"]')
+  await s.click('[data-role="vip-safe"]')
+  await wait(2500)
+  await s.shot('A2-고객센터')
+  await s.click('[data-role="vip-safe-next"]')
   await wait(3200)
-  await s.shot('A9-검거카드')
+  await s.shot('A3-검거카드')
   await s.click('[data-role="flip-card"]')
   await wait(1800)
-  await s.shot('A10-카드뒷면')
-  const found = await s.page.evaluate(() => document.body.innerText.includes('검거 완료'))
+  await s.shot('A4-카드뒷면')
+  const ok = await s.page.evaluate(() => document.body.innerText.includes('검거 완료'))
   await s.browser.close()
-  return { path: 'A', label: s.label, problems: s.problems, errors: s.errors, ok: found }
+  return { path: 'A', label: s.label, problems: s.problems, errors: s.errors, ok }
 }
 
-/** 경로 B — 아무것도 안 찾고 그대로 결제 */
+/** 경로 B — 끝까지 결제해서 당한 뒤, 다시 해보기 → 먼저 확인 */
 async function runB(device) {
   const s = await open(device)
   await s.click('[data-role="rules-start"]')
@@ -130,20 +103,29 @@ async function runB(device) {
   await s.click('[data-role="vip-open"]')
   await wait(800)
   await s.fillAll()
+  await s.shot('B1-본인확인')
   await s.click('[data-role="vip-verify-next"]')
   await wait(600)
+  await s.shot('B2-좌석')
   await s.click('[data-role="vip-seat-next"]')
   await wait(600)
   await s.fillAll()
+  await s.shot('B3-결제')
   await s.click('[data-role="vip-pay"]')
   await wait(2600)
-  await s.shot('B1-초청완료')
+  await s.shot('B4-초청완료')
   await wait(3200)
-  await s.shot('B2-알림폭탄')
-  await s.click('[data-role="vip-reveal-next"]')
+  await s.shot('B5-알림폭탄')
+  await s.page.waitForSelector('[data-role="vip-retry"]', { timeout: 20000 })
+  await s.shot('B5b-피해화면')
+  await s.click('[data-role="vip-retry"]')
+  await wait(1400)
+  await s.shot('B6-다시팝업')
+  await s.click('[data-role="vip-safe"]')
+  await s.click('[data-role="vip-safe-next"]')
   await wait(3200)
-  await s.shot('B3-수사완료카드')
-  const ok = await s.page.evaluate(() => document.body.innerText.includes('수사 완료'))
+  await s.shot('B7-검거카드')
+  const ok = await s.page.evaluate(() => document.body.innerText.includes('검거 완료'))
   await s.browser.close()
   return { path: 'B', label: s.label, problems: s.problems, errors: s.errors, ok }
 }
