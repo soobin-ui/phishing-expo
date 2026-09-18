@@ -63,7 +63,7 @@ export function personalize(scenario: Scenario, name: string): Scenario {
     })),
     lockscreen: scenario.lockscreen?.map((n) => ({ ...n, from: fill(n.from, v), text: fill(n.text, v) })),
     brief: scenario.brief
-      ? { title: fill(scenario.brief.title, v), steps: scenario.brief.steps.map((t) => fill(t, v)) }
+      ? { ...scenario.brief, title: fill(scenario.brief.title, v), steps: scenario.brief.steps.map((t) => fill(t, v)) }
       : undefined,
   }
 }

@@ -9,6 +9,7 @@ import { ArriveScreen } from './screens/ArriveScreen'
 import { MailScreen } from './screens/MailScreen'
 import { ForensicScreen } from './screens/ForensicScreen'
 import { ChatScreen } from './screens/ChatScreen'
+import { SmishScreen } from './screens/SmishScreen'
 import { CaughtScreen } from './screens/CaughtScreen'
 import { FindScreen } from './screens/FindScreen'
 import { ActionScreen } from './screens/ActionScreen'
@@ -70,12 +71,25 @@ export default function App() {
   const [gave, setGave] = useState<string[]>([])
   /** 전화 [끊기]를 눌렀는지 — 끊었으면 안전도와 상관없이 '넘어가지 않음' */
   const [hungUp, setHungUp] = useState(false)
+  /** 선택형(스미싱)에서 [답장하기]를 골라 범인의 두 번째 문자까지 봤는지 */
+  const [replied, setReplied] = useState(false)
 
   const sessionRef = useRef({ id: newSessionId(), startedAt: Date.now() })
   const savedRef = useRef(false)
 
   /** 고른 사건에 관람객 이름을 넣은 시나리오 */
   const scenario = useMemo(() => personalize(scenarioFor(situation), name), [situation, name])
+
+  /**
+   * 찾기 화면에 놓을 시나리오 — 선택형에서 답장을 안 했으면 첫 문자만 보여 줍니다
+   * (받아 보지도 않은 두 번째 문자에서 수상한 문구를 찾게 할 수는 없으니까). 수상한 문구도 그 문자에 있는 것만.
+   */
+  const findScenario = useMemo(() => {
+    if (scenario.mode !== 'choice' || replied) return scenario
+    const turns = scenario.turns.slice(0, 1)
+    const shown = [turns[0]?.message ?? '', turns[0]?.preview?.domain ?? '', scenario.sender.number].join('\n')
+    return { ...scenario, turns, redFlags: scenario.redFlags.filter((f) => shown.includes(f.match)) }
+  }, [scenario, replied])
 
   /** 안전도 60 이상이거나 전화를 끊었으면 넘어가지 않은 것으로 봅니다 */
   const defended = hungUp || safety >= 60
@@ -89,6 +103,7 @@ export default function App() {
     setFound(0)
     setGave([])
     setHungUp(false)
+    setReplied(false)
     setStep('intro')
   }, [])
 
@@ -127,7 +142,7 @@ export default function App() {
         situation,
         scenarioId: scenario.id,
         flagsFound: foundCount,
-        flagsTotal: scenario.redFlags.length,
+        flagsTotal: findScenario.redFlags.length,
         defended,
       })
     }
@@ -195,7 +210,21 @@ export default function App() {
           />
         )}
 
-        {step === 'chat' && (
+        {step === 'chat' && scenario.mode === 'choice' && (
+          <SmishScreen
+            scenario={scenario}
+            onReply={(delta, item) => {
+              setSafety((v) => Math.max(0, Math.min(100, v + delta)))
+              if (item) setGave((prev) => (prev.includes(item) ? prev : [...prev, item]))
+            }}
+            onFinish={(didReply) => {
+              setReplied(didReply)
+              setStep('caught')
+            }}
+          />
+        )}
+
+        {step === 'chat' && scenario.mode !== 'choice' && (
           <ChatScreen
             scenario={scenario}
             safety={safety}
@@ -221,13 +250,13 @@ export default function App() {
         )}
 
         {step === 'find' && (
-          <FindScreen scenario={scenario} defended={defended} onDone={finish} />
+          <FindScreen scenario={findScenario} defended={defended} onDone={finish} />
         )}
 
         {step === 'action' && (
           <ActionScreen
             found={found}
-            total={scenario.redFlags.length}
+            total={findScenario.redFlags.length}
             safety={safety}
             onReset={reset}
           />

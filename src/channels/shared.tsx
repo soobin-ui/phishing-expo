@@ -41,6 +41,8 @@ export interface ChannelProps {
   compose?: Compose
   /** 전화 [끊기] */
   onHangUp?: () => void
+  /** 문자 속 링크 미리보기 카드를 눌렀을 때 (선택형 스미싱 — 누르면 가짜 페이지가 열립니다) */
+  onPreview?: () => void
 }
 
 /** 새 말이 오면 맨 아래를 보여줍니다. 다시 보기(찾기)에서는 처음부터 보여줍니다. */

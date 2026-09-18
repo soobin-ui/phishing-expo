@@ -1,6 +1,7 @@
 import { Fragment } from 'react'
 import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
+import { OldPhoto } from '../components/OldPhoto'
 import { ui } from '../lib/content'
 import { Hint, clock, day, pop, sendOnEnter, useStickBottom } from './shared'
 import type { ChannelProps } from './shared'
@@ -14,9 +15,10 @@ const LINK_LINE = /^[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i
  * 저장 안 된 번호가 맨 위에 크게 뜨고 '연락처 추가'가 붙는, 흔한 기본 문자 앱 모양.
  * turns[].attachment 가 있으면 파일 카드, turns[].preview 가 있으면 링크 미리보기 카드.
  */
-export function SmsView({ scenario, items, readIndex, render, compose }: ChannelProps) {
+export function SmsView({ scenario, items, readIndex, render, compose, onPreview }: ChannelProps) {
   const c = ui.channels.sms
-  const ref = useStickBottom(!!compose, [items.length])
+  // 새 말이 오면 맨 아래로 — 직접 답장하는 화면과, 선택형(onPreview)에서 답장 뒤 범인의 문자가 올 때
+  const ref = useStickBottom(!!compose || !!onPreview, [items.length])
   const today = items[0]?.at ?? new Date()
 
   return (
@@ -74,7 +76,7 @@ export function SmsView({ scenario, items, readIndex, render, compose }: Channel
                     </div>
                   )}
 
-                  {turn?.preview && (
+                  {turn?.preview && !turn.preview.thumb && (
                     <div className="mt-2 overflow-hidden rounded-xl border border-[#dfe3ea] bg-white">
                       <div className="flex h-[3.6rem] items-center bg-gradient-to-br from-[#dbe6ff] to-[#f1f5ff] px-3 text-[0.85rem] font-extrabold text-[#5a74c9]">
                         {turn.preview.site}
@@ -84,6 +86,25 @@ export function SmsView({ scenario, items, readIndex, render, compose }: Channel
                     </div>
                   )}
                 </div>
+
+                {/* 사진 썸네일이 붙은 링크 미리보기 — 아이폰 문자처럼 말풍선 아래 따로. 주소(도메인)는 찾기 화면에서 누를 수 있습니다 */}
+                {turn?.preview?.thumb && (
+                  <div
+                    data-role="sms-preview"
+                    onClick={onPreview}
+                    className={`mt-1.5 flex w-[min(82%,24rem)] items-center gap-3 rounded-[1.1rem] bg-[#eef0f3] p-2.5 ${onPreview ? 'cursor-pointer active:bg-[#e2e5ea]' : ''}`}
+                  >
+                    <OldPhoto variant={0} className="h-[4.6rem] w-[4.6rem] shrink-0 rounded-lg" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[1.02rem] leading-tight font-bold">{turn.preview.title}</span>
+                      <span className="mt-0.5 block text-[0.88rem] text-[#8a8f99]">{turn.preview.site}</span>
+                      <span className="mt-0.5 block text-[0.88rem] text-[#8a8f99]">{render(turn.preview.domain)}</span>
+                    </span>
+                    <svg viewBox="0 0 24 24" className="h-[1.2rem] w-[1.2rem] shrink-0 text-[#a1a6ae]" fill="none" stroke="currentColor" strokeWidth="2.6" aria-hidden="true">
+                      <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                )}
                 <span className="mt-0.5 ml-1 text-[0.72rem] text-[#a1a6ae]">{clock(it.at)}</span>
               </motion.div>
             )

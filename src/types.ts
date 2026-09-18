@@ -56,7 +56,7 @@ export interface ScenarioTurn {
   /** 문자 첨부파일 카드 (sms) */
   attachment?: { name: string; meta: string }
   /** 링크 미리보기 카드 (sms) */
-  preview?: { site: string; title: string; domain: string }
+  preview?: { site: string; title: string; domain: string; /** 'school' 이면 사진 썸네일이 붙은 가로 카드(아이폰 문자 모양) */ thumb?: string }
   /** 입력창 위에 뜨는 안내 — 관람객이 직접 답장을 타이핑합니다 */
   hint: string
   /** 내가 쓴 답의 성격에 따라 상대가 바로 받아치는 한 줄 */
@@ -134,7 +134,9 @@ export interface Scenario {
    */
   lockscreen?: LockNotice[]
   /** 도착 화면 앞에 먼저 뜨는 사건 브리핑(있으면). title·steps 의 {name} 은 입력한 이름, **굵게**는 금색 */
-  brief?: { title: string; steps: string[] }
+  brief?: { title: string; steps: string[]; /** 단계 아래 작은 안내 한 줄 */ note?: string }
+  /** 'choice' — 문자를 주고받지 않고 선택지를 고르는 체험(SmishScreen). 없으면 직접 타이핑(ChatScreen) */
+  mode?: 'choice'
   turns: ScenarioTurn[]
   redFlags: RedFlag[]
 }

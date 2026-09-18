@@ -116,6 +116,25 @@ async function run(topic, [label, w, h, mobile]) {
     await shot('7-action')
     await browser.close()
     return { topic, label, problems, flags: 4 }
+  } else if (await page.$('[data-role="smish-reply"]')) {
+    // 선택형(스미싱) — 답장 → 사진 확인 → 가짜 본인확인 페이지를 끝까지
+    await shot('1-chat')
+    await page.click('[data-role="smish-reply"]')
+    await wait(2600)
+    await page.click('[data-role="smish-open"]')
+    await wait(900)
+    await page.type('[data-role="smish-name"]', '홍길동')
+    await page.type('[data-role="smish-phone"]', '01000000000')
+    await page.click('[data-role="smish-send"]')
+    await wait(500)
+    await page.click('[data-role="smish-popup-ok"]')
+    await wait(1600)
+    await shot('2-page')
+    await page.type('[data-role="smish-code"]', '482913')
+    await page.click('[data-role="smish-verify-code"]')
+    await wait(400)
+    await page.click('[data-role="smish-view"]')
+    await wait(3000)
   } else {
     for (let i = 0; i < REPLIES.length; i += 1) {
       await page.waitForFunction(() => {

@@ -150,7 +150,7 @@ function PushNotice({
  * 사건 브리핑 — 1·2번 주제(메일·포렌식)와 같은 상자. 무엇이 오는지·무엇을 할지 먼저 알고 시작하게.
  * 문구는 scenarios.json 의 brief(title·steps, {name} 치환됨). **굵게** 부분은 금색.
  */
-function Brief({ brief, onStart }: { brief: { title: string; steps: string[] }; onStart: () => void }) {
+function Brief({ brief, onStart }: { brief: { title: string; steps: string[]; note?: string }; onStart: () => void }) {
   const b = ui.brief
   return (
     <motion.div
@@ -195,6 +195,7 @@ function Brief({ brief, onStart }: { brief: { title: string; steps: string[] }; 
             </li>
           ))}
         </ol>
+        {brief.note && <p className="mt-3 text-[0.9rem] leading-snug text-white/55">{brief.note}</p>}
         <button
           type="button"
           data-role="brief-start"
