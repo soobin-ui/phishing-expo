@@ -763,10 +763,11 @@ function Flood({ count }: { count: number }) {
 function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void }) {
   const d = vip.damage
   const [shown, setShown] = useState(0)
-  const total = 4
+  /** 알림은 3개만 — [다시 해보기]까지 스크롤 없이 한 화면에 들어오게 */
+  const total = 3
   useEffect(() => {
     if (shown >= total) return
-    const id = window.setTimeout(() => setShown((n) => n + 1), shown === 0 ? 400 : 550)
+    const id = window.setTimeout(() => setShown((n) => n + 1), shown === 0 ? 350 : 500)
     return () => window.clearTimeout(id)
   }, [shown, total])
 
@@ -778,25 +779,25 @@ function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void })
       data-role="vip-damage"
       className="absolute inset-0 z-40 flex items-center justify-center bg-[#1a0508]/92 px-4 py-4 backdrop-blur-sm"
     >
-      <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#ff6b6b]/60 bg-[#1f0a10]/95 px-[clamp(1.1rem,4vw,1.7rem)] py-[clamp(1.1rem,3vh,1.7rem)] text-white shadow-[0_0_2.4rem_rgba(255,107,107,0.35)]">
+      <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#ff6b6b]/60 bg-[#1f0a10]/95 px-[clamp(0.9rem,3.5vw,1.4rem)] py-[clamp(0.9rem,2vh,1.2rem)] text-white shadow-[0_0_2.4rem_rgba(255,107,107,0.35)]">
         <div className="text-center">
-          <span className="inline-block rounded-md bg-[#ff6b6b] px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-[#2a0509]">{d.tag}</span>
-          <h2 className="mt-3 font-display text-[min(1.4rem,5.4vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(255,107,107,0.6)]">{d.title}</h2>
+          <span className="inline-block rounded-md bg-[#ff6b6b] px-2.5 py-1 font-display text-[0.8rem] leading-none font-bold text-[#2a0509]">{d.tag}</span>
+          <h2 className="mt-2 font-display text-[min(1.2rem,4.6vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(255,107,107,0.6)]">{d.title}</h2>
         </div>
 
-        <div className="mt-4 rounded-xl bg-[#2b3246] p-3">
-          <p className="mb-2 text-center text-[0.8rem] font-bold text-white/55">{d.phone}</p>
-          <div className="flex min-h-[8rem] flex-col gap-2">
+        <div className="mt-3 rounded-xl bg-[#2b3246] p-2.5">
+          <p className="mb-1.5 text-center text-[0.78rem] font-bold text-white/55">{d.phone}</p>
+          <div className="flex min-h-[9.6rem] flex-col gap-1.5">
             {vip.flood.alerts.slice(0, shown).map((a, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: -14, scale: 0.94 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ type: 'spring', stiffness: 380, damping: 24 }}
-                className="rounded-xl bg-white px-3.5 py-2.5 text-[#1f2430]"
+                className="rounded-xl bg-white px-3 py-2 text-[#1f2430]"
               >
-                <p className="text-[0.78rem] font-bold text-[#e5484d]">{a.from}</p>
-                <p className="mt-0.5 text-[0.98rem] leading-snug">{a.text}</p>
+                <p className="text-[0.74rem] font-bold text-[#e5484d]">{a.from}</p>
+                <p className="mt-0.5 text-[0.9rem] leading-snug">{a.text}</p>
               </motion.div>
             ))}
           </div>
@@ -805,23 +806,23 @@ function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void })
         {/* 넘긴 정보·교훈·버튼은 바로 — 알림은 위에서 따로 차례로 쌓입니다 */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
           {gave.length > 0 && (
-              <div className="mt-3 text-center">
-                <p className="text-[0.85rem] font-bold text-white/55">{d.gaveTitle}</p>
-                <div className="mt-1.5 flex flex-wrap justify-center gap-2">
+              <div className="mt-2.5 text-center">
+                <p className="text-[0.8rem] font-bold text-white/55">{d.gaveTitle}</p>
+                <div className="mt-1 flex flex-wrap justify-center gap-1.5">
                   {gave.map((g) => (
-                    <span key={g} className="rounded-full border border-[#ff6b6b]/60 bg-[#2a0509] px-3 py-1.5 text-[0.95rem] font-bold text-[#ffb4b4]">
+                    <span key={g} className="rounded-full border border-[#ff6b6b]/60 bg-[#2a0509] px-2.5 py-1 text-[0.88rem] font-bold text-[#ffb4b4]">
                       {g}
                     </span>
                   ))}
                 </div>
               </div>
             )}
-            <p className="mt-3 text-center text-[0.98rem] leading-snug text-white/80">{d.lesson}</p>
+            <p className="mt-2.5 text-center text-[0.9rem] leading-snug text-white/80">{d.lesson}</p>
             <button
               type="button"
               data-role="vip-retry"
               onClick={onRetry}
-              className="mt-4 min-h-[3.4rem] w-full rounded-xl bg-gold px-4 font-display text-[1.2rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]"
+              className="mt-3 min-h-[3.2rem] w-full rounded-xl bg-gold px-4 font-display text-[1.2rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]"
             >
               {d.retry}
             </button>
