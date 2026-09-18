@@ -360,7 +360,7 @@ function Invitation({
         transition={{ type: 'spring', stiffness: 260, damping: 20, delay: nagging ? 0 : 0.4 }}
         role="dialog"
         data-role="vip-popup"
-        className="no-scrollbar relative max-h-full w-full max-w-[24rem] overflow-y-auto rounded-2xl border border-[#d8b35a] bg-gradient-to-b from-[#16120a] to-[#0a0806] px-5 pb-5 pt-9 text-center text-white shadow-[0_0_2.4rem_rgba(216,179,90,0.5)]"
+        className="relative w-full max-w-[24rem] rounded-2xl border border-[#d8b35a] bg-gradient-to-b from-[#16120a] to-[#0a0806] px-4 pb-3.5 pt-7 text-center text-white shadow-[0_0_2.4rem_rgba(216,179,90,0.5)]"
       >
         {/* 닫기 */}
         <button
@@ -378,19 +378,20 @@ function Invitation({
         )}
         <p className="font-display text-[0.95rem] font-bold tracking-[0.42em] text-[#e6c77a]">{p.eyebrow}</p>
         <div className="mx-auto mt-2 h-px w-[60%] bg-gradient-to-r from-transparent via-[#d8b35a] to-transparent" />
-        <p className="mt-3.5 font-display text-[1.3rem] leading-snug font-bold">{fill(p.hello, { name })}</p>
-        <p className="mt-1.5 text-[0.98rem] leading-snug text-white/80">{p.selected}</p>
+        <p className="mt-2.5 font-display text-[1.2rem] leading-snug font-bold">{fill(p.hello, { name })}</p>
+        <p className="mt-1 text-[0.92rem] leading-snug text-white/80">{p.selected}</p>
 
         {/* 콘서트 포스터 — 오리지널 그래픽(실제 포스터 사진·로고 미사용) */}
-        <div className="mx-auto mt-4 w-[74%] overflow-hidden rounded-lg border border-[#d8b35a]/50 shadow-[0_0.4rem_1.4rem_rgba(0,0,0,0.6)]">
+        {/* 포스터는 높이 기준(화면 34%)으로 — 팝업이 스크롤 없이 한 화면에 들어오게 */}
+        <div className="mx-auto mt-3 aspect-[3/4] h-[min(34vh,22rem)] overflow-hidden rounded-lg border border-[#d8b35a]/50 shadow-[0_0.4rem_1.4rem_rgba(0,0,0,0.6)]">
           <ConcertPoster p={p} />
         </div>
-        <p className="mt-3 inline-block rounded-full bg-[#e6c77a] px-3.5 py-1 font-display text-[1.05rem] font-bold text-[#2a1f08]">{p.ticketSeat}</p>
+        <p className="mt-2 inline-block rounded-full bg-[#e6c77a] px-3.5 py-0.5 font-display text-[1rem] font-bold text-[#2a1f08]">{p.ticketSeat}</p>
 
         <motion.p
           animate={{ opacity: [1, 0.4, 1] }}
           transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
-          className="mt-2.5 text-[0.98rem] font-bold text-[#ff8a9c]"
+          className="mt-1.5 text-[0.92rem] font-bold text-[#ff8a9c]"
         >
           {p.rush}
         </motion.p>
@@ -410,7 +411,7 @@ function Invitation({
           }}
           transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
           whileTap={{ scale: 0.97 }}
-          className="mt-3.5 min-h-[3.6rem] w-full rounded-xl bg-gradient-to-b from-[#ffe6a3] to-[#c99a3a] px-4 font-display text-[1.25rem] font-black text-[#2a1f08]"
+          className="mt-2.5 min-h-[3.3rem] w-full rounded-xl bg-gradient-to-b from-[#ffe6a3] to-[#c99a3a] px-4 font-display text-[1.2rem] font-black text-[#2a1f08]"
         >
           {p.cta}
         </motion.button>
@@ -420,7 +421,7 @@ function Invitation({
           type="button"
           data-role="vip-safe"
           onClick={onSafe}
-          className="mt-2.5 min-h-[3.2rem] w-full rounded-xl border border-white/35 bg-white/5 px-4 text-[1.02rem] font-bold text-white active:bg-white/15"
+          className="mt-2 min-h-[2.9rem] w-full rounded-xl border border-white/35 bg-white/5 px-4 text-[0.98rem] font-bold text-white active:bg-white/15"
         >
           {vip.options.verify.label}
         </button>
@@ -430,7 +431,7 @@ function Invitation({
           type="button"
           data-role="vip-ignore"
           onClick={onClose}
-          className="mt-2 w-full py-1.5 text-[0.9rem] font-semibold text-white/50 underline decoration-white/25 underline-offset-2 active:text-white"
+          className="mt-1 w-full py-1 text-[0.85rem] font-semibold text-white/50 underline decoration-white/25 underline-offset-2 active:text-white"
         >
           {vip.options.close.label}
         </button>
@@ -454,28 +455,35 @@ function ConcertPoster({ p }: { p: typeof vip.popup }) {
         <div className="absolute left-1/2 -top-8 h-[120%] w-10 -translate-x-1/2 -rotate-[17deg] bg-[linear-gradient(180deg,rgba(255,255,255,0.3),transparent)] blur-md" />
       </div>
 
-      {/* 얼굴이 보이지 않는 역광 실루엣(오리지널) — 마이크를 든 가수 */}
-      <svg viewBox="0 0 120 160" className="absolute inset-x-0 bottom-0 mx-auto h-[80%]" aria-hidden="true">
-        <g fill="#060c1f">
-          <ellipse cx="58" cy="46" rx="14" ry="15" />
-          <path d="M40 74c0-11 8-17 18-17s18 6 18 17l3 46c0 4-3 7-7 7H44c-4 0-7-3-7-7z" />
-          {/* 마이크로 올린 팔 */}
-          <path d="M74 78c6 2 9 8 8 16l-1 10c-1 5-8 4-8-1l1-9-6-10z" />
-          {/* 반대 팔 */}
-          <path d="M40 80l-9 26c-1 4-6 3-6-1l6-28c1-4 4-6 9-5z" />
-        </g>
-        {/* 마이크 */}
-        <g fill="#060c1f">
-          <rect x="78" y="60" width="4" height="20" rx="2" transform="rotate(18 80 70)" />
-          <ellipse cx="83" cy="58" rx="4.5" ry="5.5" />
+      {/* 얼굴이 보이지 않는 역광 실루엣(오리지널) — 마이크 스탠드 앞에 선 가수, 사람 비율로 */}
+      <svg viewBox="0 0 200 300" className="absolute inset-x-0 bottom-0 mx-auto h-[86%]" aria-hidden="true">
+        <g fill="#050a1c">
+          {/* 머리(머리카락 결) */}
+          <path d="M86 44c-3-14 6-27 20-27 13 0 22 10 21 24 1 3 1 7-1 10 2 6-1 13-6 16-3 6-9 9-15 9s-12-3-15-9c-5-3-8-10-6-16-1-3-1-5 2-7z" />
+          <path d="M84 30c4-10 14-16 24-15 8 1 14 6 17 13-8-3-16-2-22 1-6-2-13-1-19 1z" />
+          {/* 목 */}
+          <rect x="97" y="72" width="14" height="14" />
+          {/* 상의(반팔 티) 몸통 */}
+          <path d="M72 96c6-8 16-13 32-13s26 5 32 13l6 60c0 4-3 7-7 7H73c-4 0-7-3-7-7z" />
+          {/* 마이크 스탠드를 잡은 오른팔(위로) */}
+          <path d="M130 100c9 2 16 8 20 18l7 26c1 6-6 9-9 3l-9-22-9-7z" />
+          <path d="M137 88c4-2 9 0 11 4l6 14-9 5-8-16c-2-3-2-5 0-7z" />
+          {/* 주머니에 넣은 왼팔 */}
+          <path d="M74 100c-7 4-11 11-13 20l-4 30c-1 6 6 8 8 2l6-24 8-8z" />
+          {/* 바지·다리 */}
+          <path d="M70 160h70l-6 118c0 4-3 6-7 6h-12c-4 0-6-3-6-7l-3-72-5 72c0 4-3 7-7 7H82c-4 0-7-3-7-6z" />
+          {/* 마이크 스탠드 + 빈티지 마이크 */}
+          <rect x="148" y="70" width="4" height="220" rx="2" />
+          <ellipse cx="150" cy="290" rx="18" ry="4" />
+          <rect x="141" y="58" width="18" height="24" rx="8" />
+          <path d="M141 66h18v3h-18zM141 72h18v3h-18z" fill="#1c2a55" />
         </g>
       </svg>
-
       {/* 아티스트명(작게, 위) */}
       <p className="absolute inset-x-0 top-[7%] text-center font-display text-[0.72rem] font-bold tracking-[0.42em] text-white/95">{p.ticketArtist}</p>
 
       {/* IM HERO — 가장 크게 */}
-      <p className="absolute inset-x-0 top-[15%] text-center font-display text-[2.5rem] leading-none font-black tracking-tight text-white [text-shadow:0_0_0.9rem_rgba(150,190,255,0.95)]">
+      <p className="absolute inset-x-0 top-[15%] text-center font-display text-[clamp(1.6rem,5.2vh,2.5rem)] leading-none font-black tracking-tight text-white [text-shadow:0_0_0.9rem_rgba(150,190,255,0.95)]">
         {p.ticketTour}
       </p>
 
@@ -754,10 +762,10 @@ function Flood({ count }: { count: number }) {
 function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void }) {
   const d = vip.damage
   const [shown, setShown] = useState(0)
-  const total = vip.flood.alerts.length + 1
+  const total = 4
   useEffect(() => {
     if (shown >= total) return
-    const id = window.setTimeout(() => setShown((n) => n + 1), shown === 0 ? 600 : 900)
+    const id = window.setTimeout(() => setShown((n) => n + 1), shown === 0 ? 400 : 550)
     return () => window.clearTimeout(id)
   }, [shown, total])
 
@@ -778,7 +786,7 @@ function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void })
         <div className="mt-4 rounded-xl bg-[#2b3246] p-3">
           <p className="mb-2 text-center text-[0.8rem] font-bold text-white/55">{d.phone}</p>
           <div className="flex min-h-[8rem] flex-col gap-2">
-            {vip.flood.alerts.slice(0, Math.min(shown, 4)).map((a, i) => (
+            {vip.flood.alerts.slice(0, shown).map((a, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: -14, scale: 0.94 }}
@@ -793,9 +801,9 @@ function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void })
           </div>
         </div>
 
-        {shown >= total && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-            {gave.length > 0 && (
+        {/* 넘긴 정보·교훈·버튼은 바로 — 알림은 위에서 따로 차례로 쌓입니다 */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          {gave.length > 0 && (
               <div className="mt-3 text-center">
                 <p className="text-[0.85rem] font-bold text-white/55">{d.gaveTitle}</p>
                 <div className="mt-1.5 flex flex-wrap justify-center gap-2">
@@ -816,8 +824,7 @@ function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void })
             >
               {d.retry}
             </button>
-          </motion.div>
-        )}
+        </motion.div>
       </div>
     </motion.div>
   )
