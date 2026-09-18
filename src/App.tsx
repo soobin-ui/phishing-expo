@@ -10,6 +10,7 @@ import { MailScreen } from './screens/MailScreen'
 import { ForensicScreen } from './screens/ForensicScreen'
 import { ChatScreen } from './screens/ChatScreen'
 import { SmishScreen } from './screens/SmishScreen'
+import { VipScreen } from './screens/VipScreen'
 import { CaughtScreen } from './screens/CaughtScreen'
 import { FindScreen } from './screens/FindScreen'
 import { ActionScreen } from './screens/ActionScreen'
@@ -186,7 +187,20 @@ export default function App() {
           />
         )}
 
-        {step === 'arrive' && scenario.channel !== 'mail' && situation !== 'job' && (
+        {/* 기관·기업 사칭 — 가짜 통신사 VIP 초청 사이트(브리핑 → 사이트 수사 → 결제 결말 → 검거 카드) */}
+        {step === 'arrive' && scenario.mode === 'site' && (
+          <VipScreen
+            scenario={scenario}
+            name={name}
+            onReply={(delta, item) => {
+              setSafety((v) => Math.max(0, Math.min(100, v + delta)))
+              if (item) setGave((prev) => (prev.includes(item) ? prev : [...prev, item]))
+            }}
+            onSolved={finish}
+          />
+        )}
+
+        {step === 'arrive' && scenario.channel !== 'mail' && situation !== 'job' && scenario.mode !== 'site' && (
           <ArriveScreen
             scenario={scenario}
             onOpen={() => setStep('chat')}

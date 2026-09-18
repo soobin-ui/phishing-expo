@@ -84,10 +84,21 @@ export function ChatIcon({ className = 'h-[55%] w-[55%]' }: { className?: string
   )
 }
 
+/** 가짜 사이트(4번) — 지구본 */
+function WebIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" />
+    </svg>
+  )
+}
+
 /** 사건 종류(채널)별 아이콘 */
 export function ChannelIcon({ channel, className }: { channel: string; className?: string }) {
   if (channel === 'mail') return <MailIcon className={className} />
   if (channel === 'call') return <PhoneIcon className={className} />
   if (channel === 'messenger') return <ChatIcon className={className} />
+  if (channel === 'web') return <WebIcon className={className} />
   return <SmsIcon className={className} />
 }

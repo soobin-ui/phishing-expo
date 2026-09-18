@@ -49,7 +49,7 @@ export interface RedFlag {
  * 받는 화면 — 주제마다 다릅니다.
  *   mail 업무 이메일 · sms 휴대폰 문자 · messenger 메신저 · call 전화
  */
-export type Channel = 'mail' | 'sms' | 'messenger' | 'call'
+export type Channel = 'mail' | 'sms' | 'messenger' | 'call' | 'web'
 
 export interface ScenarioTurn {
   message: string
@@ -136,7 +136,7 @@ export interface Scenario {
   /** 도착 화면 앞에 먼저 뜨는 사건 브리핑(있으면). title·steps 의 {name} 은 입력한 이름, **굵게**는 금색 */
   brief?: { title: string; steps: string[]; /** 단계 아래 작은 안내 한 줄 */ note?: string }
   /** 'choice' — 문자를 주고받지 않고 선택지를 고르는 체험(SmishScreen). 없으면 직접 타이핑(ChatScreen) */
-  mode?: 'choice'
+  mode?: 'choice' | 'site'
   turns: ScenarioTurn[]
   redFlags: RedFlag[]
 }
