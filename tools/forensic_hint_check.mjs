@@ -27,7 +27,7 @@ async function open(fast) {
   page.on('pageerror', (e) => errors.push(e.message))
   await page.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true })
   if (fast) await page.evaluateOnNewDocument(() => { const si = window.setInterval; window.setInterval = (fn, ms, ...a) => si(fn, ms === 1000 ? 20 : ms, ...a) })
-  await page.goto(`${URL}?topic=job&t=${Date.now()}`, { waitUntil: 'networkidle0' })
+  await page.goto(`${URL}?topic=job&name=수사관&t=${Date.now()}`, { waitUntil: 'networkidle0' })
   await page.click('[data-role="rules-start"]'); await wait(400)
   await page.click('[data-role="unlock"]'); await wait(300)
   return { page, errors }

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { DefenseCard } from '../components/DefenseCard'
@@ -203,6 +203,10 @@ export function ForensicScreen({
 
   const flags: RedFlag[] = EVIDENCE.map((e) => ({ target: e.id, match: '', label: e.label, explain: e.why }))
 
+  /* 휴대폰 위 '지금 할 일' — 1 잠금 해제 → 2 증거 찾기 → 3 폴더 열어 재구성 */
+  const phase = cur === 'lock' ? 1 : full ? 3 : 2
+  const guide = phase === 1 ? fx.guide.lock : phase === 3 ? fx.guide.full : fx.guide.search
+
   return (
     <div className="fx">
       <div className="fx-bg" />
@@ -230,55 +234,58 @@ export function ForensicScreen({
         </div>
       </header>
 
-      <section ref={phoneRef} className="phone">
-        {cur !== 'lock' && (
-          <div className="status">
-            <span>{fx.lock.clock}</span>
-            <span>LTE 67%</span>
-          </div>
-        )}
-        <div className="scr">
-          {cur === 'lock' ? (
-            <Lock onOpen={() => go('home')} />
-          ) : cur === 'home' ? (
-            <div className="home">
-              <Wall />
-              {fx.apps.map((a) => (
-                <button key={a.id} type="button" data-app={a.id} className={`icon ${seenApps.includes(a.id) ? 'seen' : ''} ${hint?.app === a.id ? 'hl' : ''}`} onClick={() => go(a.id)}>
-                  <span className="i" style={{ background: a.color, color: a.dark ? '#3b2f00' : '#fff' }}>
-                    <AppIcon name={a.icon} />
-                    {a.badge ? <em>{a.badge}</em> : null}
-                  </span>
-                  {a.name}
+      {/* 지금 할 일 — 연구실(메일) 화면처럼 크게, 단계가 바뀔 때마다 튀어나오며 */}
+      <div key={phase} className="guide">
+        <span className="pill headline-pop">{fill(fx.guide.step, { n: phase })}</span>
+        <h2 className="headline-pop headline-glow">
+          <Strong text={fill(guide.title, { n: EVIDENCE.length })} />
+        </h2>
+        <p>{guide.sub}</p>
+      </div>
+
+      {/* 피해자 휴대폰 — 아이폰 모양(검은 테두리·다이내믹 아일랜드·상태 표시줄·홈 바) */}
+      <div className="phonewrap">
+        <div className="shell">
+          <section ref={phoneRef} className={`phone ${cur === 'lock' || cur === 'home' ? 'wall' : ''}`}>
+            <div className="island" />
+            <div className="status">
+              <span className="st-time">{cur === 'lock' ? '' : fx.lock.clock}</span>
+              <StatusIcons />
+            </div>
+            <div className="scr">
+              {cur === 'lock' ? (
+                <Lock onOpen={() => go('home')} />
+              ) : cur === 'home' ? (
+                <Home seen={seenApps} hint={hint} onGo={go} onDecoy={() => showToast(fx.toast.decoyTitle, fx.toast.decoyBody)} />
+              ) : (
+                <AppView screen={SCREENS[cur]} found={found} hint={hint} onGo={go} onInspect={inspect} />
+              )}
+            </div>
+            {cur !== 'lock' && cur !== 'home' && (
+              <div className="navbar">
+                <button type="button" data-role="nav-back" onClick={back}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M15 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  {fx.nav.back}
                 </button>
-              ))}
-            </div>
-          ) : (
-            <AppView screen={SCREENS[cur]} found={found} hint={hint} onGo={go} onInspect={inspect} />
-          )}
+                <button type="button" data-role="nav-home" onClick={home}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="5" y="5" width="14" height="14" rx="3" /></svg>
+                  {fx.nav.home}
+                </button>
+              </div>
+            )}
+            <div className="homebar" />
+            {toast && (
+              <div key={toast.id} className="toast">
+                <InfoIcon />
+                <div>
+                  <b>{toast.title}</b> {toast.body}
+                </div>
+              </div>
+            )}
+            <div ref={flashRef} className="flash" />
+          </section>
         </div>
-        {cur !== 'lock' && (
-          <div className="navbar">
-            <button type="button" data-role="nav-back" onClick={back}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M15 5l-7 7 7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              {fx.nav.back}
-            </button>
-            <button type="button" data-role="nav-home" onClick={home}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="5" y="5" width="14" height="14" rx="3" /></svg>
-              {fx.nav.home}
-            </button>
-          </div>
-        )}
-        {toast && (
-          <div key={toast.id} className="toast">
-            <InfoIcon />
-            <div>
-              <b>{toast.title}</b> {toast.body}
-            </div>
-          </div>
-        )}
-        <div ref={flashRef} className="flash" />
-      </section>
+      </div>
 
       {/* 힌트 버튼 · 증거 폴더 */}
       <div className={`dock ${done ? 'top' : ''}`}>
@@ -353,27 +360,31 @@ export function ForensicScreen({
         </div>
       )}
 
+      {/* 사건 브리핑 — 연구실(메일) 화면과 같은 짧은 3줄 + 기회 5개 */}
       {rules && (
         <div className="dim">
-          <div className="box" role="dialog" aria-modal="true">
+          <div className="box brief" role="dialog" aria-modal="true">
             <span className="gold-tag">
               <MagnifierIcon />
               {fx.rules.tag}
             </span>
             <h2>{fx.rules.title}</h2>
-            <p className="lead">{fx.rules.lead}</p>
-            <span className="case">{fx.rules.case}</span>
             <ol className="steps">
               {fx.rules.steps.map((s, i) => (
                 <li key={i}>
-                  <span className="num">{i + 1}</span>
+                  <span className="ico">{i === 0 ? <PhoneIcon /> : i === 1 ? <TargetIcon /> : <MagnifierIcon />}</span>
                   <span>
-                    <b className="st">{fill(s.title, { n: EVIDENCE.length, chances: CHANCES, min: TIME_LIMIT / 60 })}</b>
-                    <small className="sb">{s.body}</small>
+                    <Strong text={fill(s, { n: EVIDENCE.length, chances: CHANCES, min: TIME_LIMIT / 60 })} />
                   </span>
                 </li>
               ))}
             </ol>
+            <div className="chances" aria-hidden="true">
+              {Array.from({ length: CHANCES }, (_, i) => (
+                <i key={i} style={{ animationDelay: `${0.55 + i * 0.08}s` }} />
+              ))}
+            </div>
+            <p className="note">{fx.rules.chanceNote}</p>
             <button type="button" className="cta" data-role="rules-start" onClick={() => setRules(false)}>
               {fx.rules.start}
             </button>
@@ -433,59 +444,83 @@ function snapPos(ph: HTMLElement | null) {
   return p ? { left: p.left + p.width / 2, top: p.top + p.height * 0.45 } : { left: '50%', top: '45%' }
 }
 
-/** 잠금화면 — 시계 · 책상 그림(화면 비율에 맞춰 범위를 고름) · 새벽 피해 알림 */
+/**
+ * 잠금화면 — 아이폰 잠금화면 순서 그대로: 자물쇠 · 날짜 · 큰 시계 · 알림 묶음.
+ * 알림 바로 아래에 큰 금색 [휴대폰 열어서 조사하기] — 예전엔 책상 그림 밑에 있어 못 찾는다는 피드백.
+ * 알림을 눌러도 열립니다(아이폰에서 알림을 누르면 앱이 열리듯).
+ */
 function Lock({ onOpen }: { onOpen: () => void }) {
-  const boxRef = useRef<HTMLDivElement>(null)
-  const [view, setView] = useState({ vb: '0 218 360 272', cal: false })
-  useLayoutEffect(() => {
-    const fit = () => {
-      const r = boxRef.current?.getBoundingClientRect()
-      if (!r || !r.width || !r.height) return
-      const BOTTOM = 490
-      let h = Math.max(272, Math.min(398, 360 * (r.height / r.width)))
-      let w = h * (r.width / r.height)
-      if (w < 360) {
-        w = 360
-        h = w * (r.height / r.width)
-      }
-      setView({ vb: `${180 - w / 2} ${BOTTOM - h} ${w} ${h}`, cal: BOTTOM - h <= 126 })
-    }
-    fit()
-    window.addEventListener('resize', fit)
-    return () => window.removeEventListener('resize', fit)
-  }, [])
   return (
     <div className="lock">
-      <div className="clock">{fx.lock.clock}</div>
+      <svg className="lockicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+        <rect x="5" y="10.5" width="14" height="10" rx="2.5" />
+        <path d="M8 10.5V7.5a4 4 0 018 0v3" strokeLinecap="round" />
+      </svg>
       <div className="date">{fx.lock.date}</div>
-      <div ref={boxRef} className="scene">
-        <DeskArt viewBox={view.vb} preserve="xMidYMax meet" calendar={view.cal} flat />
+      <div className="clock">{fx.lock.clock}</div>
+      <div className="pushes">
+        {fx.lock.pushes.map((p, i) => (
+          <button key={p.title} type="button" className="push" style={{ animationDelay: `${0.15 + i * 0.12}s` }} onClick={onOpen}>
+            <i>{p.icon}</i>
+            <span className="tx">
+              <span className="top">
+                <b>{p.app}</b>
+                <time>{p.time}</time>
+              </span>
+              <strong>{p.title}</strong>
+              <small>{p.body}</small>
+            </span>
+          </button>
+        ))}
       </div>
-      <div className="deskarea">
-        <div className="pushes">
-          {fx.lock.pushes.map((p) => (
-            <div key={p.title} className="push">
-              <i>{p.icon}</i>
-              <div>
-                <b>{p.title}</b>
-                <span>{p.detail}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-        <button type="button" className="open" data-role="unlock" onClick={onOpen}>
-          {fx.lock.open}
-        </button>
+      <button type="button" className="open" data-role="unlock" onClick={onOpen}>
+        {fx.lock.open}
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" aria-hidden="true"><path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      </button>
+      <div className="quick" aria-hidden="true">
+        <i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 3h6l1 5-2 2v11H10V10L8 8z" strokeLinejoin="round" /></svg></i>
+        <i><CameraIcon /></i>
       </div>
     </div>
   )
 }
 
-function Wall() {
+/** 홈 화면 — 아이폰처럼 4열 격자 + 아래 고정 줄. 증거가 있는 앱 3개는 빨간 숫자 배지, 나머지는 눌러도 '증거 없음' 안내만 */
+function Home({ seen, hint, onGo, onDecoy }: { seen: string[]; hint: Evidence | null; onGo: (id: string) => void; onDecoy: () => void }) {
+  const icon = (a: { id: string; name: string; icon: string; color: string; dark?: boolean; badge?: number }, real: boolean) => (
+    <button
+      key={a.id}
+      type="button"
+      data-app={real ? a.id : undefined}
+      className={`icon ${real && seen.includes(a.id) ? 'seen' : ''} ${real && hint?.app === a.id ? 'hl' : ''}`}
+      onClick={() => (real ? onGo(a.id) : onDecoy())}
+    >
+      <span className="i" style={{ background: a.color, color: a.dark ? '#1c1c1e' : '#fff' }}>
+        <AppIcon name={a.icon} />
+        {a.badge ? <em>{a.badge}</em> : null}
+      </span>
+      {a.name}
+    </button>
+  )
   return (
-    <div className="wall">
-      <DeskArt viewBox="0 0 360 640" preserve="xMidYMid slice" calendar={false} />
+    <div className="home">
+      <div className="grid">
+        {fx.apps.map((a) => icon(a, true))}
+        {fx.decoys.grid.map((a) => icon(a, false))}
+      </div>
+      <div className="tray">{fx.decoys.dock.map((a) => icon(a, false))}</div>
     </div>
+  )
+}
+
+/** 상태 표시줄 오른쪽 — 신호 · 와이파이 · 배터리 */
+function StatusIcons() {
+  return (
+    <span className="st-icons" aria-hidden="true">
+      <svg viewBox="0 0 20 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="0.8" /><rect x="4.5" y="6" width="3" height="6" rx="0.8" /><rect x="9" y="3.5" width="3" height="8.5" rx="0.8" /><rect x="13.5" y="0.5" width="3" height="11.5" rx="0.8" /></svg>
+      <svg viewBox="0 0 16 12" fill="currentColor"><path d="M8 11.2a1.6 1.6 0 110-3.2 1.6 1.6 0 010 3.2zm-3.4-4.4a4.8 4.8 0 016.8 0l-1.3 1.3a3 3 0 00-4.2 0zM1.9 4.1a8.6 8.6 0 0112.2 0l-1.3 1.3a6.8 6.8 0 00-9.6 0z" /></svg>
+      <svg viewBox="0 0 27 12" fill="none" stroke="currentColor"><rect x="0.5" y="0.5" width="22" height="11" rx="3" opacity=".4" /><rect x="2" y="2" width="15" height="8" rx="1.6" fill="currentColor" stroke="none" /><path d="M24.5 4v4a2 2 0 000-4z" fill="currentColor" stroke="none" opacity=".4" /></svg>
+    </span>
   )
 }
 
@@ -654,80 +689,54 @@ function Linked({ text }: { text: string }) {
   )
 }
 
-/** 취업준비생 책상 — 벽 메모 · 달력(19일 면접) · 노트북 · 책 · 커피 */
-function DeskArt({ viewBox, preserve, calendar, flat = false }: { viewBox: string; preserve: string; calendar: boolean; flat?: boolean }) {
-  return (
-    <svg viewBox={viewBox} preserveAspectRatio={preserve} aria-hidden="true">
-      <defs>
-        <linearGradient id="fxwg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#fbeee0" />
-          <stop offset=".62" stopColor="#f3dcc8" />
-        </linearGradient>
-      </defs>
-      <rect x="-600" width="1560" height="640" fill={flat ? '#f6e5d5' : 'url(#fxwg)'} />
-      {calendar && (
-        <g className="cal" transform="translate(180 216) scale(.72) translate(-180 -216) rotate(2 180 160)">
-          <rect x="118" y="104" width="124" height="112" rx="4" fill="#fff" />
-          <rect x="118" y="104" width="124" height="24" rx="4" fill="#e5484d" />
-          <rect x="118" y="120" width="124" height="8" fill="#e5484d" />
-          <text x="180" y="121" fontSize="12" fontWeight="800" fill="#fff" textAnchor="middle">SEPTEMBER 9</text>
-          <g fontSize="9" fill="#6b7280" textAnchor="middle">
-            {Array.from({ length: 28 }, (_, i) => (
-              <text key={i} x={132 + (i % 7) * 16} y={146 + Math.floor(i / 7) * 18}>{i + 1}</text>
-            ))}
-          </g>
-          <circle cx="196" cy="179" r="8" fill="none" stroke="#e5484d" strokeWidth="2" />
-          <text x="196" y="212" fontSize="8" fontWeight="800" fill="#e5484d" textAnchor="middle">면접!</text>
-        </g>
-      )}
-      <g transform="rotate(-3 86 290)">
-        <rect x="26" y="238" width="120" height="104" rx="4" fill="#fff" opacity=".9" />
-        <text x="40" y="266" fontSize="13" fontWeight="700" fill="#374151">9월 할 일</text>
-        <g fontSize="11" fill="#4b5563">
-          <text x="40" y="288">자소서 제출</text>
-          <text x="40" y="306">토익 스피킹</text>
-          <text x="40" y="324">면접 연습!</text>
-        </g>
-        <g stroke="#10b981" strokeWidth="2.4" fill="none" strokeLinecap="round">
-          <path d="M118 283l4 4 7-8" />
-          <path d="M118 301l4 4 7-8" />
-        </g>
-      </g>
-      <g transform="rotate(4 259 272)">
-        <rect x="200" y="226" width="118" height="92" rx="3" fill="#fde68a" />
-        <text x="214" y="258" fontSize="14" fontWeight="800" fill="#92400e">D-2</text>
-        <text x="214" y="280" fontSize="12" fontWeight="700" fill="#78350f">해온소재</text>
-        <text x="214" y="298" fontSize="12" fontWeight="700" fill="#78350f">화상면접!</text>
-      </g>
-      <g transform="rotate(-5 198 381)">
-        <rect x="150" y="346" width="96" height="70" rx="3" fill="#fbcfe8" />
-        <text x="164" y="376" fontSize="13" fontWeight="800" fill="#9d174d">취뽀 가자</text>
-        <text x="164" y="396" fontSize="11" fill="#9d174d">할 수 있다!</text>
-      </g>
-      <rect x="-600" y="470" width="1560" height="170" fill="#c08a5b" />
-      <rect x="-600" y="470" width="1560" height="10" fill="#a8744a" />
-      <rect x="96" y="408" width="150" height="72" rx="6" fill="#374151" />
-      <rect x="104" y="415" width="134" height="58" rx="3" fill="#93c5fd" />
-      <rect x="80" y="478" width="182" height="10" rx="4" fill="#4b5563" />
-      <rect x="20" y="446" width="64" height="12" rx="2" fill="#2563eb" />
-      <rect x="24" y="434" width="58" height="12" rx="2" fill="#f59e0b" />
-      <rect x="18" y="458" width="68" height="13" rx="2" fill="#10b981" />
-      <text x="30" y="444" fontSize="8" fontWeight="700" fill="#fff">NCS</text>
-      <text x="28" y="455" fontSize="8" fontWeight="700" fill="#fff">TOEIC</text>
-      <text x="26" y="468" fontSize="8" fontWeight="700" fill="#fff">면접 100문</text>
-      <rect x="286" y="436" width="34" height="40" rx="6" fill="#fff" />
-      <path d="M320 446h8a7 7 0 010 14h-8" stroke="#fff" strokeWidth="4" fill="none" />
-      <rect x="286" y="436" width="34" height="9" rx="3" fill="#7c4a2d" />
-    </svg>
-  )
-}
-
+/** 홈 화면 앱 아이콘 — 전부 SVG(이모지 금지) */
 function AppIcon({ name }: { name: string }) {
   if (name === 'msg') return <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16a1 1 0 011 1v10a1 1 0 01-1 1H10l-5 4v-4H4a1 1 0 01-1-1V6a1 1 0 011-1z" /></svg>
   if (name === 'talk') return <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.5c5.2 0 9.4 3.3 9.4 7.4s-4.2 7.4-9.4 7.4c-.8 0-1.6-.1-2.3-.2L5 20.8l1.2-3.9C4 15.6 2.6 13.4 2.6 10.9c0-4.1 4.2-7.4 9.4-7.4z" /></svg>
   if (name === 'bank') return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-5 9 5M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18" strokeLinejoin="round" /></svg>
-  if (name === 'photo') return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="5" width="18" height="14" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-8 8" /></svg>
+  if (name === 'photo')
+    return (
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        {[0, 45, 90, 135, 180, 225, 270, 315].map((deg, i) => (
+          <ellipse key={deg} cx="12" cy="7.2" rx="2.6" ry="4.6" transform={`rotate(${deg} 12 12)`} fill={['#f5b800', '#f58a1f', '#ef4444', '#c026d3', '#3b82f6', '#06b6d4', '#22c55e', '#84cc16'][i]} opacity=".85" />
+        ))}
+      </svg>
+    )
+  if (name === 'cal')
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="4" width="18" height="17" rx="3" fill="#fff" />
+        <rect x="3" y="4" width="18" height="5" rx="2" fill="#ef4444" />
+        <text x="12" y="18.5" fontSize="9" fontWeight="700" fill="#1c1c1e" textAnchor="middle" fontFamily="var(--font-sans)">18</text>
+      </svg>
+    )
+  if (name === 'gear') return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 01-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 01-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 01-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 010-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 012.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 014 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 012.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 010 4h-.1a1.7 1.7 0 00-1.5 1z" strokeLinejoin="round" /></svg>
+  if (name === 'clock') return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" fill="#fff" stroke="none" /><circle cx="12" cy="12" r="9" stroke="#e5e5ea" /><path d="M12 6.5V12l3.6 2.4" stroke="#1c1c1e" strokeWidth="1.6" strokeLinecap="round" /><path d="M12 12L8.2 9.8" stroke="#ff9500" strokeWidth="1.2" strokeLinecap="round" /></svg>
+  if (name === 'weather') return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="9" r="4" fill="#ffd60a" /><path d="M8 19h9.5a3.5 3.5 0 00.5-7 5 5 0 00-9.6-1A4 4 0 008 19z" fill="#fff" /></svg>
+  if (name === 'phone') return <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.6 3.4l2.3-.5a1 1 0 011.1.6l1.4 3.3a1 1 0 01-.3 1.2L9.6 9.2a11.5 11.5 0 005.2 5.2l1.2-1.5a1 1 0 011.2-.3l3.3 1.4a1 1 0 01.6 1.1l-.5 2.3a2 2 0 01-2 1.6A15.5 15.5 0 013.5 5.4a2 2 0 011.6-2z" /></svg>
+  if (name === 'safari') return <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="#1e90ff" /><circle cx="12" cy="12" r="8" fill="none" stroke="#fff" strokeWidth=".6" strokeDasharray="1 1.4" /><path d="M16.5 7.5L13.6 13.6 7.5 16.5l2.9-6.1z" fill="#fff" /><path d="M16.5 7.5l-2.9 6.1-3.2-1.5z" fill="#ff3b30" /></svg>
+  if (name === 'camera') return <CameraIcon />
+  if (name === 'music') return <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 18.5a3 3 0 11-2-2.8V6.6l11-2.4v9.9a3 3 0 11-2-2.8V7.1l-7 1.5z" /></svg>
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M4 10h16M9 3v4M15 3v4" /></svg>
+}
+
+function PhoneIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <rect x="6" y="2.5" width="12" height="19" rx="2.5" />
+      <path d="M10 18.5h4" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function TargetIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="4.5" />
+      <circle cx="12" cy="12" r="1" fill="currentColor" />
+    </svg>
+  )
 }
 
 function BulbIcon() {

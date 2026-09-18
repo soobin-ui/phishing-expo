@@ -25,7 +25,7 @@ for (const [label, w, h, mobile] of DEVICES) {
   const errors = []
   page.on('pageerror', (e) => errors.push(e.message))
   await page.setViewport({ width: w, height: h, isMobile: mobile, hasTouch: mobile })
-  await page.goto(`${URL}?topic=job&t=${Date.now()}`, { waitUntil: 'networkidle0' })
+  await page.goto(`${URL}?topic=job&name=수사관&t=${Date.now()}`, { waitUntil: 'networkidle0' })
   await page.evaluate(() => document.fonts.ready)
   const shot = (n) => page.screenshot({ path: join(OUT, `${label}-${n}.png`) })
   const tapText = (t) => page.evaluate((t) => [...document.querySelectorAll('[data-i]')].find((x) => x.textContent.includes(t)).click(), t)
