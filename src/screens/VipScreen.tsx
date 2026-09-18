@@ -48,8 +48,12 @@ export function VipScreen({
   const [phase, setPhase] = useState<Phase>('none')
   /** 1회차에 결제까지 가서 당한 뒤에는 안내(STOP) 모드 — 각 페이지에서 수법을 짚어 줍니다 */
   const [guided, setGuided] = useState(false)
-  /** 안내 모드에서 페이지를 먼저 ~1.2초 보여준 뒤 STOP 이 뜹니다(바로 뜨지 않게) */
-  const [stopShown, setStopShown] = useState(false)
+  /**
+   * 안내 모드의 연출 순서(beat):
+   *   0 페이지만 보임 → 1 가운데 STOP! 만 반짝 팝업 → 2 STOP 스르륵 사라지고 실제 자리(주소창·타이머)가 반짝 하이라이트
+   *   → 3 말풍선이 떠서 "이 사이트 주소, 확인하셨나요?" + 설명 + [다음]
+   */
+  const [beat, setBeat] = useState(0)
   const [siteLeft, setSiteLeft] = useState(SITE_LIMIT)
   const [alerts, setAlerts] = useState(0)
   const [falls, setFalls] = useState(0)
@@ -75,13 +79,14 @@ export function VipScreen({
   /* 안내 모드: 페이지가 바뀌면 STOP 을 잠깐 뒤에 띄웁니다(먼저 페이지를 보여줌) */
   const inGuidedStage = guided && phase === 'none' && (stage === 'verify' || stage === 'seat' || stage === 'pay')
   useEffect(() => {
-    if (!inGuidedStage) {
-      setStopShown(false)
-      return
-    }
-    setStopShown(false)
-    const id = window.setTimeout(() => setStopShown(true), 1200)
-    return () => window.clearTimeout(id)
+    setBeat(0)
+    if (!inGuidedStage) return
+    const ids = [
+      window.setTimeout(() => setBeat(1), 1100), // 가운데 STOP! 만
+      window.setTimeout(() => setBeat(2), 2500), // STOP 사라지고 실제 자리 하이라이트
+      window.setTimeout(() => setBeat(3), 3400), // 말풍선
+    ]
+    return () => ids.forEach((i) => window.clearTimeout(i))
   }, [inGuidedStage, stage])
 
   /** 결제 완료 → 초청 빵빠레 → 알림 폭탄 → 피해 화면 */
@@ -125,7 +130,7 @@ export function VipScreen({
           {/* 브라우저 윗줄 — 안내 모드 주소 단계에서는 이 줄이 흐림 위로 올라와 하이라이트됩니다 */}
           <div
             className={`flex shrink-0 items-center gap-2.5 border-b border-[#e3e6ee] bg-white px-3 py-2 ${
-              stopShown && stage === 'verify' ? 'relative z-[55]' : ''
+              beat >= 2 && stage === 'verify' ? 'relative z-[55]' : ''
             }`}
           >
             <span className="flex gap-1.5" aria-hidden="true">
@@ -134,12 +139,12 @@ export function VipScreen({
               <i className="block h-[0.6rem] w-[0.6rem] rounded-full bg-[#28c941]" />
             </span>
             <motion.div
-              animate={stopShown && stage === 'verify' ? { boxShadow: ['0 0 0 0 rgba(255,60,60,0)', '0 0 0 3px #ff4d4d, 0 0 1.4rem 0.2rem rgba(255,77,77,0.7)', '0 0 0 0 rgba(255,60,60,0)'] } : {}}
+              animate={beat >= 2 && stage === 'verify' ? { boxShadow: ['0 0 0 0 rgba(255,60,60,0)', '0 0 0 3px #ff4d4d, 0 0 1.4rem 0.2rem rgba(255,77,77,0.7)', '0 0 0 0 rgba(255,60,60,0)'] } : {}}
               transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}
               className="flex min-w-0 flex-1 items-center gap-2 rounded-full bg-[#eef0f5] px-3.5 py-1.5 text-[0.98rem] text-[#4a5368]"
             >
               <LockIcon />
-              <span className={`truncate ${stopShown && stage === 'verify' ? 'rounded bg-red-100 px-1 font-bold text-red-700 underline decoration-red-400 decoration-2' : ''}`}>
+              <span className={`truncate ${beat >= 2 && stage === 'verify' ? 'rounded bg-red-100 px-1 font-bold text-red-700 underline decoration-red-400 decoration-2' : ''}`}>
                 {vip.site.address}
               </span>
             </motion.div>
@@ -151,7 +156,7 @@ export function VipScreen({
               animate={{ backgroundColor: ['#d4143a', '#ff2350', '#d4143a'] }}
               transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
               className={`flex shrink-0 items-center justify-center gap-3 px-3 py-2.5 text-white ${
-                stopShown && stage === 'seat' ? 'relative z-[55] shadow-[0_0_0_3px_#ffd24d,0_0_1.4rem_0.2rem_rgba(255,210,77,0.75)]' : ''
+                beat >= 2 && stage === 'seat' ? 'relative z-[55] shadow-[0_0_0_3px_#ffd24d,0_0_1.4rem_0.2rem_rgba(255,210,77,0.75)]' : ''
               }`}
             >
               <ClockIcon />
@@ -206,7 +211,7 @@ export function VipScreen({
 
           {/* 안내(STOP) 모드 — 페이지를 먼저 보여준 뒤(stopShown), 흐림 위로 말풍선이 뜹니다 */}
           <AnimatePresence>
-            {inGuidedStage && stopShown && <GuidedStop key={stage} step={stage} onNext={guideNext} />}
+            {inGuidedStage && beat >= 1 && <GuidedStop key={stage} step={stage} beat={beat} onNext={guideNext} />}
           </AnimatePresence>
 
           {/* 초청 완료 위로 쏟아지는 해외결제·새 기기 로그인 알림 */}
@@ -813,7 +818,7 @@ function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void })
  * 화면을 어둡게 덮고 큰 빨간 STOP! 을 띄운 뒤, 그 페이지의 수법을 밝게 짚어 주고 [다음]으로 넘어갑니다.
  *   verify → 주소창(공식 주소 아님) · seat → 타이머·남은 좌석·자동 배정 압박 · pay → 선결제 보증금
  */
-function GuidedStop({ step, onNext }: { step: 'verify' | 'seat' | 'pay'; onNext: () => void }) {
+function GuidedStop({ step, beat, onNext }: { step: 'verify' | 'seat' | 'pay'; beat: number; onNext: () => void }) {
   const key = step === 'verify' ? 'url' : step === 'seat' ? 'pressure' : 'deposit'
   const g = vip.guide.steps[key]
   // 하이라이트되는 실제 요소(주소창·타이머) 바로 아래에 말풍선을 답니다. 결제는 가운데.
@@ -832,44 +837,70 @@ function GuidedStop({ step, onNext }: { step: 'verify' | 'seat' | 'pay'; onNext:
       data-role="vip-stop"
       className="absolute inset-0 z-40 bg-[#050a18]/45 backdrop-blur-[3px]"
     >
-      <div className={`absolute flex px-1 ${anchor}`}>
-        <motion.div
-          initial={{ opacity: 0, y: -10, scale: 0.94 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ type: 'spring', stiffness: 280, damping: 22 }}
-          className="relative w-full max-w-[30rem] rounded-2xl border-2 border-[#ff5a5a] bg-[#160a10]/97 px-4 py-4 text-center text-white shadow-[0_0_2.2rem_rgba(255,60,60,0.5)]"
-        >
-          {/* 말풍선 꼬리 — 위(하이라이트된 바)를 가리킵니다 */}
-          {tail && <span className="absolute -top-[0.65rem] left-8 h-3.5 w-3.5 rotate-45 border-l-2 border-t-2 border-[#ff5a5a] bg-[#160a10]" />}
-
-          {/* STOP! */}
-          <motion.span
-            animate={{ scale: [1, 1.06, 1], boxShadow: ['0 0 0 0 rgba(255,60,60,0)', '0 0 1.4rem 0.3rem rgba(255,60,60,0.85)', '0 0 0 0 rgba(255,60,60,0)'] }}
-            transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
-            className="inline-flex h-[2.7rem] items-center rounded-xl bg-[#e5142e] px-5 font-display text-[1.5rem] font-black tracking-[0.08em] text-white"
+      {/* ① 가운데 STOP! 하나만 — 반짝이며 팝업했다가 스르륵 사라집니다 */}
+      <AnimatePresence>
+        {beat === 1 && (
+          <motion.div
+            key="stop"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.25, filter: 'blur(6px)' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 16 }}
+            className="absolute inset-0 flex items-center justify-center"
           >
-            {vip.guide.stop}
-          </motion.span>
+            <motion.span
+              data-role="vip-stop-badge"
+              animate={{
+                scale: [1, 1.08, 1],
+                boxShadow: [
+                  '0 0 0 0 rgba(255,60,60,0)',
+                  '0 0 2.6rem 0.7rem rgba(255,60,60,0.95)',
+                  '0 0 0 0 rgba(255,60,60,0)',
+                ],
+              }}
+              transition={{ duration: 0.85, repeat: Infinity, ease: 'easeInOut' }}
+              className="inline-flex h-[5rem] items-center rounded-2xl bg-[#e5142e] px-10 font-display text-[3rem] leading-none font-black tracking-[0.08em] text-white"
+            >
+              {vip.guide.stop}
+            </motion.span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          <h2 className="mt-3 font-display text-[min(1.3rem,5.2vw)] leading-snug font-bold">{g.title}</h2>
+      {/* ③ 말풍선 — 하이라이트된 자리 아래에서 떠오릅니다 */}
+      <AnimatePresence>
+        {beat >= 3 && (
+          <div key="bubble" className={`absolute flex px-1 ${anchor}`}>
+            <motion.div
+              initial={{ opacity: 0, y: -12, scale: 0.94 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+              className="relative w-full max-w-[30rem] rounded-2xl border-2 border-[#ff5a5a] bg-[#160a10]/97 px-4 py-4 text-center text-white shadow-[0_0_2.2rem_rgba(255,60,60,0.5)]"
+            >
+              {/* 말풍선 꼬리 — 위(하이라이트된 자리)를 가리킵니다 */}
+              {tail && <span className="absolute -top-[0.65rem] left-8 h-3.5 w-3.5 rotate-45 border-l-2 border-t-2 border-[#ff5a5a] bg-[#160a10]" />}
 
-          {/* 결제 단계는 하이라이트할 상단 바가 없어 문구를 말풍선 안에 보여 줍니다 */}
-          {step === 'pay' && (
-            <p className="mt-3 rounded-lg bg-red-50 px-3 py-2.5 text-left text-[0.98rem] leading-snug font-semibold text-red-700">{vip.pay.notice}</p>
-          )}
+              <h2 className="font-display text-[min(1.3rem,5.2vw)] leading-snug font-bold">{g.title}</h2>
 
-          <p className="mt-2.5 text-[0.96rem] leading-snug text-white/85">{g.warn}</p>
+              {/* 결제 단계는 하이라이트할 상단 바가 없어 문구를 말풍선 안에 보여 줍니다 */}
+              {step === 'pay' && (
+                <p className="mt-3 rounded-lg bg-red-50 px-3 py-2.5 text-left text-[0.98rem] leading-snug font-semibold text-red-700">{vip.pay.notice}</p>
+              )}
 
-          <button
-            type="button"
-            data-role="vip-stop-next"
-            onClick={onNext}
-            className="mt-3.5 min-h-[3.3rem] w-full rounded-xl bg-gold px-4 font-display text-[1.2rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]"
-          >
-            {vip.guide.next}
-          </button>
-        </motion.div>
-      </div>
+              <p className="mt-2.5 text-[0.96rem] leading-snug text-white/85">{g.warn}</p>
+
+              <button
+                type="button"
+                data-role="vip-stop-next"
+                onClick={onNext}
+                className="mt-3.5 min-h-[3.3rem] w-full rounded-xl bg-gold px-4 font-display text-[1.2rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]"
+              >
+                {vip.guide.next}
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
