@@ -134,7 +134,20 @@ async function run(topic, [label, w, h, mobile]) {
     await page.click('[data-role="smish-verify-code"]')
     await wait(400)
     await page.click('[data-role="smish-view"]')
-    await wait(3000)
+    await wait(6500)
+    await shot('3-damage') // 피해 카드 → 다시 시도 → 먼저 확인 → 검거 카드
+    await page.click('[data-role="smish-retry"]')
+    await wait(800)
+    await page.click('[data-role="smish-verify"]')
+    await wait(6500)
+    await page.click('[data-role="smish-verify-next"]')
+    await wait(3400)
+    await shot('5-card')
+    await page.click('[data-role="flip-card"]')
+    await wait(1600)
+    await shot('6-card-back')
+    await browser.close()
+    return { topic, label, problems, flags: 4 }
   } else {
     for (let i = 0; i < REPLIES.length; i += 1) {
       await page.waitForFunction(() => {

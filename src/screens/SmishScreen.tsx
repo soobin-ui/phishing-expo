@@ -1,39 +1,55 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChannelView } from '../channels'
+import { DefenseCard } from '../components/DefenseCard'
 import type { Item } from '../channels'
 import { OldPhoto } from '../components/OldPhoto'
 import sm from '../content/smish.json'
-import type { Scenario } from '../types'
+import { splitByFlags } from '../lib/highlight'
+import { scrollToWithin } from '../lib/scroll'
+import type { RedFlag, Scenario } from '../types'
 
 /**
  * [3번 스미싱] 선택형 체험 — 문자를 주고받지 않고, 받은 문자를 보고 **무엇을 할지 고릅니다**.
  *
- *   ① 사진 확인하기  → 가짜 '사진 공유' 본인확인 페이지(이름·전화번호 → 인증번호 → 사진 보기) → 당함
+ *   ① 사진 확인하기  → 가짜 '사진 공유' 본인확인 페이지(이름·전화번호 → 인증번호 → 사진 보기)
+ *                     → **피해 카드**(소액결제·대출·지인에게 같은 문자) → [다시 시도해 보세요] → 선택 화면으로
  *   ② 답장하기      → "지현이가 누구지?" → 범인이 질문은 얼버무리고 링크를 다시 누르게 함 → 다시 고르기
  *   ③ 누르지 않고 먼저 확인하기 → 동창회 단톡방에 물어봄 → 가짜로 드러남 → 번호 차단·신고 → 위험 차단
+ *                     → [다음] → **검거 완료 카드**(1·2번 주제와 같은 카드, 뒷면 옆에 그 문자 다시 보기) → 마무리
+ *
+ * ★ 이 주제는 '직접 피해자가 되어 보는' 체험입니다(2026-09-18 사용자 결정).
+ *   정보를 넘겨도 "전송되었습니다"로 끝내지 않고, 어떤 피해가 생기는지 보여 준 뒤 다시 고르게 합니다.
+ *   위험을 막아야만 검거 카드로 갑니다. 카드 별점은 그동안 무엇을 했는지(링크 접속·넘긴 정보·당한 횟수)에서 나옵니다.
  *
  * ★ 선택지에 위험/안전 색을 입히지 않습니다. 셋 다 같은 모양 — 고르는 것이 곧 답입니다.
  * ★ 가짜 페이지에 입력한 값은 이 컴포넌트의 상태로만 있다가 사라집니다. 저장·전송하지 않습니다.
  * ★ 문자 속 미리보기 카드를 눌러도 ①과 같습니다(실제로는 그걸 누르게 되니까).
  */
-type Phase = 'choose' | 'page' | 'verify'
+type Phase = 'choose' | 'page' | 'damage' | 'verify' | 'card'
 
 export function SmishScreen({
   scenario,
   onReply,
-  onFinish,
+  onSolved,
 }: {
   scenario: Scenario
   /** 안전도 증감 + 넘긴 것(당한 직후 목록에 뜹니다) */
   onReply: (delta: number, gave: string | null) => void
-  /** replied — 답장을 해서 범인의 두 번째 문자까지 봤는지(찾기 화면에 그 문자를 넣을지) */
-  onFinish: (replied: boolean) => void
+  /** 검거 카드까지 본 뒤 — 확인한 수법 개수를 넘깁니다(마무리 화면으로) */
+  onSolved: (foundCount: number) => void
 }) {
   const [phase, setPhase] = useState<Phase>('choose')
   const [replied, setReplied] = useState(false)
   const [waiting, setWaiting] = useState(false)
   const openedOnce = useRef(false)
+  /** 가짜 페이지를 끝까지 가서 당한 횟수 · 그동안 넘긴 것들 — 검거 카드 별점에 씁니다 */
+  const [falls, setFalls] = useState(0)
+  const [gaveList, setGaveList] = useState<string[]>([])
+  const give = (delta: number, item: string) => {
+    onReply(delta, item)
+    setGaveList((v) => (v.includes(item) ? v : [...v, item]))
+  }
   const timers = useRef<number[]>([])
   useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), [])
   const later = (fn: () => void, ms: number) => timers.current.push(window.setTimeout(fn, ms))
@@ -47,7 +63,7 @@ export function SmishScreen({
     if (waiting) return
     if (!openedOnce.current) {
       openedOnce.current = true
-      onReply(-15, sm.page.gaveOpen)
+      give(-15, sm.page.gaveOpen)
     }
     setPhase('page')
   }
@@ -104,13 +120,153 @@ export function SmishScreen({
         {phase === 'page' && (
           <FakePage
             onClose={() => setPhase('choose')}
-            onGive={(delta, item) => onReply(delta, item)}
-            onDone={() => onFinish(replied)}
+            onGive={give}
+            onDone={() => {
+              setFalls((n) => n + 1)
+              setPhase('damage')
+            }}
           />
         )}
-        {phase === 'verify' && <VerifyScene onDone={() => onFinish(replied)} />}
+        {phase === 'damage' && <DamageScene gave={gaveList} onRetry={() => setPhase('choose')} />}
+        {phase === 'verify' && <VerifyScene onDone={() => setPhase('card')} />}
+        {phase === 'card' && (
+          <DefenseCard
+            stats={{
+              found: scenario.redFlags.length,
+              total: scenario.redFlags.length,
+              // 보안 대응력 — 끝까지 당한 횟수만큼 / 정보 보호력 — 넘긴 것 개수만큼 / 악성 차단력 — 링크를 안 눌렀으면 만점
+              wrongs: falls * 2,
+              misses: gaveList.length,
+              blocked: falls > 0 ? 0 : openedOnce.current ? 1 : 2,
+            }}
+            flags={scenario.redFlags}
+            solved={scenario.redFlags.map((f) => f.target)}
+            copy={sm.card}
+            review={(flag) => <ReviewThread scenario={scenario} flag={flag} />}
+            onNext={() => onSolved(scenario.redFlags.length)}
+          />
+        )}
       </AnimatePresence>
     </div>
+  )
+}
+
+/** 검거 카드 뒷면 옆 — 그 문자를 다시 보여 주고, 카드가 가리키는 수법의 자리를 붉게 빛냅니다(답장 뒤 범인의 문자까지 전부) */
+function ReviewThread({ scenario, flag }: { scenario: Scenario; flag: RedFlag }) {
+  const at = useMemo(() => new Date(), [])
+  const items: Item[] = [
+    { from: 'them', text: scenario.turns[0]?.message ?? '', at, turn: 0 },
+    { from: 'me', text: sm.myReply, at },
+    { from: 'them', text: scenario.turns[1]?.message ?? '', at, turn: 1 },
+  ]
+  const render = (text: string) =>
+    splitByFlags(text, scenario.redFlags).map((seg, i) =>
+      seg.flag ? (
+        <span
+          key={i}
+          className={
+            seg.flag.target === flag.target
+              ? 'focus-glow rounded px-0.5 font-bold text-red-700'
+              : 'rounded bg-red-50 px-0.5 text-red-700 underline decoration-red-300 decoration-2'
+          }
+        >
+          {seg.text}
+        </span>
+      ) : (
+        <span key={i}>{seg.text}</span>
+      ),
+    )
+  // 문자 앱은 자기 안에서 스크롤합니다 — 카드가 가리키는 수법이 바뀌면 그 자리로 직접 내려 줍니다
+  // (검거 카드가 오른쪽 판에 zoom 0.82 를 걸어 두어 좌표를 그만큼 환산)
+  const wrap = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      const el = wrap.current?.querySelector('.focus-glow') ?? null
+      scrollToWithin((el?.closest('.overflow-y-auto') as HTMLElement | null) ?? null, el, 0.82)
+    }, 650)
+    return () => window.clearTimeout(id)
+  }, [flag.target])
+  return (
+    <div ref={wrap} className="h-full">
+      <ChannelView scenario={scenario} items={items} typing={false} readIndex={-1} render={render} />
+    </div>
+  )
+}
+
+/**
+ * ① 의 결말 — 피해 카드. "정보가 전송되었습니다"로 끝내지 않고, 그 뒤 실제로 무슨 일이 생기는지 보여 줍니다.
+ * [다시 시도해 보세요] → 선택 화면으로 돌아가 다른 선택을 해 보게 합니다.
+ */
+function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void }) {
+  const d = sm.damage
+  const [shown, setShown] = useState(0)
+  const total = d.alerts.length + 1
+  useEffect(() => {
+    if (shown >= total) return
+    const id = window.setTimeout(() => setShown((n) => n + 1), shown === 0 ? 700 : 1200)
+    return () => window.clearTimeout(id)
+  }, [shown, total])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      data-role="smish-damage"
+      className="absolute inset-0 z-40 flex items-center justify-center bg-[#1a0508]/92 px-4 py-4 backdrop-blur-sm"
+    >
+      <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#ff6b6b]/60 bg-[#1f0a10]/95 px-[clamp(1.1rem,4vw,1.7rem)] py-[clamp(1.1rem,3vh,1.7rem)] text-white shadow-[0_0_2.4rem_rgba(255,107,107,0.35)]">
+        <div className="text-center">
+          <span className="inline-block rounded-md bg-[#ff6b6b] px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-[#2a0509]">{d.tag}</span>
+          <h2 className="mt-3 font-display text-[min(1.45rem,5.6vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(255,107,107,0.6)]">{d.title}</h2>
+        </div>
+
+        {/* 그 뒤 내 휴대폰에 온 알림들 */}
+        <div className="mt-4 rounded-xl bg-[#2b3246] p-3">
+          <p className="mb-2 text-center text-[0.8rem] font-bold text-white/55">{d.phone}</p>
+          <div className="flex min-h-[9.5rem] flex-col gap-2">
+            {d.alerts.slice(0, shown).map((a, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: -14, scale: 0.94 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 24 }}
+                className="rounded-xl bg-white px-3.5 py-2.5 text-[#1f2430]"
+              >
+                <p className="text-[0.78rem] font-bold text-[#e5484d]">{a.from}</p>
+                <p className="mt-0.5 text-[0.98rem] leading-snug">{a.text}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {shown >= total && (
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+            {gave.length > 0 && (
+              <div className="mt-3 text-center">
+                <p className="text-[0.85rem] font-bold text-white/55">{d.gaveTitle}</p>
+                <div className="mt-1.5 flex flex-wrap justify-center gap-2">
+                  {gave.map((g) => (
+                    <span key={g} className="rounded-full border border-[#ff6b6b]/60 bg-[#2a0509] px-3 py-1.5 text-[0.95rem] font-bold text-[#ffb4b4]">
+                      {g}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            <p className="mt-3 text-center text-[0.98rem] leading-snug text-white/80">{d.lesson}</p>
+            <button
+              type="button"
+              data-role="smish-retry"
+              onClick={onRetry}
+              className="mt-4 min-h-[3.4rem] w-full rounded-xl bg-gold px-4 font-display text-[1.2rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]"
+            >
+              {d.retry}
+            </button>
+          </motion.div>
+        )}
+      </div>
+    </motion.div>
   )
 }
 
