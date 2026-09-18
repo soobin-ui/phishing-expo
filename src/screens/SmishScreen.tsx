@@ -127,7 +127,10 @@ export function SmishScreen({
             }}
           />
         )}
-        {phase === 'damage' && <DamageScene gave={gaveList} onRetry={() => setPhase('choose')} />}
+        {/* '유출된 정보' 칩에는 실제로 넘긴 정보만 — '링크에 접속'은 정보가 아니라 행동이라 뺍니다 */}
+        {phase === 'damage' && (
+          <DamageScene gave={gaveList.filter((g) => g !== sm.page.gaveOpen)} onRetry={() => setPhase('choose')} />
+        )}
         {phase === 'verify' && <VerifyScene onDone={() => setPhase('card')} />}
         {phase === 'card' && (
           <DefenseCard

@@ -58,11 +58,12 @@ function PushNotice({
   /** 사건 브리핑(시나리오에 있으면) — 잠금화면을 흐리게 깔고 먼저 뜹니다. 닫아야 피싱 문자가 옵니다 */
   const [brief, setBrief] = useState(!!scenario.brief)
 
-  // 평범한 알림이 먼저 자리를 잡고, 피싱 문자는 (브리핑을 닫은 뒤) 1.4초 뒤에 도착합니다
+  // 평범한 알림이 먼저 자리를 잡고, 피싱 문자는 브리핑을 닫자마자(0.35초) '띠링' 하고 도착합니다
+  // ★ 더 늘리지 마세요 — 1.4초였을 때 "대기 시간이 길다"는 피드백이 있었습니다(2026-09-18)
   const [arrived, setArrived] = useState(others.length === 0 && !scenario.brief)
   useEffect(() => {
     if (arrived || brief) return
-    const id = window.setTimeout(() => setArrived(true), 1400)
+    const id = window.setTimeout(() => setArrived(true), 350)
     return () => window.clearTimeout(id)
   }, [arrived, brief])
 
