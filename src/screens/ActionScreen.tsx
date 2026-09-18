@@ -5,7 +5,7 @@ import { ScrollScreen } from '../components/Stage'
 import { BadgeIcon } from '../components/Cyber'
 import { fill, ui } from '../lib/content'
 
-const AUTO_RESET = 40 // 초
+const AUTO_RESET = 30 // 초 — 마지막 화면에서 처음으로 돌아가는 시간(2026-09-18 40→30)
 
 /**
  * [4] 마지막 화면 — 실제로 당했을 때 무엇을 해야 하는지.
