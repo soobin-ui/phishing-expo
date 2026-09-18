@@ -527,7 +527,7 @@ function InputField({ field, value, onChange }: { field: Field; value: string; o
         inputMode={field.id === 'name' ? 'text' : 'numeric'}
         placeholder={field.ph}
         autoComplete="off"
-        className="min-h-[3.2rem] w-full rounded-xl border border-[#d5d9e3] bg-white px-4 text-[1.1rem] text-[#1c1f2a] outline-none placeholder:text-[#a3abb8] focus:border-[#d4143a]"
+        className="min-h-[clamp(2.6rem,5.4dvh,3.2rem)] w-full rounded-xl border border-[#d5d9e3] bg-white px-4 text-[1.1rem] text-[#1c1f2a] outline-none placeholder:text-[#a3abb8] focus:border-[#d4143a]"
       />
     </div>
   )
@@ -565,7 +565,7 @@ function SiteButton({
       }
       transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut' }}
       whileTap={{ scale: 0.98 }}
-      className="mt-4 min-h-[3.5rem] w-full rounded-xl bg-[#d4143a] px-4 text-[1.15rem] font-bold text-white shadow-[0_0.2rem_0_#8f0d27] active:translate-y-[0.1rem] disabled:opacity-35"
+      className="mt-[clamp(0.6rem,2dvh,1rem)] min-h-[clamp(2.9rem,6dvh,3.5rem)] w-full rounded-xl bg-[#d4143a] px-4 text-[1.15rem] font-bold text-white shadow-[0_0.2rem_0_#8f0d27] active:translate-y-[0.1rem] disabled:opacity-35"
     >
       {children}
     </motion.button>
@@ -577,15 +577,15 @@ function Verify({ name, onNext }: { name: string; onNext: () => void }) {
   const v = vip.verify
   const { raw, setField, complete } = useForm(v.fields)
   return (
-    <div className="mx-auto w-full max-w-[32rem] px-5 py-5">
+    <div className="mx-auto w-full max-w-[32rem] px-5 py-[clamp(0.7rem,2.4dvh,1.25rem)]">
       <StageHead step={v.step} title={v.title} />
       <p className="mt-1.5 text-[1rem] text-[#5a6377]">{fill(v.body, { name })}</p>
-      <div className="mt-4 flex flex-col gap-3.5">
+      <div className="mt-[clamp(0.6rem,2dvh,1rem)] flex flex-col gap-[clamp(0.5rem,1.7dvh,0.875rem)]">
         {v.fields.map((f: Field) => (
           <InputField key={f.id} field={f} value={raw[f.id] ?? ''} onChange={(val) => setField(f.id, val)} />
         ))}
       </div>
-      <p className="mt-3 text-[0.82rem] leading-snug text-[#8a93a6]">{vip.site.demoNote}</p>
+      <p className="mt-[clamp(0.4rem,1.4dvh,0.75rem)] text-[0.82rem] leading-snug text-[#8a93a6]">{vip.site.demoNote}</p>
       <SiteButton role="vip-verify-next" disabled={!complete} onClick={onNext}>
         {v.cta}
       </SiteButton>

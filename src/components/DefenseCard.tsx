@@ -91,26 +91,49 @@ export function DefenseCard({
   const backSeen = seen.length > 0
   const flag = flags[Math.min(trick, flags.length - 1)]
   const reviewRef = useRef<HTMLDivElement>(null)
-  /** 메일 판은 카드와 같은 높이 — 카드 높이를 재서 맞춥니다(내용이 길어도 판이 커지지 않게) */
-  const cardRef = useRef<HTMLDivElement>(null)
-  const [cardH, setCardH] = useState(0)
-  const [cardW, setCardW] = useState(0)
-  /** 버튼 두 개는 카드(뒷면이면 카드+메일 판) 폭에 딱 맞춥니다 — 폭이 따로 놀면 동떨어져 보입니다 */
-  const rowRef = useRef<HTMLDivElement>(null)
-  const [rowW, setRowW] = useState(0)
+
+  /**
+   * ★ 카드 크기는 '남은 자리'를 실제로 재서 정합니다(2026-09-19).
+   *
+   *   예전에는 카드 **폭**만 정하고 높이는 5:7 비율로 따라가게 뒀습니다.
+   *   그러면 세로가 모자란 기기(아이패드 가로·노트북)에서 카드가 남은 높이를 넘겨 버리고,
+   *   가운데 정렬이라 위아래로 똑같이 삐져나와 **제목을 덮고 아래 버튼이 잘렸습니다**.
+   *
+   *   이제 카드 자리(제목과 버튼을 뺀 나머지)의 폭·높이를 재서
+   *   높이에 먼저 맞추고, 폭이 모자라면 폭에 맞춥니다. 그래서 어떤 기기든 항상 들어옵니다.
+   */
+  const boxRef = useRef<HTMLDivElement>(null)
+  const [box, setBox] = useState({ w: 0, h: 0, rem: 16 })
   useLayoutEffect(() => {
-    const card = cardRef.current
-    const row = rowRef.current
-    if (!card || !row) return
-    const ro = new ResizeObserver(() => {
-      setCardH(card.offsetHeight)
-      setCardW(card.offsetWidth)
-      setRowW(row.offsetWidth)
-    })
-    ro.observe(card)
-    ro.observe(row)
+    const el = boxRef.current
+    if (!el) return
+    const read = () =>
+      setBox({
+        w: el.clientWidth,
+        h: el.clientHeight,
+        rem: parseFloat(getComputedStyle(document.documentElement).fontSize) || 16,
+      })
+    read()
+    const ro = new ResizeObserver(read)
+    ro.observe(el)
     return () => ro.disconnect()
   }, [])
+
+  const rem = box.rem
+  /** 옆에 다시 보기 판까지 놓을 만큼 넓은가 (좁으면 카드만) */
+  const canSplit = hasReview && box.w >= 42 * rem
+  const showReview = flipped && canSplit
+  const gapPx = showReview ? rem : 0
+  const reviewW = showReview ? Math.min(28 * rem, box.w * 0.46) : 0
+  /** 카드가 쓸 수 있는 폭 */
+  const freeW = Math.max(0, box.w - reviewW - gapPx)
+  /** 높이 우선 — 남은 높이에 맞추되, 폭이 모자라면 폭에 맞춥니다. 큰 화면에서는 너무 커지지 않게 상한 */
+  const cardH = Math.max(0, Math.min(box.h, (freeW * 7) / 5, 30 * rem * 1.4))
+  const cardW = (cardH * 5) / 7
+  /** 버튼 줄은 카드(+옆 판)와 폭이 정확히 같습니다 */
+  const rowW = cardW + gapPx + reviewW
+  /** 카드 안 글자는 카드 크기를 따라갑니다(카드가 작아지면 글자도 같이) */
+  const cardFont = Math.max(10, Math.min(26, cardW / 21))
 
   /** 메일 다시 보기 — 카드가 가리키는 수법은 붉게 빛나고(focus-glow), 나머지 수상한 문구는 옅은 붉은 밑줄 */
   const reviewFlags = flags.filter((f) => f.match)
@@ -147,7 +170,7 @@ export function DefenseCard({
   }, [])
 
   /** 뒷면 옆 판이 보이는 상태 — 행이 카드보다 넓어졌는지로 판단(좁은 폰에서는 판이 숨겨져 행 = 카드) */
-  const split = flipped && hasReview && cardW > 0 && rowW > cardW + 24
+  const split = showReview
 
   const rows = [
     { label: t.card.detect, sub: 'PHISHING DETECTION', icon: <IconDetect />, n: clamp(Math.round((stats.found / stats.total) * 5)) },
@@ -194,15 +217,15 @@ export function DefenseCard({
           카드가 1번 수법을 보여줄 때 메일에서는 1번 문구가 붉게 빛나며 그 자리로 스크롤되고,
           [다음]으로 2번·3번·4번으로 넘기면 빛나는 자리도 따라 움직입니다 — "아, 여기였구나"를 다시 보게.
           (mail 을 안 넘기는 주제 — 포렌식 — 는 카드만 가운데. 폰(<640px)은 자리가 없어 메일 판을 숨기고 카드만.) */}
-      <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-3">
-        <div className="flex w-full flex-col items-center gap-3">
-        {/* 카드 (+ 메일 판) — 내용 폭만큼만(w-fit) 차지해서 아래 버튼 폭의 기준이 됩니다 */}
-        <div ref={rowRef} className="flex w-fit max-w-full items-center justify-center gap-4">
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center gap-3 px-4 py-3">
+        {/* 카드가 쓸 자리 — 제목과 버튼을 뺀 나머지 전부. 이 칸의 크기를 재서 카드 크기를 정합니다 */}
+        <div ref={boxRef} className="flex min-h-0 w-full flex-1 items-center justify-center">
+        <div className="flex h-full items-center justify-center" style={{ width: rowW || undefined, gap: gapPx }}>
         <motion.div
-          ref={cardRef}
           layout
           transition={{ type: 'spring', stiffness: 210, damping: 26 }}
-          className={`shrink-0 [perspective:1400px] ${flipped && hasReview ? 'w-[min(26rem,86vw,53dvh)] sm:w-[min(22rem,40vw,50dvh)]' : 'w-[min(26rem,86vw,53dvh)]'}`}
+          className="shrink-0 [perspective:1400px]"
+          style={{ width: cardW || undefined, height: cardH || undefined, fontSize: cardFont }}
         >
         {shown && (
           <motion.div
@@ -210,8 +233,7 @@ export function DefenseCard({
             animate={{ rotateY: flipped ? 180 : 0, scale: 1, opacity: 1 }}
             transition={{ duration: 1.15, ease: [0.16, 1, 0.3, 1] }}
             data-role="defense-card"
-            className="relative w-full [transform-style:preserve-3d]"
-            style={{ aspectRatio: '5 / 7' }}
+            className="relative h-full w-full [transform-style:preserve-3d]"
           >
             {/* ── 앞면 ── */}
             <CardFace>
@@ -354,15 +376,15 @@ export function DefenseCard({
         </motion.div>
 
         {/* 오른쪽 — 방금 조사한 그 메일. 카드가 가리키는 수법의 자리가 붉게 빛나고 그리로 스크롤됩니다 */}
-        {flipped && hasReview && (
+        {showReview && (
           <motion.div
             layout
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ type: 'spring', stiffness: 210, damping: 26, delay: 0.45 }}
             data-role="review-mail"
-            style={{ height: cardH || undefined }}
-            className="flex min-h-0 w-[min(30rem,48vw)] shrink-0 flex-col overflow-hidden rounded-xl border-2 border-[#2fa8ff]/70 bg-white text-[#1f2430] shadow-[0_0_1.6rem_rgba(47,168,255,0.4)] max-sm:hidden"
+            style={{ height: cardH || undefined, width: reviewW || undefined }}
+            className="flex min-h-0 shrink-0 flex-col overflow-hidden rounded-xl border-2 border-[#2fa8ff]/70 bg-white text-[#1f2430] shadow-[0_0_1.6rem_rgba(47,168,255,0.4)]"
           >
             <div className="flex shrink-0 items-center gap-2 border-b border-[#eceff4] bg-[#f7f9fc] px-3 py-2 text-[0.9rem] font-bold text-[#2f55b8]">
               <span className="flex h-[1.5rem] w-[1.5rem] items-center justify-center rounded-full bg-[#e5484d] font-display text-[0.8rem] text-white tabular-nums">
@@ -391,6 +413,7 @@ export function DefenseCard({
           </motion.div>
         )}
         </div>
+        </div>
 
         {/* 처음엔 [카드 뒷면 보기] 하나만(카드 폭). 뒷면을 한 번 본 뒤부터 [이렇게 예방하세요]가 같이 보입니다.
             ★ 뒷면에서 옆 판이 보일 때는 [앞면 보기]를 카드 폭에, [이렇게 예방하세요]를 옆 판 폭에 맞춥니다(1~4번 공통) */}
@@ -399,8 +422,8 @@ export function DefenseCard({
           animate={{ opacity: shown ? 1 : 0, y: shown ? 0 : 10 }}
           transition={{ delay: 1.5 }}
           // 폭은 카드(+옆 판) 행과 정확히 같게 — 버튼이 카드보다 넓어 보이지 않도록(2026-09-19)
-          style={{ width: rowW || undefined }}
-          className={`flex max-w-full max-[420px]:flex-col ${split ? 'gap-4' : 'gap-2.5'}`}
+          style={{ width: rowW || undefined, gap: split ? gapPx : undefined }}
+          className={`flex max-w-full shrink-0 max-[420px]:flex-col ${split ? '' : 'gap-2.5'}`}
         >
           <motion.button
             type="button"
@@ -435,7 +458,6 @@ export function DefenseCard({
             </motion.button>
           )}
         </motion.div>
-        </div>
       </div>
     </motion.div>
   )

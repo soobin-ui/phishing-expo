@@ -46,7 +46,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
           className="mx-auto flex w-full max-w-[36rem] flex-1 flex-col items-center justify-center px-6 pt-[max(1rem,2.5dvh)] pb-[calc(clamp(2.6rem,6dvh,3.4rem)+1.2rem)] text-center wide:max-w-[76rem] wide:flex-row wide:gap-[4%] wide:px-[5%] wide:pt-6"
         >
           {/* ── 장면: 두 캐릭터 + 레이더 + 수상한 메시지들 ── */}
-          <div className="flex w-full flex-col items-center wide:flex-1">
+          <div className="flex w-full flex-col items-center wide:min-w-0 wide:flex-1">
             <motion.div variants={rise} className="wide:hidden">
               <EventPill className="bg-[#1a3f6b] text-[0.95rem] text-[#dceeff]" />
               <ZoneTitle />
@@ -112,10 +112,14 @@ function ZoneTitle() {
 /**
  * 두 캐릭터가 서 있고, 뒤에서 레이더가 돌며 수상한 메일·문자·전화를 잡아냅니다.
  * 높이는 화면 높이를 따라가서 폰·태블릿·노트북 모두 한 화면에 들어옵니다.
+ *
+ * ★ 가로 화면에서는 폭(34vw)으로도 묶어 둡니다(2026-09-19).
+ *   높이만 보고 크기를 정하면 1080×810 처럼 납작한 화면에서 장면이 옆으로 자라
+ *   오른쪽 글과 [수사 시작하기] 가 화면 밖으로 잘렸습니다.
  */
 function Scene() {
   return (
-    <div className="relative mx-auto mt-[min(0.6rem,1dvh)] aspect-[10/8] h-[min(31dvh,30rem)] max-w-full wide:mt-0 wide:h-[min(64dvh,30rem)]">
+    <div className="relative mx-auto mt-[min(0.6rem,1dvh)] aspect-[10/8] h-[min(31dvh,30rem)] max-w-full wide:mt-0 wide:h-[min(64dvh,30rem,34vw)]">
       {/* 레이더 */}
       <div className="absolute top-[2%] left-1/2 aspect-square h-[88%] -translate-x-1/2">
         <div className="absolute inset-0 rounded-full border border-[#2fa8ff]/45 bg-[radial-gradient(circle,rgba(22,104,196,0.28),rgba(5,10,24,0)_70%)]" />

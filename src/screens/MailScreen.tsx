@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { EmailBody } from "../channels/MailView";
@@ -747,11 +747,30 @@ function Bubble({
 }) {
   const t = ui.investigate;
   const probe = pop.flag.probe;
+  /**
+   * 말풍선이 메일 판 밖으로 나가면 아래(또는 위)가 잘려 선택지를 못 누릅니다.
+   * 그려진 뒤 실제 자리를 재서, 삐져나온 만큼 안으로 밀어 넣습니다(2026-09-19).
+   * ★ transform 은 등장 연출이 쓰고 있어서 margin 으로 밉니다.
+   */
+  const ref = useRef<HTMLDivElement>(null);
+  const [shift, setShift] = useState(0);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const host = el?.offsetParent as HTMLElement | null;
+    if (!el || !host) return;
+    const r = el.getBoundingClientRect();
+    const p = host.getBoundingClientRect();
+    let dy = 0;
+    if (r.bottom > p.bottom - 8) dy = p.bottom - 8 - r.bottom;
+    if (r.top + dy < p.top + 8) dy = p.top + 8 - r.top;
+    setShift((v) => (Math.abs(v - dy) < 1 ? v : dy));
+  });
   if (!probe) return null;
   const wrong = pop.wrong === null ? null : probe.options[pop.wrong];
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, scale: 0.94 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.96 }}
@@ -762,6 +781,8 @@ function Bubble({
         left: `clamp(0.75rem, ${pop.x}px, calc(100% - min(23rem, 100% - 1.5rem) - 0.75rem))`,
         top: pop.below ? pop.y : undefined,
         bottom: pop.below ? undefined : `calc(100% - ${pop.y}px)`,
+        marginTop: pop.below ? shift : undefined,
+        marginBottom: pop.below ? undefined : -shift,
       }}
     >
       <div className="rounded-2xl bg-navy-deep p-4 text-white shadow-[0_0.8rem_2rem_rgba(0,0,0,0.35)]">
