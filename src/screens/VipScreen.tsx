@@ -9,12 +9,14 @@ import type { RedFlag, Scenario } from '../types'
 /**
  * [4번 기관·기업 사칭] 가짜 통신사 'KTT' VIP 초청 사이트.
  *
- * ★ 3번 스미싱과 같은 '직접 피해자가 되어 보는' 선택형 체험입니다(2026-09-18 사용자 결정).
- *   사건 브리핑(3번과 같은 상자) → KTT VIP 멤버십 페이지 + VIP 초청 팝업에서 **직접 선택**:
- *     ① VIP 초청 확인하기 → 본인확인(직접 입력) → 초청석 확보 → 보증금 5만원 결제(직접 입력)
- *        → 초청 완료 → 해외결제·명의도용 알림 폭탄 → **피해 화면** → [다시 해보기] → 팝업으로
- *     ② 공식 고객센터에 먼저 확인하기 → 가짜로 판명 → 사이트 닫기·신고 → **검거 완료 카드**  ← 정답
- *     (오른쪽 위 ✕ 로 닫으면 잠시 뒤 다시 뜸 — '닫고 그냥 보기' 선택지는 2026-09-18 삭제)
+ * ★ 3번 스미싱과 같은 '무조건 직접 당해보는' 체험입니다(2026-09-18 사용자 결정).
+ *   사건 브리핑 → KTT VIP 멤버십 페이지 + VIP 초청 팝업([VIP 초청 확인하기] 버튼 하나만):
+ *   [1회차] 확인하기 → 본인확인(직접 입력) → 초청석 확보 → 보증금 5만원 결제(직접 입력)
+ *           → 초청 완료 → 해외결제·명의도용 알림 폭탄 → **피해 화면** → [다시 해보기]
+ *   [2회차~] guided=true. 확인하기 → 각 페이지(본인확인·좌석·결제)에서 화면이 어두워지며 **STOP!** 안내:
+ *           그 페이지 수법을 하이라이트(주소·타이머/자동배정·선결제) + 경고 → [다음] → 다음 페이지 STOP
+ *           → 결제 STOP [다음] → **검거 완료 카드**
+ *   ★ '공식 고객센터 먼저 확인' 선택지·닫기 ✕ 는 삭제 — 무조건 끝까지 체험하도록.
  *
  * ★ 본인확인·결제 입력칸은 관람객이 직접 칩니다(체험용이라 아무 숫자나). 화면 상태로만 있다가 사라지며 저장·전송하지 않습니다.
  * ★ KTT · 스페셜 T 는 지어낸 이름입니다(실존 통신사 금지). 콘서트만 사용자 지시로 임영웅 IM HERO THE STADIUM 2 를 씀.
@@ -22,7 +24,7 @@ import type { RedFlag, Scenario } from '../types'
  * ★ 이모지 금지 — 아이콘·빵빠레 모두 SVG/도형.
  */
 type Stage = 'home' | 'verify' | 'seat' | 'pay' | 'done'
-type Phase = 'none' | 'damage' | 'safe' | 'card'
+type Phase = 'none' | 'damage' | 'card'
 
 /** 가짜 사이트가 띄우는 마감 타이머(초) — 압박 연출용 */
 const SITE_LIMIT = 180
@@ -44,8 +46,8 @@ export function VipScreen({
   const [brief, setBrief] = useState(true)
   const [stage, setStage] = useState<Stage>('home')
   const [phase, setPhase] = useState<Phase>('none')
-  const [popupOpen, setPopupOpen] = useState(true)
-  const [nagging, setNagging] = useState(false)
+  /** 1회차에 결제까지 가서 당한 뒤에는 안내(STOP) 모드 — 각 페이지에서 수법을 짚어 줍니다 */
+  const [guided, setGuided] = useState(false)
   const [siteLeft, setSiteLeft] = useState(SITE_LIMIT)
   const [alerts, setAlerts] = useState(0)
   const [falls, setFalls] = useState(0)
@@ -77,22 +79,20 @@ export function VipScreen({
     later(() => setPhase('damage'), 1700 + n * 360 + 1400)
   }
 
-  /** [다시 해보기] — 팝업(홈)으로 돌아갑니다 */
+  /** [다시 해보기] — 팝업(홈)으로 돌아가고, 이제부터 안내(STOP) 모드 */
   const retry = () => {
     setPhase('none')
     setStage('home')
     setAlerts(0)
     setSiteLeft(SITE_LIMIT)
-    setPopupOpen(true)
+    setGuided(true)
   }
 
-  /** ③ 팝업 닫고 그냥 보기 — 잠시 뒤 다시 뜹니다(무시만으로는 안 끝남) */
-  const closePopup = () => {
-    setPopupOpen(false)
-    later(() => {
-      setNagging(true)
-      setPopupOpen(true)
-    }, 3500)
+  /** 안내 모드에서 [다음] — 본인확인 → 좌석 → 결제 → 검거 카드 */
+  const guideNext = () => {
+    if (stage === 'verify') setStage('seat')
+    else if (stage === 'seat') setStage('pay')
+    else setPhase('card')
   }
 
   return (
@@ -171,16 +171,17 @@ export function VipScreen({
             {stage === 'done' && <Done name={name} />}
           </div>
 
-          {/* VIP 초청 팝업 — 홈에서만. 여기서 직접 선택합니다 */}
+          {/* VIP 초청 팝업 — 홈에서만. [VIP 초청 확인하기] 하나만(무조건 체험) */}
           <AnimatePresence>
-            {stage === 'home' && phase === 'none' && !brief && popupOpen && (
-              <Invitation
-                name={name}
-                nagging={nagging}
-                onOpen={() => setStage('verify')}
-                onSafe={() => setPhase('safe')}
-                onClose={closePopup}
-              />
+            {stage === 'home' && phase === 'none' && !brief && (
+              <Invitation name={name} onOpen={() => setStage('verify')} />
+            )}
+          </AnimatePresence>
+
+          {/* 안내(STOP) 모드 — 2회차부터 각 페이지에서 수법을 짚어 줍니다 */}
+          <AnimatePresence>
+            {guided && phase === 'none' && (stage === 'verify' || stage === 'seat' || stage === 'pay') && (
+              <GuidedStop key={stage} step={stage} seats={seats} onNext={guideNext} />
             )}
           </AnimatePresence>
 
@@ -191,9 +192,6 @@ export function VipScreen({
 
       {/* 피해 화면 — 결제까지 갔을 때 */}
       <AnimatePresence>{phase === 'damage' && <DamageScene gave={gave} onRetry={retry} />}</AnimatePresence>
-
-      {/* 먼저 확인하기 — 공식 고객센터 확인 → 위험 차단 */}
-      <AnimatePresence>{phase === 'safe' && <SafeScene onDone={() => setPhase('card')} />}</AnimatePresence>
 
       {/* 검거 완료 카드 — 위험을 막았을 때만 */}
       <AnimatePresence>
@@ -333,19 +331,7 @@ function Home() {
 }
 
 /** VIP 초청 팝업 — 여기서 직접 선택합니다(3번의 선택지와 같은 역할) */
-function Invitation({
-  name,
-  nagging,
-  onOpen,
-  onSafe,
-  onClose,
-}: {
-  name: string
-  nagging: boolean
-  onOpen: () => void
-  onSafe: () => void
-  onClose: () => void
-}) {
+function Invitation({ name, onOpen }: { name: string; onOpen: () => void }) {
   const p = vip.popup
   return (
     <motion.div
@@ -357,25 +343,11 @@ function Invitation({
       <motion.div
         initial={{ opacity: 0, scale: 0.82, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 20, delay: nagging ? 0 : 0.4 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.4 }}
         role="dialog"
         data-role="vip-popup"
         className="relative w-full max-w-[24rem] rounded-2xl border border-[#d8b35a] bg-gradient-to-b from-[#16120a] to-[#0a0806] px-4 pb-3.5 pt-7 text-center text-white shadow-[0_0_2.4rem_rgba(216,179,90,0.5)]"
       >
-        {/* 닫기 */}
-        <button
-          type="button"
-          data-role="vip-close"
-          onClick={onClose}
-          aria-label={vip.popup.close}
-          className="absolute right-3 top-3 flex h-[2rem] w-[2rem] items-center justify-center rounded-full text-white/60 active:bg-white/10"
-        >
-          <svg viewBox="0 0 24 24" className="h-[1.2rem] w-[1.2rem]" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" /></svg>
-        </button>
-
-        {nagging && (
-          <p className="mb-1 font-display text-[0.9rem] font-bold text-[#ff8a9c]">{vip.nag.eyebrow}</p>
-        )}
         <p className="font-display text-[0.95rem] font-bold tracking-[0.42em] text-[#e6c77a]">{p.eyebrow}</p>
         <div className="mx-auto mt-2 h-px w-[60%] bg-gradient-to-r from-transparent via-[#d8b35a] to-transparent" />
         <p className="mt-2.5 font-display text-[1.2rem] leading-snug font-bold">{fill(p.hello, { name })}</p>
@@ -415,17 +387,6 @@ function Invitation({
         >
           {p.cta}
         </motion.button>
-
-        {/* ② 공식 고객센터에 먼저 확인하기 — 정답 */}
-        <button
-          type="button"
-          data-role="vip-safe"
-          onClick={onSafe}
-          className="mt-2 min-h-[2.9rem] w-full rounded-xl border border-white/35 bg-white/5 px-4 text-[0.98rem] font-bold text-white active:bg-white/15"
-        >
-          {vip.options.verify.label}
-        </button>
-
       </motion.div>
     </motion.div>
   )
@@ -823,75 +784,76 @@ function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void })
   )
 }
 
-/** 먼저 확인하기 — 공식 고객센터에 물어봄 → 가짜로 드러남 → 사이트 닫기·신고 → 위험 차단 */
-function SafeScene({ onDone }: { onDone: () => void }) {
-  const v = vip.safe
-  const [shown, setShown] = useState(0)
-  const total = v.chat.length + 2
-  useEffect(() => {
-    if (shown >= total) return
-    const id = window.setTimeout(() => setShown((n) => n + 1), shown === 0 ? 700 : 1300)
-    return () => window.clearTimeout(id)
-  }, [shown, total])
-
+/**
+ * 안내(STOP) 모드 — 2회차(다시 해보기)부터 각 페이지에서 뜹니다.
+ * 화면을 어둡게 덮고 큰 빨간 STOP! 을 띄운 뒤, 그 페이지의 수법을 밝게 짚어 주고 [다음]으로 넘어갑니다.
+ *   verify → 주소창(공식 주소 아님) · seat → 타이머·남은 좌석·자동 배정 압박 · pay → 선결제 보증금
+ */
+function GuidedStop({ step, seats, onNext }: { step: 'verify' | 'seat' | 'pay'; seats: number; onNext: () => void }) {
+  const key = step === 'verify' ? 'url' : step === 'seat' ? 'pressure' : 'deposit'
+  const g = vip.guide.steps[key]
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      data-role="vip-safe-scene"
-      className="absolute inset-0 z-40 flex items-center justify-center bg-[#050a18]/92 px-4 py-4 backdrop-blur-sm"
+      data-role="vip-stop"
+      className="absolute inset-0 z-40 flex items-center justify-center bg-[#050a18]/88 px-5 backdrop-blur-[2px]"
     >
-      <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#2fa8ff]/60 bg-[#0b1631]/95 px-[clamp(1.1rem,4vw,1.7rem)] py-[clamp(1.1rem,3vh,1.7rem)] text-white shadow-[0_0_2.4rem_rgba(47,168,255,0.35)]">
-        <div className="text-center">
-          <span className="inline-block rounded-md bg-gold px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-navy-deep">{v.tag}</span>
-          <h2 className="mt-3 font-display text-[min(1.45rem,5.6vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(47,168,255,0.6)]">{v.title}</h2>
+      <motion.div
+        initial={{ opacity: 0, y: 20, scale: 0.94 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+        className="no-scrollbar max-h-full w-full max-w-[30rem] overflow-y-auto rounded-2xl border border-[#ff4d4d]/60 bg-[#160a10]/95 px-[clamp(1.1rem,4vw,1.6rem)] py-[clamp(1.1rem,3vh,1.5rem)] text-center text-white shadow-[0_0_2.6rem_rgba(255,60,60,0.45)]"
+      >
+        {/* 큰 빨간 STOP */}
+        <motion.div
+          animate={{ scale: [1, 1.06, 1], boxShadow: ['0 0 0 0 rgba(255,60,60,0)', '0 0 1.8rem 0.35rem rgba(255,60,60,0.85)', '0 0 0 0 rgba(255,60,60,0)'] }}
+          transition={{ duration: 1, repeat: Infinity, ease: 'easeInOut' }}
+          className="mx-auto flex h-[3.6rem] w-[9rem] items-center justify-center rounded-2xl bg-[#e5142e] font-display text-[1.9rem] font-black tracking-[0.1em] text-white"
+        >
+          {vip.guide.stop}
+        </motion.div>
+
+        <h2 className="mt-3.5 font-display text-[min(1.35rem,5.4vw)] leading-snug font-bold [text-shadow:0_0_1rem_rgba(255,120,120,0.5)]">{g.title}</h2>
+
+        {/* 그 페이지의 수법을 밝게 짚어 줍니다 */}
+        <div className="mt-3.5 rounded-xl bg-white/[0.06] p-3 text-left">
+          {step === 'verify' && (
+            <div className="flex items-center gap-2 rounded-full bg-white px-3.5 py-2.5 text-[0.98rem] text-[#4a5368]">
+              <LockIcon />
+              <span className="rounded bg-red-100 px-1.5 py-0.5 font-bold text-red-700 underline decoration-red-400 decoration-2">{vip.site.address}</span>
+            </div>
+          )}
+          {step === 'seat' && (
+            <div className="flex flex-col gap-2">
+              <motion.div
+                animate={{ opacity: [1, 0.55, 1] }}
+                transition={{ duration: 0.9, repeat: Infinity, ease: 'easeInOut' }}
+                className="flex items-center justify-center gap-2 rounded-lg bg-[#d4143a] px-3 py-2 text-[0.98rem] font-bold text-white"
+              >
+                <ClockIcon />
+                {vip.site.bar.label} <b className="tabular-nums">02:41</b> · {fill(vip.site.bar.seats, { n: seats })}
+              </motion.div>
+              <p className="rounded-lg bg-red-50 px-3 py-2 text-[0.95rem] leading-snug font-semibold text-red-700">{vip.seat.notice}</p>
+            </div>
+          )}
+          {step === 'pay' && (
+            <p className="rounded-lg bg-red-50 px-3 py-2.5 text-[0.98rem] leading-snug font-semibold text-red-700">{vip.pay.notice}</p>
+          )}
         </div>
 
-        <div className="mt-4 rounded-xl bg-[#e6eaf0] p-3 text-[#1f2430]">
-          <p className="mb-2 flex items-center justify-center gap-1.5 text-[0.8rem] font-bold text-[#47607a]">
-            <PhoneIcon />
-            {v.room}
-          </p>
-          <div className="flex min-h-[9rem] flex-col gap-2">
-            {v.chat.slice(0, shown).map((m, i) =>
-              'me' in m && m.me ? (
-                <motion.p key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-[82%] self-end rounded-xl rounded-br-sm bg-[#3478f6] px-3 py-2 text-[0.98rem] leading-snug text-white">
-                  {m.text}
-                </motion.p>
-              ) : (
-                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-[86%] self-start">
-                  <p className="mb-0.5 ml-1 text-[0.78rem] font-bold text-[#47607a]">{'who' in m ? m.who : ''}</p>
-                  <p className="rounded-xl rounded-bl-sm bg-white px-3 py-2 text-[0.98rem] leading-snug">{m.text}</p>
-                </motion.div>
-              ),
-            )}
-          </div>
-        </div>
+        <p className="mt-3 text-[0.98rem] leading-snug text-white/85">{g.warn}</p>
 
-        {shown > v.chat.length && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-3 flex flex-wrap justify-center gap-2">
-            {v.actions.map((a) => (
-              <span key={a} className="inline-flex items-center gap-1.5 rounded-full border border-[#2fa8ff]/60 bg-[#050a18] px-3 py-1.5 text-[0.95rem] font-bold text-[#9fe0ff]">
-                <svg viewBox="0 0 24 24" className="h-[1rem] w-[1rem]" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
-                  <path d="M5 12.5l4.5 4.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                {a}
-              </span>
-            ))}
-          </motion.div>
-        )}
-
-        {shown > v.chat.length + 1 && (
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 18 }} className="mt-4 text-center">
-            <p className="font-display text-[min(1.7rem,6.4vw)] font-bold text-gold [text-shadow:0_0_1rem_rgba(254,202,54,0.5)]">{v.done}</p>
-            <p className="mt-1.5 text-[0.98rem] leading-snug text-white/75">{v.doneSub}</p>
-            <button type="button" data-role="vip-safe-next" onClick={onDone} className="mt-4 min-h-[3.4rem] w-full rounded-xl bg-gold px-4 font-display text-[1.2rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]">
-              {v.next}
-            </button>
-          </motion.div>
-        )}
-      </div>
+        <button
+          type="button"
+          data-role="vip-stop-next"
+          onClick={onNext}
+          className="mt-4 min-h-[3.4rem] w-full rounded-xl bg-gold px-4 font-display text-[1.2rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]"
+        >
+          {vip.guide.next}
+        </button>
+      </motion.div>
     </motion.div>
   )
 }
@@ -1036,13 +998,6 @@ function ClockIcon() {
     <svg viewBox="0 0 24 24" className="h-[1.3rem] w-[1.3rem] shrink-0" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5.5l3.5 2" strokeLinecap="round" />
-    </svg>
-  )
-}
-function PhoneIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-[0.95rem] w-[0.95rem]" fill="currentColor" aria-hidden="true">
-      <path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1z" />
     </svg>
   )
 }
