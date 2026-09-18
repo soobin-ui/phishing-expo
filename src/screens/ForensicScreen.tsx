@@ -454,6 +454,7 @@ export function ForensicScreen({
             flags={flags}
             solved={found}
             copy={timedOut ? { ...fx.card, failBody: fx.card.timeoutBody } : fx.card}
+            review={(flag) => <ReviewThread flag={flag} />}
             onNext={() => onSolved(found.length)}
           />
         )}
@@ -580,7 +581,7 @@ function AppView({ screen, found, hint, onGo, onInspect }: { screen: Screen; fou
           ) : m.vid ? (
             <div key={i} className="vid"><i />{m.vid}</div>
           ) : (
-            <button key={i} type="button" data-i={i} className={`bub ${m.me ? 'me' : ''} ${m.ev && found.includes(m.ev) ? 'found' : ''} ${hint && m.ev === hint.id ? 'hl' : ''}`} onClick={() => onInspect(m)}>
+            <button key={i} type="button" data-i={i} className={`bub ${m.me ? 'me' : ''} ${m.ev && found.includes(m.ev) ? 'found' : ''} ${m.ev && !found.includes(m.ev) ? 'ev' : ''} ${hint && m.ev === hint.id ? 'hl' : ''}`} onClick={() => onInspect(m)}>
               <Linked text={m.t ?? ''} />
             </button>
           ),
@@ -607,6 +608,38 @@ function AppView({ screen, found, hint, onGo, onInspect }: { screen: Screen; fou
       </div>
       <div className="body">{body}</div>
     </>
+  )
+}
+
+/**
+ * 검거 카드 뒷면 오른쪽 — 카드가 가리키는 수법이 있던 대화방(문자 또는 카카오톡)을 다시 띄웁니다.
+ * 그 증거 말풍선은 붉게 빛나고(.focus-glow → DefenseCard 가 그리로 스크롤), 나머지 증거는 금테로 표시.
+ */
+function ReviewThread({ flag }: { flag: RedFlag }) {
+  const ev = EVIDENCE.find((e) => e.id === flag.target)
+  const screen = ev ? SCREENS[ev.room] : undefined
+  if (!screen?.thread) return null
+  let lit = false
+  return (
+    <div className="review" data-role="review-thread">
+      <div className="rhdr">
+        {screen.title}
+        {screen.sub && <small>{screen.sub}</small>}
+      </div>
+      <div className={`thread ${screen.kakao ? 'k' : ''}`}>
+        {screen.thread.map((m, i) => {
+          if (m.day) return <div key={i} className="day">{m.day}</div>
+          if (m.vid) return <div key={i} className="vid"><i />{m.vid}</div>
+          const focus = m.ev === flag.target && !lit
+          if (focus) lit = true
+          return (
+            <div key={i} className={`bub ${m.me ? 'me' : ''} ${focus ? 'focus-glow' : m.ev ? 'found' : ''}`}>
+              <Linked text={m.t ?? ''} />
+            </div>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 

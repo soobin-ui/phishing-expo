@@ -54,6 +54,7 @@ export function DefenseCard({
   solved,
   copy = {},
   mail,
+  review,
   onNext,
 }: {
   stats: Stats
@@ -62,8 +63,11 @@ export function DefenseCard({
   copy?: CardCopy
   /** 넘기면 뒷면 옆에 그 메일이 다시 떠서, 카드가 가리키는 수법의 자리가 빛납니다(연구실 메일 전용) */
   mail?: MailDoc
+  /** 메일이 아닌 주제(포렌식 대화방 등)가 오른쪽 판에 넣을 내용 — 빛나야 할 자리에 .focus-glow 를 붙이면 그리로 스크롤됩니다 */
+  review?: (flag: RedFlag) => ReactNode
   onNext: () => void
 }) {
+  const hasReview = !!mail || !!review
   const t = ui.investigate
   const c = {
     caughtBody: copy.caughtBody ?? t.caughtBody,
@@ -120,12 +124,12 @@ export function DefenseCard({
 
   // 카드가 바뀌면 메일에서 그 자리로 스크롤(메일 판이 나타난 뒤에)
   useEffect(() => {
-    if (!flipped || !mail) return
+    if (!flipped || !hasReview) return
     const id = window.setTimeout(() => {
       scrollToWithin(reviewRef.current, reviewRef.current?.querySelector('.focus-glow') ?? null, REVIEW_ZOOM)
     }, 600)
     return () => window.clearTimeout(id)
-  }, [trick, flipped, mail])
+  }, [trick, flipped, hasReview])
 
   useEffect(() => {
     const id = window.setTimeout(() => setShown(true), 700)
@@ -182,7 +186,7 @@ export function DefenseCard({
           ref={cardRef}
           layout
           transition={{ type: 'spring', stiffness: 210, damping: 26 }}
-          className={`shrink-0 [perspective:1400px] ${flipped && mail ? 'w-[min(24rem,86vw,46vh)] sm:w-[min(20rem,40vw,46vh)]' : 'w-[min(24rem,86vw,46vh)]'}`}
+          className={`shrink-0 [perspective:1400px] ${flipped && hasReview ? 'w-[min(24rem,86vw,46vh)] sm:w-[min(20rem,40vw,46vh)]' : 'w-[min(24rem,86vw,46vh)]'}`}
         >
         {shown && (
           <motion.div
@@ -334,7 +338,7 @@ export function DefenseCard({
         </motion.div>
 
         {/* 오른쪽 — 방금 조사한 그 메일. 카드가 가리키는 수법의 자리가 붉게 빛나고 그리로 스크롤됩니다 */}
-        {flipped && mail && (
+        {flipped && hasReview && (
           <motion.div
             layout
             initial={{ opacity: 0, x: 40 }}
@@ -355,14 +359,18 @@ export function DefenseCard({
               className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3"
               style={{ zoom: REVIEW_ZOOM }}
             >
-              <EmailBody
-                mail={mail}
-                render={renderReview}
-                solvedLink={flag.target !== 'link'}
-                solvedFile={flag.target !== 'attachment'}
-                focusLink={flag.target === 'link'}
-                focusFile={flag.target === 'attachment'}
-              />
+              {mail ? (
+                <EmailBody
+                  mail={mail}
+                  render={renderReview}
+                  solvedLink={flag.target !== 'link'}
+                  solvedFile={flag.target !== 'attachment'}
+                  focusLink={flag.target === 'link'}
+                  focusFile={flag.target === 'attachment'}
+                />
+              ) : (
+                review?.(flag)
+              )}
             </div>
           </motion.div>
         )}
