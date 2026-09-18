@@ -411,7 +411,7 @@ export function MailScreen({
         </motion.section>
 
         {/* 가로 화면(노트북·가로 태블릿): 남은 시간을 메일 오른쪽에 크게 */}
-        <aside className={`w-[13.5rem] shrink-0 flex-col gap-3 ${card ? "hidden" : "hidden wide:flex"}`}>
+        <aside className={`w-[15.5rem] shrink-0 flex-col gap-3 ${card ? "hidden" : "hidden wide:flex"}`}>
           {renderStats(true)}
         </aside>
         </div>
@@ -426,8 +426,8 @@ export function MailScreen({
   /** 남은 시간 · 찾은 문구 · 남은 기회 — 세로 화면은 한 줄, 가로 화면은 메일 오른쪽 세로로 크게 */
   function renderStats(big: boolean) {
     const urgent = low && started;
-    const digits = big ? "text-[3.4rem]" : "text-[1.9rem]";
-    const small = big ? "text-[1.3rem]" : "text-[1rem]";
+    const digits = big ? "text-[4.2rem]" : "text-[2.3rem]";
+    const small = big ? "text-[1.7rem]" : "text-[1.2rem]";
     return (
       <>
         <Stat label={t.time} tone="time" low={urgent} big={big}>
@@ -465,7 +465,7 @@ export function MailScreen({
             {Array.from({ length: total }, (_, i) => (
               <span
                 key={i}
-                className={`rounded-full ${big ? "h-[0.7rem] w-[0.7rem]" : "h-[0.5rem] w-[0.5rem]"} ${
+                className={`rounded-full ${big ? "h-[0.85rem] w-[0.85rem]" : "h-[0.55rem] w-[0.55rem]"} ${
                   i < solved.length ? "bg-gold" : "bg-white/20"
                 }`}
               />
@@ -493,7 +493,7 @@ export function MailScreen({
             {Array.from({ length: TOOLS }, (_, i) => (
               <Magnifier
                 key={i}
-                className={`${big ? "h-[1.25rem] w-[1.25rem]" : "h-[0.95rem] w-[0.95rem]"} ${i < left ? "text-gold" : "text-white/15"}`}
+                className={`${big ? "h-[1.5rem] w-[1.5rem]" : "h-[1.05rem] w-[1.05rem]"} ${i < left ? "text-gold" : "text-white/15"}`}
               />
             ))}
           </span>
@@ -636,7 +636,7 @@ function Stat({
     >
       <span
         className={`font-bold tracking-wide ${low ? "text-[#ffb4b4]" : TONE[tone].label} ${
-          big ? "text-[1rem]" : "text-[0.75rem]"
+          big ? "text-[1.5rem]" : "text-[0.98rem]"
         }`}
       >
         {label}
