@@ -210,10 +210,14 @@ export function DefenseCard({
 
                 {/* 수법 4장을 옆으로 이어 붙인 띠 — [다음]을 누르면 본 장은 왼쪽으로 밀리고 다음 장이 오른쪽에서 들어옵니다 */}
                 <div className="relative min-h-0 flex-1 overflow-hidden">
-                  <motion.div
+                  {/* ⚠️ framer-motion 의 % 단위 x 는 거의 즉시 끝나 버려(0.1초) 밀리는 게 안 보였음 → CSS transition 으로 0.7초 */}
+                  <div
+                    data-role="trick-track"
                     className="flex h-full"
-                    animate={{ x: `-${trick * 100}%` }}
-                    transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+                    style={{
+                      transform: `translateX(-${trick * 100}%)`,
+                      transition: 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+                    }}
                   >
                     {flags.map((f, i) => (
                       <div
@@ -236,7 +240,7 @@ export function DefenseCard({
                         )}
                       </div>
                     ))}
-                  </motion.div>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2">
