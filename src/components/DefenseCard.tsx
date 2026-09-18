@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import mascot from '../assets/mascot.webp'
 import mascot2 from '../assets/mascot2.webp'
+import { EmailBody } from '../channels/MailView'
+import { splitByFlags } from '../lib/highlight'
+import { scrollToWithin } from '../lib/scroll'
 import { fill, ui } from '../lib/content'
-import type { RedFlag } from '../types'
+import type { MailDoc, RedFlag } from '../types'
 
 /**
  * 검거 완료 — 홍보 포스터 모양의 '피싱 방어력 카드'가 돌면서 나옵니다.
@@ -32,6 +35,8 @@ export interface Stats {
 }
 
 const clamp = (n: number) => Math.max(1, Math.min(5, n))
+/** 다시 보기 메일 판의 축소 비율 — 카드 옆 좁은 칸에 메일이 들어가게 */
+const REVIEW_ZOOM = 0.82
 
 /** 주제마다 바뀌는 문구 — 없으면 연구실(메일) 문구를 씁니다 */
 export interface CardCopy {
@@ -40,9 +45,7 @@ export interface CardCopy {
   failBody?: string
   tricks?: string
   missed?: string
-  missedShort?: string
-  allSeen?: string
-  allSeenSub?: string
+  reviewTitle?: string
 }
 
 export function DefenseCard({
@@ -50,12 +53,15 @@ export function DefenseCard({
   flags,
   solved,
   copy = {},
+  mail,
   onNext,
 }: {
   stats: Stats
   flags: RedFlag[]
   solved: string[]
   copy?: CardCopy
+  /** 넘기면 뒷면 옆에 그 메일이 다시 떠서, 카드가 가리키는 수법의 자리가 빛납니다(연구실 메일 전용) */
+  mail?: MailDoc
   onNext: () => void
 }) {
   const t = ui.investigate
@@ -65,25 +71,53 @@ export function DefenseCard({
     failBody: copy.failBody ?? t.failBody,
     tricks: copy.tricks ?? t.card.tricks,
     missed: copy.missed ?? t.card.missed,
-    missedShort: copy.missedShort ?? t.card.missedShort,
-    allSeen: copy.allSeen ?? t.card.allSeen,
-    allSeenSub: copy.allSeenSub ?? t.card.allSeenSub,
+    reviewTitle: copy.reviewTitle ?? t.card.reviewTitle,
   }
   const all = stats.found >= stats.total
   const [shown, setShown] = useState(false)
   const [flipped, setFlipped] = useState(false)
   const [trick, setTrick] = useState(0)
-  /** 오른쪽 칸에 꽂힌 수법 번호들 — [다음]을 누른 순서대로 */
-  const [dealt, setDealt] = useState<number[]>([])
-  const allDealt = dealt.length >= flags.length
   const flag = flags[Math.min(trick, flags.length - 1)]
+  const reviewRef = useRef<HTMLDivElement>(null)
+  /** 메일 판은 카드와 같은 높이 — 카드 높이를 재서 맞춥니다(내용이 길어도 판이 커지지 않게) */
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [cardH, setCardH] = useState(0)
+  useLayoutEffect(() => {
+    const el = cardRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setCardH(el.offsetHeight))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
-  /** [다음] — 지금 보던 카드를 칸으로 돌리고, 다음 수법을 큰 카드에 */
-  const deal = () => {
-    if (allDealt) return
-    setDealt((d) => (d.includes(trick) ? d : [...d, trick]))
-    if (trick < flags.length - 1) setTrick(trick + 1)
-  }
+  /** 메일 다시 보기 — 카드가 가리키는 수법은 붉게 빛나고(focus-glow), 나머지 수상한 문구는 옅은 붉은 밑줄 */
+  const reviewFlags = flags.filter((f) => f.match)
+  const renderReview = (text: string) =>
+    splitByFlags(text, reviewFlags).map((seg, i) =>
+      seg.flag ? (
+        <span
+          key={i}
+          className={
+            seg.flag.target === flag.target
+              ? 'focus-glow rounded px-0.5 font-bold text-red-700'
+              : 'rounded px-0.5 bg-red-50 text-red-700 underline decoration-red-300 decoration-2'
+          }
+        >
+          {seg.text}
+        </span>
+      ) : (
+        <span key={i}>{seg.text}</span>
+      ),
+    )
+
+  // 카드가 바뀌면 메일에서 그 자리로 스크롤(메일 판이 나타난 뒤에)
+  useEffect(() => {
+    if (!flipped || !mail) return
+    const id = window.setTimeout(() => {
+      scrollToWithin(reviewRef.current, reviewRef.current?.querySelector('.focus-glow') ?? null, REVIEW_ZOOM)
+    }, 600)
+    return () => window.clearTimeout(id)
+  }, [trick, flipped, mail])
 
   useEffect(() => {
     const id = window.setTimeout(() => setShown(true), 700)
@@ -128,17 +162,18 @@ export function DefenseCard({
 
       {/* ②③ 카드 + 버튼.
           앞면: 카드 한 장이 가운데.
-          뒷면(flipped): 큰 카드가 왼쪽으로 밀려나고 오른쪽에 2×2 빈 칸이 생깁니다.
-          [다음]을 누를 때마다 지금 보던 수법 카드가 작은 카드가 되어 빈 칸으로 날아가 꽂히고(카드 게임에서 패 돌리듯),
-          큰 카드에는 다음 수법이 나타납니다. 1번 왼쪽 위 → 2번 오른쪽 위 → 3번 왼쪽 아래 → 4번 오른쪽 아래.
-          ★ 날아가는 움직임은 framer-motion 의 layoutId 공유(큰 카드 속 내용 ↔ 칸 속 작은 카드가 같은 id). */}
+          뒷면(flipped): 큰 카드가 왼쪽으로 밀려나고, 오른쪽에 **방금 조사한 그 메일**이 다시 뜹니다.
+          카드가 1번 수법을 보여줄 때 메일에서는 1번 문구가 붉게 빛나며 그 자리로 스크롤되고,
+          [다음]으로 2번·3번·4번으로 넘기면 빛나는 자리도 따라 움직입니다 — "아, 여기였구나"를 다시 보게.
+          (mail 을 안 넘기는 주제 — 포렌식 — 는 카드만 가운데.) */}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-3">
-        <div className="flex w-full max-w-[46rem] flex-col items-center gap-2.5">
-        <div className="flex w-full items-center justify-center gap-[4%]">
+        <div className="flex w-full max-w-[52rem] flex-col items-center gap-2.5">
+        <div className={`flex w-full items-center justify-center gap-[3%] ${flipped && mail ? 'max-sm:flex-col max-sm:gap-3' : ''}`}>
         <motion.div
+          ref={cardRef}
           layout
           transition={{ type: 'spring', stiffness: 210, damping: 26 }}
-          className={`[perspective:1400px] ${flipped ? 'w-[min(22rem,50%,40vh)]' : 'w-[min(24rem,86vw,40vh)]'}`}
+          className={`shrink-0 [perspective:1400px] ${flipped && mail ? 'w-[min(20rem,44%,40vh)] max-sm:w-[min(15rem,56vw,24vh)]' : 'w-[min(24rem,86vw,40vh)]'}`}
         >
         {shown && (
           <motion.div
@@ -223,7 +258,7 @@ export function DefenseCard({
               </div>
             </CardFace>
 
-            {/* ── 뒷면 — 지금 보는 수법 한 장 (다 돌리고 나면 '모두 확인') ── */}
+            {/* ── 뒷면 — 수법 한 장씩 ── */}
             <CardFace back>
               <div className="flex h-full flex-col text-left">
                 <div className="flex items-center gap-1.5">
@@ -231,107 +266,95 @@ export function DefenseCard({
                     {c.tricks}
                   </span>
                   <span className="font-display text-[0.75em] font-bold text-white tabular-nums">
-                    {Math.min(dealt.length + 1, flags.length)} / {flags.length}
+                    {trick + 1} / {flags.length}
                   </span>
                 </div>
 
                 <div className="relative min-h-0 flex-1">
-                  {allDealt ? (
-                    <motion.div
-                      key="all-seen"
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.35, type: 'spring', stiffness: 260, damping: 18 }}
-                      data-role="all-seen"
-                      className="flex h-full flex-col items-center justify-center text-center"
-                    >
-                      <span className="flex h-[3em] w-[3em] items-center justify-center rounded-full bg-[#2fa8ff] text-[#050a18]">
-                        <svg viewBox="0 0 24 24" className="h-[60%] w-[60%]" fill="none" stroke="currentColor" strokeWidth="3.2" aria-hidden="true">
-                          <path d="M5 12.5l4.5 4.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </span>
-                      <p className="mt-[0.8em] font-display text-[1.05em] leading-snug font-bold whitespace-pre-line text-white">
-                        {fill(c.allSeen, { n: flags.length })}
-                      </p>
-                      <p className="mt-[0.5em] text-[0.72em] leading-relaxed text-[#b9cbe6]">{c.allSeenSub}</p>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key={`big-${trick}`}
-                      layoutId={`deal-${trick}`}
-                      data-role="trick-slide"
-                      className="flex h-full flex-col justify-center"
-                    >
-                      <span className="flex h-[2.2em] w-[2.2em] items-center justify-center rounded-full bg-[#2fa8ff] font-display text-[1em] font-bold text-[#050a18]">
-                        {trick + 1}
-                      </span>
-                      <p className="mt-[0.6em] text-[1em] leading-snug font-bold text-white">{flag.label}</p>
-                      <p className="mt-[0.45em] text-[0.78em] leading-relaxed text-[#b9cbe6]">{flag.explain}</p>
-                      {!solved.includes(flag.target) && (
-                        <p className="mt-[0.5em] text-[0.68em] font-bold text-[#ffb4b4]">{c.missed}</p>
-                      )}
-                    </motion.div>
-                  )}
+                  <motion.div
+                    key={`trick-${trick}`}
+                    initial={{ opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                    data-role="trick-slide"
+                    className="flex h-full flex-col justify-center"
+                  >
+                    <span className="flex h-[2.2em] w-[2.2em] items-center justify-center rounded-full bg-[#e5484d] font-display text-[1em] font-bold text-white">
+                      {trick + 1}
+                    </span>
+                    <p className="mt-[0.6em] text-[1em] leading-snug font-bold text-white">{flag.label}</p>
+                    <p className="mt-[0.45em] text-[0.78em] leading-relaxed text-[#b9cbe6]">{flag.explain}</p>
+                    {!solved.includes(flag.target) && (
+                      <p className="mt-[0.5em] text-[0.68em] font-bold text-[#ffb4b4]">{c.missed}</p>
+                    )}
+                  </motion.div>
                 </div>
 
-                {!allDealt && (
-                  <div className="flex justify-end">
-                    <button
-                      type="button"
-                      data-role="next-trick"
-                      onClick={deal}
-                      className="rounded-full bg-[#2fa8ff] px-[1.1em] py-[0.4em] font-display text-[0.75em] font-bold text-[#050a18] active:bg-[#1d8ede]"
-                    >
-                      {t.card.nextTrick}
-                    </button>
+                <div className="flex items-center gap-2">
+                  <div className="flex flex-1 gap-[0.3em]">
+                    {flags.map((f, i) => (
+                      <button
+                        key={f.target}
+                        type="button"
+                        data-role="pick-trick"
+                        aria-label={`${i + 1}번 수법 보기`}
+                        onClick={() => setTrick(i)}
+                        className="flex-1 py-[0.5em]"
+                      >
+                        <span
+                          className={`block h-[0.4em] w-full rounded-full ${
+                            i === trick ? 'bg-[#2fa8ff]' : 'bg-white/25'
+                          }`}
+                        />
+                      </button>
+                    ))}
                   </div>
-                )}
+                  <button
+                    type="button"
+                    data-role="next-trick"
+                    onClick={() => setTrick((v) => (v + 1) % flags.length)}
+                    className="rounded-full bg-[#2fa8ff] px-[1.1em] py-[0.4em] font-display text-[0.75em] font-bold text-[#050a18] active:bg-[#1d8ede]"
+                  >
+                    {t.card.nextTrick}
+                  </button>
+                </div>
               </div>
             </CardFace>
           </motion.div>
         )}
         </motion.div>
 
-        {/* 오른쪽 2×2 칸 — 뒷면을 볼 때만. 돌린 카드가 차례로 꽂힙니다 */}
-        {flipped && (
+        {/* 오른쪽 — 방금 조사한 그 메일. 카드가 가리키는 수법의 자리가 붉게 빛나고 그리로 스크롤됩니다 */}
+        {flipped && mail && (
           <motion.div
             layout
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ type: 'spring', stiffness: 210, damping: 26, delay: 0.45 }}
-            data-role="deal-grid"
-            className="grid w-[min(17rem,40%)] grid-cols-2 gap-[0.5rem]"
+            data-role="review-mail"
+            style={{ height: cardH || undefined }}
+            className="flex min-h-0 w-full min-w-0 max-w-[32rem] flex-1 flex-col overflow-hidden rounded-xl border-2 border-[#2fa8ff]/70 bg-white text-[#1f2430] shadow-[0_0_1.6rem_rgba(47,168,255,0.4)] max-sm:flex-none"
           >
-            {flags.map((f, k) => (
-              <div
-                key={f.target}
-                data-role="deal-slot"
-                className="relative rounded-[0.6rem] border-2 border-dashed border-[#2fa8ff]/35"
-                style={{ aspectRatio: '5 / 7' }}
-              >
-                <span className="absolute top-1 left-1.5 font-display text-[0.7rem] font-bold text-[#2fa8ff]/45 tabular-nums">
-                  {k + 1}
-                </span>
-                {dealt.includes(k) && (
-                  <motion.div
-                    layoutId={`deal-${k}`}
-                    transition={{ type: 'spring', stiffness: 170, damping: 22 }}
-                    data-role="dealt-card"
-                    className="absolute inset-0 flex flex-col overflow-hidden rounded-[0.6rem] border-2 border-[#2fa8ff] bg-[linear-gradient(160deg,#0a1226_0%,#0d1c3c_55%,#081022_100%)] p-[0.45rem] text-[clamp(0.6rem,1.9vh,0.85rem)] shadow-[0_0_1.2rem_rgba(47,168,255,0.55)]"
-                  >
-                    <span className="flex h-[1.9em] w-[1.9em] items-center justify-center rounded-full bg-[#2fa8ff] font-display text-[0.9em] font-bold text-[#050a18]">
-                      {k + 1}
-                    </span>
-                    <p className="mt-[0.5em] text-[0.95em] leading-snug font-bold text-white">{f.label}</p>
-                    {!solved.includes(f.target) && (
-                      <span className="mt-auto inline-block self-start rounded-full bg-[#ffb4b4]/20 px-[0.5em] py-[0.15em] text-[0.7em] font-bold text-[#ffb4b4]">
-                        {c.missedShort}
-                      </span>
-                    )}
-                  </motion.div>
-                )}
-              </div>
-            ))}
+            <div className="flex shrink-0 items-center gap-2 border-b border-[#eceff4] bg-[#f7f9fc] px-3 py-2 text-[0.9rem] font-bold text-[#2f55b8]">
+              <span className="flex h-[1.5rem] w-[1.5rem] items-center justify-center rounded-full bg-[#e5484d] font-display text-[0.8rem] text-white tabular-nums">
+                {trick + 1}
+              </span>
+              {fill(c.reviewTitle, { n: trick + 1 })}
+            </div>
+            <div
+              ref={reviewRef}
+              className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3"
+              style={{ zoom: REVIEW_ZOOM }}
+            >
+              <EmailBody
+                mail={mail}
+                render={renderReview}
+                solvedLink={flag.target !== 'link'}
+                solvedFile={flag.target !== 'attachment'}
+                focusLink={flag.target === 'link'}
+                focusFile={flag.target === 'attachment'}
+              />
+            </div>
           </motion.div>
         )}
         </div>

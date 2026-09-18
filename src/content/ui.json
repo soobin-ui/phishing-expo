@@ -240,9 +240,7 @@
       "flipFront": "카드 앞면 보기",
       "nextTrick": "다음",
       "missed": "이번에는 찾지 못한 수법입니다. 꼭 기억해 두세요",
-      "missedShort": "못 찾음",
-      "allSeen": "피싱 수법 {n}가지를\n모두 확인했습니다",
-      "allSeenSub": "아래 [이렇게 예방하세요]를 눌러 마무리해 주세요"
+      "reviewTitle": "방금 받은 그 메일 · {n}번 수법은 여기"
     },
     "rules": {
       "tag": "사건 브리핑",

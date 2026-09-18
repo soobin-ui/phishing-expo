@@ -5,6 +5,7 @@ import { EmailBody } from "../channels/MailView";
 import { DefenseCard } from "../components/DefenseCard";
 import { splitByFlags } from "../lib/highlight";
 import { fill, ui } from "../lib/content";
+import { scrollToWithin } from "../lib/scroll";
 import type { MailDoc, RedFlag, Scenario } from "../types";
 
 /**
@@ -95,10 +96,9 @@ export function MailScreen({
     if (!next) return;
     setHint(next.target);
     showToast(t.hintToast, 2200);
+    // ★ scrollIntoView 금지 — 바깥 무대까지 밀려 올라감. 메일 상자 안에서만 스크롤
     window.setTimeout(() => {
-      paneRef.current
-        ?.querySelector(".hint-glow")
-        ?.scrollIntoView({ block: "center", behavior: "smooth" });
+      scrollToWithin(scrollRef.current, paneRef.current?.querySelector(".hint-glow") ?? null);
     }, 50);
   };
 
@@ -413,6 +413,7 @@ export function MailScreen({
                 flags={flags}
                 solved={solved}
                 copy={timedOut ? { failBody: t.timeout } : undefined}
+                mail={scenario}
                 onNext={() => onSolved(solved.length)}
               />
             )}
