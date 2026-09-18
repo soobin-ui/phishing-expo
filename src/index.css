@@ -161,12 +161,50 @@ button {
   cursor: url("data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2236%22 height=%2236%22 viewBox=%220 0 36 36%22><circle cx=%2215%22 cy=%2215%22 r=%229.5%22 fill=%22rgba(169,214,253,0.22)%22/><g fill=%22none%22 stroke=%22%230e1633%22 stroke-width=%225%22 stroke-linecap=%22round%22><circle cx=%2215%22 cy=%2215%22 r=%229.5%22/><path d=%22M22 22L32 32%22/></g><g fill=%22none%22 stroke=%22%23feca36%22 stroke-width=%222.6%22 stroke-linecap=%22round%22><circle cx=%2215%22 cy=%2215%22 r=%229.5%22/><path d=%22M22 22L32 32%22/></g></svg>") 15 15, crosshair;
 }
 
-/* 돋보기를 한 개 쓸 때 누른 자리에서 떠오르는 표시 */
+/* 돋보기를 한 개 쓸 때 누른 자리에서 크게 튀어나오는 '남은 기회' 표시 */
 .tool-pop {
-  animation: tool-pop 1.15s ease-out forwards;
+  animation: tool-pop 1.4s cubic-bezier(0.2, 0.9, 0.3, 1) forwards;
 }
 @keyframes tool-pop {
-  0% { opacity: 0; transform: translate(-50%, 0) scale(0.8); }
-  18% { opacity: 1; transform: translate(-50%, -0.5rem) scale(1.06); }
-  100% { opacity: 0; transform: translate(-50%, -3.4rem) scale(1); }
+  0% { opacity: 0; transform: translate(-50%, 0) scale(0.4); }
+  16% { opacity: 1; transform: translate(-50%, -0.8rem) scale(1.25); }
+  30% { opacity: 1; transform: translate(-50%, -1rem) scale(1); }
+  75% { opacity: 1; transform: translate(-50%, -2rem) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -4rem) scale(0.9); }
+}
+
+/* 지금 할 일 제목 — 메일을 여는 순간 튀어나옵니다 */
+.headline-pop {
+  animation: headline-pop 0.65s cubic-bezier(0.2, 1.2, 0.3, 1) both;
+}
+@keyframes headline-pop {
+  0% { opacity: 0; transform: scale(0.55); }
+  60% { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+/* 찾을 개수 — 천천히 커졌다 작아지며 눈에 띄게 */
+.gold-pulse {
+  display: inline-block;
+  animation: gold-pulse 1.6s ease-in-out infinite;
+}
+@keyframes gold-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+
+/* 남은 시간이 30초 이하 — 숫자가 다급하게 흔들립니다 */
+.timer-shake {
+  display: inline-block;
+  animation: timer-shake 0.8s ease-in-out infinite;
+}
+@keyframes timer-shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  15% { transform: translateX(-0.25rem) rotate(-3deg); }
+  30% { transform: translateX(0.25rem) rotate(3deg); }
+  45% { transform: translateX(-0.2rem) rotate(-2deg); }
+  60% { transform: translateX(0.2rem) rotate(2deg); }
+  75% { transform: translateX(-0.08rem) rotate(0deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .headline-pop, .gold-pulse, .timer-shake { animation: none; }
 }

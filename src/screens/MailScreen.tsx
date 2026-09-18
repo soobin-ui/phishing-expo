@@ -141,7 +141,7 @@ export function MailScreen({
         y: e.clientY - pane.top,
         n: remain,
       });
-      window.setTimeout(() => setPopCount(null), 1150);
+      window.setTimeout(() => setPopCount(null), 1400);
     }
     return remain;
   };
@@ -231,100 +231,37 @@ export function MailScreen({
         }`}
       >
         <header className="shrink-0 px-4 pt-[max(0.7rem,1.4vh)] pb-2.5">
-          <div className="mx-auto flex w-full max-w-[62rem] flex-col gap-2.5 wide:flex-row wide:items-center wide:gap-5">
-            {/* 지금 할 일 — 크게. 받은편지함에서는 '메일 열기', 메일 안에서는 '수상한 문구 찾기' */}
-            <div className="min-w-0 flex-1">
-              <p className="font-display text-[0.78rem] font-bold tracking-[0.16em] text-[#6f93c4] tabular-nums">
-                {fill(t.step, { n: view === "inbox" ? 1 : 2 })}
-              </p>
-              <motion.h2
-                key={view}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-0.5 font-display text-[clamp(1.2rem,4.4vw,1.65rem)] leading-tight font-bold text-white [text-shadow:0_0_1rem_rgba(47,168,255,0.55)]"
-              >
-                <Strong
-                  text={view === "inbox" ? t.openGoal : fill(t.goal, { n: total })}
-                />
-              </motion.h2>
-              <p className="mt-0.5 text-[0.95rem] leading-snug text-white/60">
-                {view === "inbox" ? t.openSub : t.goalSub}
-              </p>
-            </div>
+          <div className="mx-auto w-full max-w-[78rem]">
+            {/* 지금 할 일 — 크게, 튀어나오며. 받은편지함에서는 '메일 열기', 메일 안에서는 '수상한 문구 찾기' */}
+            <p className="font-display text-[0.8rem] font-bold tracking-[0.16em] text-[#6f93c4] tabular-nums">
+              {fill(t.step, { n: view === "inbox" ? 1 : 2 })}
+            </p>
+            <h2
+              key={view}
+              className="headline-pop mt-1 origin-left font-display text-[clamp(1.45rem,5.4vw,2.35rem)] leading-tight font-bold text-white [text-shadow:0_0_1.2rem_rgba(47,168,255,0.65)]"
+            >
+              <Strong
+                text={view === "inbox" ? t.openGoal : fill(t.goal, { n: total })}
+                pulse={view === "mail"}
+              />
+            </h2>
+            <p className="mt-1 text-[1rem] leading-snug text-white/65">
+              {view === "inbox" ? t.openSub : t.goalSub}
+            </p>
 
-            {/* 남은 시간 · 찾은 문구 · 남은 기회 — 큰 숫자 */}
-            <div className="flex shrink-0 items-stretch gap-2">
-              <Stat label={t.time} low={low && started}>
-                <motion.b
-                  animate={low && running ? { scale: [1, 1.08, 1] } : { scale: 1 }}
-                  transition={
-                    low && running
-                      ? { duration: 1, repeat: Infinity, ease: "easeInOut" }
-                      : { duration: 0.2 }
-                  }
-                  data-role="timer"
-                  className={`mt-0.5 font-display text-[1.9rem] leading-none font-bold tabular-nums ${
-                    low && started ? "text-[#ff8080]" : "text-white"
-                  }`}
-                >
-                  {mmss(timeLeft)}
-                </motion.b>
-                <span className="mt-1.5 h-[0.3rem] w-full overflow-hidden rounded-full bg-white/12">
-                  <span
-                    className={`block h-full rounded-full transition-[width] duration-1000 ease-linear ${
-                      low && started ? "bg-[#ff8080]" : "bg-gold"
-                    }`}
-                    style={{ width: `${(timeLeft / TIME_LIMIT) * 100}%` }}
-                  />
-                </span>
-              </Stat>
-
-              <Stat label={t.progressLabel}>
-                <b
-                  data-role="found-count"
-                  className="mt-0.5 font-display text-[1.9rem] leading-none font-bold text-gold tabular-nums"
-                >
-                  {solved.length}
-                  <span className="text-[1rem] font-bold text-white/50"> / {total}</span>
-                </b>
-                <span className="mt-2 flex gap-1" aria-hidden="true">
-                  {Array.from({ length: total }, (_, i) => (
-                    <span
-                      key={i}
-                      className={`h-[0.5rem] w-[0.5rem] rounded-full ${
-                        i < solved.length ? "bg-gold" : "bg-white/20"
-                      }`}
-                    />
-                  ))}
-                </span>
-              </Stat>
-
-              <Stat label={t.chances}>
-                <b className="mt-0.5 font-display text-[1.9rem] leading-none font-bold text-white tabular-nums">
-                  {left}
-                  <span className="text-[1rem] font-bold text-white/50"> / {TOOLS}</span>
-                </b>
-                <span
-                  className="mt-1.5 flex gap-[0.15rem]"
-                  aria-label={fill(t.left, { n: left })}
-                >
-                  {Array.from({ length: TOOLS }, (_, i) => (
-                    <Magnifier
-                      key={i}
-                      className={`h-[0.95rem] w-[0.95rem] ${i < left ? "text-gold" : "text-white/15"}`}
-                    />
-                  ))}
-                </span>
-              </Stat>
+            {/* 세로 화면(세로 태블릿·휴대폰): 숫자 상자를 제목 아래 한 줄로 */}
+            <div className="mt-2.5 flex items-stretch gap-2 wide:hidden">
+              {renderStats(false)}
             </div>
           </div>
         </header>
 
+        <div className="mx-auto flex min-h-0 w-full max-w-[78rem] flex-1 wide:gap-4 wide:px-4 wide:pb-4">
         <motion.section
           ref={paneRef}
           animate={miss ? { x: [0, -7, 7, -4, 4, 0] } : { x: 0 }}
           transition={{ duration: 0.45 }}
-          className={`relative mx-auto min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-t-2xl bg-white wide:mb-4 wide:max-w-[62rem] wide:rounded-2xl ${
+          className={`relative min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-t-2xl bg-white wide:rounded-2xl ${
             view === "mail" && !card ? "cursor-magnify" : ""
           }`}
         >
@@ -398,13 +335,14 @@ export function MailScreen({
             )}
           </AnimatePresence>
 
+          {/* 누른 자리에서 크게 튀어나오는 '남은 돋보기 N개' */}
           {popCount && (
             <span
               key={popCount.id}
-              className="tool-pop pointer-events-none absolute z-40 flex items-center gap-1 rounded-full bg-[#1f2430]/95 px-2.5 py-1 text-[0.85rem] font-bold whitespace-nowrap text-white"
+              className="tool-pop pointer-events-none absolute z-40 flex items-center gap-2 rounded-2xl border-2 border-gold bg-navy-deep px-4 py-2 font-display text-[1.35rem] font-bold whitespace-nowrap text-white shadow-[0_0.5rem_1.6rem_rgba(0,0,0,0.4),0_0_1.2rem_rgba(254,202,54,0.45)]"
               style={{ left: popCount.x, top: popCount.y }}
             >
-              <Magnifier className="h-[0.85rem] w-[0.85rem] text-gold" />
+              <Magnifier className="h-[1.3rem] w-[1.3rem] text-gold" />
               {fill(t.spent, { n: popCount.n })}
             </span>
           )}
@@ -419,6 +357,12 @@ export function MailScreen({
             </motion.p>
           )}
         </motion.section>
+
+        {/* 가로 화면(노트북·가로 태블릿): 남은 시간을 메일 오른쪽에 크게 */}
+        <aside className="hidden w-[13.5rem] shrink-0 flex-col gap-3 wide:flex">
+          {renderStats(true)}
+        </aside>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -426,6 +370,85 @@ export function MailScreen({
       </AnimatePresence>
     </div>
   );
+
+  /** 남은 시간 · 찾은 문구 · 남은 기회 — 세로 화면은 한 줄, 가로 화면은 메일 오른쪽 세로로 크게 */
+  function renderStats(big: boolean) {
+    const urgent = low && started;
+    const digits = big ? "text-[3.4rem]" : "text-[1.9rem]";
+    const small = big ? "text-[1.3rem]" : "text-[1rem]";
+    return (
+      <>
+        <Stat label={t.time} low={urgent} big={big}>
+          <b
+            data-role="timer"
+            className={`mt-0.5 font-display ${digits} leading-none font-bold tabular-nums ${
+              urgent ? "timer-shake text-[#ff8080]" : "text-white"
+            }`}
+          >
+            {mmss(timeLeft)}
+          </b>
+          <span className={`w-full overflow-hidden rounded-full bg-white/12 ${big ? "mt-3 h-[0.45rem]" : "mt-1.5 h-[0.3rem]"}`}>
+            <span
+              className={`block h-full rounded-full transition-[width] duration-1000 ease-linear ${
+                urgent ? "bg-[#ff8080]" : "bg-gold"
+              }`}
+              style={{ width: `${(timeLeft / TIME_LIMIT) * 100}%` }}
+            />
+          </span>
+        </Stat>
+
+        <Stat label={t.progressLabel} big={big}>
+          <motion.b
+            key={solved.length}
+            initial={{ scale: solved.length ? 1.6 : 1 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 320, damping: 12 }}
+            data-role="found-count"
+            className={`mt-0.5 font-display ${digits} leading-none font-bold text-gold tabular-nums`}
+          >
+            {solved.length}
+            <span className={`${small} font-bold text-white/50`}> / {total}</span>
+          </motion.b>
+          <span className={`flex ${big ? "mt-3 gap-1.5" : "mt-2 gap-1"}`} aria-hidden="true">
+            {Array.from({ length: total }, (_, i) => (
+              <span
+                key={i}
+                className={`rounded-full ${big ? "h-[0.7rem] w-[0.7rem]" : "h-[0.5rem] w-[0.5rem]"} ${
+                  i < solved.length ? "bg-gold" : "bg-white/20"
+                }`}
+              />
+            ))}
+          </span>
+        </Stat>
+
+        <Stat label={t.chances} big={big}>
+          <motion.b
+            key={left}
+            initial={{ scale: left < TOOLS ? 1.6 : 1 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", stiffness: 320, damping: 12 }}
+            className={`mt-0.5 font-display ${digits} leading-none font-bold tabular-nums ${
+              left <= 1 ? "text-[#ff8080]" : "text-white"
+            }`}
+          >
+            {left}
+            <span className={`${small} font-bold text-white/50`}> / {TOOLS}</span>
+          </motion.b>
+          <span
+            className={`flex ${big ? "mt-3 gap-1" : "mt-1.5 gap-[0.15rem]"}`}
+            aria-label={fill(t.left, { n: left })}
+          >
+            {Array.from({ length: TOOLS }, (_, i) => (
+              <Magnifier
+                key={i}
+                className={`${big ? "h-[1.25rem] w-[1.25rem]" : "h-[0.95rem] w-[0.95rem]"} ${i < left ? "text-gold" : "text-white/15"}`}
+              />
+            ))}
+          </span>
+        </Stat>
+      </>
+    );
+  }
 }
 
 /**
@@ -522,21 +545,26 @@ function Rules({ total, onStart }: { total: number; onStart: () => void }) {
 function Stat({
   label,
   low = false,
+  big = false,
   children,
 }: {
   label: string;
   low?: boolean;
+  /** 가로 화면 오른쪽 세로 상자 — 여백·글자 크게 */
+  big?: boolean;
   children: ReactNode;
 }) {
   return (
     <div
-      className={`flex min-w-0 flex-1 flex-col items-center justify-center rounded-xl border px-2 py-1.5 transition-colors wide:min-w-[7.5rem] wide:flex-none ${
+      className={`flex min-w-0 flex-1 flex-col items-center justify-center rounded-xl border transition-colors ${
+        big ? "px-3 py-4" : "px-2 py-1.5"
+      } ${
         low
-          ? "border-red-400/70 bg-red-500/15"
+          ? "border-red-400/70 bg-red-500/15 shadow-[0_0_1.4rem_rgba(255,128,128,0.35)]"
           : "border-[#2fa8ff]/40 bg-[#0b1631]/85"
       }`}
     >
-      <span className="text-[0.72rem] font-semibold tracking-wide text-white/55">
+      <span className={`font-semibold tracking-wide text-white/55 ${big ? "text-[0.95rem]" : "text-[0.72rem]"}`}>
         {label}
       </span>
       {children}
@@ -544,13 +572,16 @@ function Stat({
   );
 }
 
-/** **굵게** 표시한 부분만 금색으로 */
-function Strong({ text }: { text: string }) {
+/** **굵게** 표시한 부분만 금색으로 — pulse 면 그 부분이 천천히 커졌다 작아집니다(찾을 개수 강조) */
+function Strong({ text, pulse = false }: { text: string; pulse?: boolean }) {
   return (
     <>
       {text.split("**").map((part, i) =>
         i % 2 ? (
-          <b key={i} className="font-bold whitespace-nowrap text-gold">
+          <b
+            key={i}
+            className={`font-bold whitespace-nowrap text-gold ${pulse ? "gold-pulse text-[1.2em]" : ""}`}
+          >
             {part}
           </b>
         ) : (
