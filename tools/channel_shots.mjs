@@ -1,6 +1,6 @@
 /**
  * 주제별 받는 화면(메일·문자·전화) 캡처 + 넘침 검사 (개발용).
- *   rnd=메일(수사) · family=문자(청첩장 스미싱, 잠금화면에 자녀 문자 알림) · agency=전화
+ *   rnd=메일(수사) · family=문자(동창 사칭 사진 스미싱, 브리핑 → 잠금화면에 자녀·남편 문자 알림) · agency=전화
  *
  *   node tools/channel_shots.mjs http://localhost:8899/
  *
@@ -39,6 +39,9 @@ async function run(topic, [label, w, h, mobile]) {
   // 도착 화면 — 먼저 한 장 찍고(폰만), 눌러서 엽니다(전화는 [받기])
   // 메일은 도착 화면 대신 받은편지함으로 바로 시작합니다
   if (topic !== 'rnd') {
+    // 사건 브리핑이 있는 주제(스미싱)는 [수사 시작하기]를 눌러야 피싱 문자가 도착합니다
+    await wait(900)
+    await page.click('[data-role="brief-start"]').catch(() => {})
     await page.waitForSelector('[data-role="open-channel"]', { timeout: 10000 })
     await wait(1200)
     if (label === '폰') await page.screenshot({ path: join(OUT, `${topic}-폰-0-arrive.png`) })
