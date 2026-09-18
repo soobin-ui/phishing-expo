@@ -14,7 +14,7 @@ import type { RedFlag, Scenario } from '../types'
  *     ① VIP 초청 확인하기 → 본인확인(직접 입력) → 초청석 확보 → 보증금 5만원 결제(직접 입력)
  *        → 초청 완료 → 해외결제·명의도용 알림 폭탄 → **피해 화면** → [다시 해보기] → 팝업으로
  *     ② 공식 고객센터에 먼저 확인하기 → 가짜로 판명 → 사이트 닫기·신고 → **검거 완료 카드**  ← 정답
- *     ③ 팝업 닫고 그냥 보기 → 잠시 뒤 초청 팝업이 다시 뜸(무시만으로는 안 끝남)
+ *     (오른쪽 위 ✕ 로 닫으면 잠시 뒤 다시 뜸 — '닫고 그냥 보기' 선택지는 2026-09-18 삭제)
  *
  * ★ 본인확인·결제 입력칸은 관람객이 직접 칩니다(체험용이라 아무 숫자나). 화면 상태로만 있다가 사라지며 저장·전송하지 않습니다.
  * ★ KTT · 스페셜 T 는 지어낸 이름입니다(실존 통신사 금지). 콘서트만 사용자 지시로 임영웅 IM HERO THE STADIUM 2 를 씀.
@@ -426,15 +426,6 @@ function Invitation({
           {vip.options.verify.label}
         </button>
 
-        {/* ③ 팝업 닫고 그냥 보기 */}
-        <button
-          type="button"
-          data-role="vip-ignore"
-          onClick={onClose}
-          className="mt-1 w-full py-1 text-[0.85rem] font-semibold text-white/50 underline decoration-white/25 underline-offset-2 active:text-white"
-        >
-          {vip.options.close.label}
-        </button>
       </motion.div>
     </motion.div>
   )
