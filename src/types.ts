@@ -133,6 +133,8 @@ export interface Scenario {
    * 피싱 문자가 맨 위에 새로 튀어나오고, 이 알림들은 그 아래 이미 와 있던 것처럼 놓입니다.
    */
   lockscreen?: LockNotice[]
+  /** 도착 화면 앞에 먼저 뜨는 사건 브리핑(있으면). title·steps 의 {name} 은 입력한 이름, **굵게**는 금색 */
+  brief?: { title: string; steps: string[] }
   turns: ScenarioTurn[]
   redFlags: RedFlag[]
 }

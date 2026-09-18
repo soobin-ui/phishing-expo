@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { clock, day } from '../channels/shared'
 import { ui } from '../lib/content'
 import type { Scenario } from '../types'
@@ -55,16 +55,28 @@ function PushNotice({
   const now = new Date()
   const others = scenario.lockscreen ?? []
 
-  // 평범한 알림이 먼저 자리를 잡고, 피싱 문자는 1.4초 뒤에 도착합니다
-  const [arrived, setArrived] = useState(others.length === 0)
+  /** 사건 브리핑(시나리오에 있으면) — 잠금화면을 흐리게 깔고 먼저 뜹니다. 닫아야 피싱 문자가 옵니다 */
+  const [brief, setBrief] = useState(!!scenario.brief)
+
+  // 평범한 알림이 먼저 자리를 잡고, 피싱 문자는 (브리핑을 닫은 뒤) 1.4초 뒤에 도착합니다
+  const [arrived, setArrived] = useState(others.length === 0 && !scenario.brief)
   useEffect(() => {
-    if (arrived) return
+    if (arrived || brief) return
     const id = window.setTimeout(() => setArrived(true), 1400)
     return () => window.clearTimeout(id)
-  }, [arrived])
+  }, [arrived, brief])
 
   return (
-    <div className="flex h-full min-h-0 flex-col items-center justify-center bg-gradient-to-b from-[#1a2440] to-[#0e1633] px-6 text-white">
+    <div className="relative h-full w-full">
+    <AnimatePresence>
+      {brief && scenario.brief && <Brief brief={scenario.brief} onStart={() => setBrief(false)} />}
+    </AnimatePresence>
+    <div
+      aria-hidden={brief}
+      className={`flex h-full min-h-0 flex-col items-center justify-center bg-gradient-to-b from-[#1a2440] to-[#0e1633] px-6 text-white transition-[filter] duration-500 ${
+        brief ? 'pointer-events-none blur-[6px] select-none' : ''
+      }`}
+    >
       {/* 잠금화면 시계 */}
       <div className="mb-10 text-center">
         <p className="font-display text-[3.4rem] leading-none font-bold tabular-nums">{clock(now)}</p>
@@ -130,6 +142,69 @@ function PushNotice({
 
       <p className="mt-6 text-[1rem] text-white/60">{c.arrive.openHint}</p>
     </div>
+    </div>
+  )
+}
+
+/**
+ * 사건 브리핑 — 1·2번 주제(메일·포렌식)와 같은 상자. 무엇이 오는지·무엇을 할지 먼저 알고 시작하게.
+ * 문구는 scenarios.json 의 brief(title·steps, {name} 치환됨). **굵게** 부분은 금색.
+ */
+function Brief({ brief, onStart }: { brief: { title: string; steps: string[] }; onStart: () => void }) {
+  const b = ui.brief
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="absolute inset-0 z-50 flex items-center justify-center bg-[#050a18]/55 px-5"
+    >
+      <motion.div
+        role="dialog"
+        aria-modal="true"
+        initial={{ opacity: 0, y: 24, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+        className="w-full max-w-[30rem] rounded-2xl border border-[#2fa8ff]/60 bg-[#0b1631]/95 px-[clamp(1.2rem,4vw,1.8rem)] py-[clamp(1.2rem,3vh,1.8rem)] text-center text-white shadow-[0_0_2.4rem_rgba(47,168,255,0.35),inset_0_0_1.6rem_rgba(47,168,255,0.08)]"
+      >
+        <span className="inline-flex items-center gap-1.5 rounded-md bg-gold px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-navy-deep">
+          <svg viewBox="0 0 24 24" className="h-[0.95rem] w-[0.95rem]" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <path d="M4 4h16v12H7l-3 3z" strokeLinejoin="round" />
+          </svg>
+          {b.tag}
+        </span>
+        <h2 className="mt-3 font-display text-[min(1.6rem,6vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(47,168,255,0.6)]">
+          {brief.title}
+        </h2>
+        <ol className="mt-5 flex flex-col gap-2.5 text-left">
+          {brief.steps.map((step, i) => (
+            <li key={i} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-3">
+              <span className="flex h-[2.3rem] w-[2.3rem] shrink-0 items-center justify-center rounded-lg border border-[#2fa8ff]/50 bg-[#050a18] font-display text-[1.05rem] font-bold text-[#9fe0ff]">
+                {i + 1}
+              </span>
+              <span className="min-w-0 flex-1 text-[1.08rem] leading-snug text-white/85">
+                {step.split('**').map((part, k) =>
+                  k % 2 ? (
+                    <b key={k} className="font-bold whitespace-nowrap text-gold">{part}</b>
+                  ) : (
+                    <span key={k}>{part}</span>
+                  ),
+                )}
+              </span>
+            </li>
+          ))}
+        </ol>
+        <button
+          type="button"
+          data-role="brief-start"
+          onClick={onStart}
+          className="mt-5 min-h-[3.8rem] w-full rounded-xl bg-gold px-4 font-display text-[1.25rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]"
+        >
+          {b.start}
+        </button>
+      </motion.div>
+    </motion.div>
   )
 }
 

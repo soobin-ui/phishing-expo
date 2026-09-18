@@ -35,9 +35,17 @@ export function givenName(name: string): string {
  * redFlags 의 match 는 건드리지 않습니다(이름이 들어간 문장을 수상한 문구로 잡지 않도록).
  * 이름이 비어 있으면(시연용 바로가기 등) ui.name.fallback 을 씁니다.
  */
+/** 부르는 말 — 받침이 있으면 '아', 없으면 '야' (수빈 → 수빈아, 지수 → 지수야). 한글이 아니면 그대로. */
+export function callName(given: string): string {
+  const code = given.charCodeAt(given.length - 1)
+  if (code < 0xac00 || code > 0xd7a3) return given
+  return given + ((code - 0xac00) % 28 ? '아' : '야')
+}
+
 export function personalize(scenario: Scenario, name: string): Scenario {
   const full = name.trim() || ui.name.fallback
-  const v = { name: full, given: givenName(full) }
+  const given = givenName(full)
+  const v = { name: full, given, givenCall: callName(given) }
   const f = <T extends string | undefined>(t: T): T => (t === undefined ? t : (fill(t, v) as T))
   return {
     ...scenario,
@@ -54,5 +62,8 @@ export function personalize(scenario: Scenario, name: string): Scenario {
       signature: f(d.signature),
     })),
     lockscreen: scenario.lockscreen?.map((n) => ({ ...n, from: fill(n.from, v), text: fill(n.text, v) })),
+    brief: scenario.brief
+      ? { title: fill(scenario.brief.title, v), steps: scenario.brief.steps.map((t) => fill(t, v)) }
+      : undefined,
   }
 }
