@@ -138,9 +138,6 @@
 .fx .icon .i svg { width: 56%; height: 56%; }
 .fx .icon em { position: absolute; top: -0.4rem; right: -0.4rem; min-width: 1.45rem; height: 1.45rem; border-radius: 99px; background: #ff3b30; color: #fff; font: 700 0.82rem/1.45rem var(--font-sans); font-style: normal; padding: 0 0.35rem; text-shadow: none; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35); }
 .fx .icon.seen .i::after { content: ''; position: absolute; inset: -0.3rem; border-radius: 1.45rem; border: 2px solid rgba(255, 255, 255, 0.85); }
-/* 증거가 남은 앱: 팝업처럼 커졌다 작아지며 금빛 테두리가 번짐. 그 앱의 증거를 다 찾으면(.live 빠짐) 멈춤 */
-.fx .icon.live .i { animation: fx-appop 1.5s cubic-bezier(0.35, 0, 0.25, 1) infinite; }
-.fx .icon.live { z-index: 2; }
 @keyframes fx-appop {
   0%, 100% { transform: scale(1); box-shadow: 0 0.2rem 0.6rem rgba(0, 0, 0, 0.18), 0 0 0 0 rgba(254, 202, 54, 0.9); }
   35% { transform: scale(1.16); box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.25), 0 0 0 0.35rem rgba(254, 202, 54, 0.55), 0 0 1.4rem 0.2rem rgba(254, 202, 54, 0.6); }
@@ -319,10 +316,9 @@
 @keyframes fx-pop { from { opacity: 0; transform: translateY(0.45rem); } to { opacity: 1; transform: none; } }
 @keyframes fx-rise { from { opacity: 0; transform: translateY(1.2rem) scale(0.96); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) {
-  .fx .folder.full, .fx .lock .open, .fx .done .arrow, .fx .push, .fx .icon.live .i, .fx .bub.pend, .fx .li.pend { animation: none; }
+  .fx .folder.full, .fx .lock .open, .fx .done .arrow, .fx .push, .fx .bub.pend, .fx .li.pend { animation: none; }
   .fx .li.pend { box-shadow: inset 0 0 0 2px rgba(254, 202, 54, 0.6); }
   .fx .bub.pend { box-shadow: 0 0 0 0.15rem rgba(254, 202, 54, 0.6); }
-  .fx .icon.live .i { box-shadow: 0 0 0 0.25rem rgba(254, 202, 54, 0.8); }
 }
 
 /* ── 가로 화면(노트북·가로 태블릿): 높이가 병목이라 STEP 안내는 왼쪽, 힌트·증거 폴더는 오른쪽, 휴대폰은 가운데에서 높이를 다 씀 ── */

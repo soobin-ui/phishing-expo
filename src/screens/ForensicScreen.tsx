@@ -556,8 +556,8 @@ function Lock({ onOpen }: { onOpen: () => void }) {
 
 /**
  * 홈 화면 — 아이폰처럼 4열 격자 + 아래 고정 줄. 나머지 앱은 눌러도 '증거 없음' 안내만.
- * 증거가 아직 남아 있는 앱(메시지·카카오톡)은 팝업처럼 반짝이고 배지에 남은 증거 수가 뜹니다.
- * 그 앱의 증거를 다 찾으면 반짝임이 멈추고 배지도 사라져, 남은 쪽만 반짝입니다.
+ * 배지에는 그 앱에 남은 증거 수가 뜨고, 다 찾으면 사라집니다.
+ * ★ 앱 아이콘은 반짝이지 않습니다 — 답을 유도하지 말라는 피드백(길 안내는 관람객이 [힌트]를 눌렀을 때만).
  */
 function Home({ seen, found, hint, onGo, onDecoy }: { seen: string[]; found: string[]; hint: Evidence | null; onGo: (id: string) => void; onDecoy: () => void }) {
   const icon = (a: { id: string; name: string; icon: string; color: string; dark?: boolean; badge?: number }, real: boolean) => {
@@ -570,7 +570,7 @@ function Home({ seen, found, hint, onGo, onDecoy }: { seen: string[]; found: str
         type="button"
         data-app={real ? a.id : undefined}
         data-left={hasEv ? left : undefined}
-        className={`icon ${real && seen.includes(a.id) ? 'seen' : ''} ${real && hint?.app === a.id ? 'hl' : ''} ${left > 0 ? 'live' : ''}`}
+        className={`icon ${real && seen.includes(a.id) ? 'seen' : ''} ${real && hint?.app === a.id ? 'hl' : ''}`}
         onClick={() => (real ? onGo(a.id) : onDecoy())}
       >
         <span className="i" style={{ background: a.color, color: a.dark ? '#1c1c1e' : '#fff' }}>
