@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { motion } from 'framer-motion'
 import { ui } from '../lib/content'
 
 /**
@@ -22,19 +23,45 @@ export function TapButton({
   tone = 'primary',
   className = '',
   disabled,
+  pulse = false,
 }: {
   children: ReactNode
   onClick?: () => void
   tone?: Tone
   className?: string
   disabled?: boolean
+  /** 시선을 끄는 버튼 — 살짝 커졌다 작아지며 금색 테두리가 반짝입니다(첫 화면 [수사 시작하기]). */
+  pulse?: boolean
 }) {
+  const base = `min-h-[4rem] w-full rounded-2xl px-6 py-3 font-display text-[1.3rem] leading-snug font-bold disabled:opacity-40 ${toneClass[tone]} ${className}`
+  if (pulse && !disabled) {
+    // 3D 그림자(0 0.3rem 0 #e9b21c)를 유지한 채, 금색 글로우가 커졌다 작아지고 버튼도 살짝 팝업됩니다
+    return (
+      <motion.button
+        type="button"
+        onClick={onClick}
+        animate={{
+          scale: [1, 1.04, 1],
+          boxShadow: [
+            '0 0.3rem 0 #e9b21c, 0 0 0 0 rgba(254,202,54,0)',
+            '0 0.3rem 0 #e9b21c, 0 0 1.7rem 0.35rem rgba(254,202,54,0.9)',
+            '0 0.3rem 0 #e9b21c, 0 0 0 0 rgba(254,202,54,0)',
+          ],
+        }}
+        transition={{ duration: 1.25, repeat: Infinity, ease: 'easeInOut' }}
+        whileTap={{ scale: 0.97 }}
+        className={`${base} transition-transform`}
+      >
+        {children}
+      </motion.button>
+    )
+  }
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`min-h-[4rem] w-full rounded-2xl px-6 py-3 font-display text-[1.3rem] leading-snug font-bold transition-[transform,box-shadow] duration-100 disabled:opacity-40 ${toneClass[tone]} ${className}`}
+      className={`${base} transition-[transform,box-shadow] duration-100`}
     >
       {children}
     </button>

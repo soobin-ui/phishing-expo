@@ -82,7 +82,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
             </motion.p>
 
             <motion.div variants={rise} className="mt-[min(1.6rem,3vh)] w-full max-w-[26rem]">
-              <TapButton onClick={onStart}>
+              <TapButton onClick={onStart} pulse>
                 <span className="inline-flex items-center gap-2">
                   <Magnifier className="h-[1.1em] w-[1.1em]" />
                   {t.start}
