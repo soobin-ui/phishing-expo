@@ -164,6 +164,7 @@ export default function App() {
         {/* 취업·채용 — 포렌식 수사(피해자 휴대폰 조사 → 증거 보드 → 검거 카드) */}
         {step === 'arrive' && situation === 'job' && (
           <ForensicScreen
+            name={name}
             onReply={(delta, item) => {
               setSafety((v) => Math.max(0, Math.min(100, v + delta)))
               if (item) setGave((prev) => (prev.includes(item) ? prev : [...prev, item]))

@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { DefenseCard } from '../components/DefenseCard'
-import { fill } from '../lib/content'
+import { fill, ui } from '../lib/content'
 import fx from '../content/forensic.json'
 import type { RedFlag } from '../types'
 import './forensic.css'
@@ -37,13 +37,17 @@ const STUCK_SEC = 25
 const SPOTS: Array<[number, number]> = [[2, 3], [53, 3], [2, 38], [53, 38]]
 
 export function ForensicScreen({
+  name,
   onReply,
   onSolved,
 }: {
+  /** 수사관 등록 때 입력한 이름 — 브리핑의 "취업준비생 {name}의 휴대폰" 자리에 들어갑니다(저장 안 함) */
+  name: string
   /** 못 찾은 증거만큼 안전도를 깎습니다(마지막 등급에 반영) */
   onReply: (delta: number, gave: string | null) => void
   onSolved: (foundCount: number) => void
 }) {
+  const who = name.trim() || ui.name.fallback
   const [rules, setRules] = useState(true)
   const [stack, setStack] = useState<string[]>(['lock'])
   const [found, setFound] = useState<string[]>([])
@@ -67,7 +71,24 @@ export function ForensicScreen({
   const [hintOn, setHintOn] = useState(false)
   const [timedOut, setTimedOut] = useState(false)
   const busy = useRef(false)
+  const shellRef = useRef<HTMLDivElement>(null)
   const phoneRef = useRef<HTMLElement>(null)
+
+  /* 휴대폰 안 글자·여백은 24rem 폭 기준으로 짜여 있습니다. 가로 화면(노트북·가로 태블릿)에서는
+     높이에 맞추느라 휴대폰이 좁아지므로, 좁아진 만큼 안쪽을 통째로 축소(zoom)해 진짜 휴대폰처럼 비율을 지킵니다 */
+  useLayoutEffect(() => {
+    const el = shellRef.current
+    if (!el) return
+    const fit = () => {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+      const inner = el.clientWidth - rem
+      el.style.setProperty('--pz', String(Math.min(1, inner / (24 * rem))))
+    }
+    fit()
+    const ro = new ResizeObserver(fit)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
   const folderRef = useRef<HTMLButtonElement>(null)
   const snapRef = useRef<HTMLDivElement>(null)
   const flashRef = useRef<HTMLDivElement>(null)
@@ -245,7 +266,7 @@ export function ForensicScreen({
 
       {/* 피해자 휴대폰 — 아이폰 모양(검은 테두리·다이내믹 아일랜드·상태 표시줄·홈 바) */}
       <div className="phonewrap">
-        <div className="shell">
+        <div ref={shellRef} className="shell">
           <section ref={phoneRef} className={`phone ${cur === 'lock' || cur === 'home' ? 'wall' : ''}`}>
             <div className="island" />
             <div className="status">
@@ -368,7 +389,7 @@ export function ForensicScreen({
               <MagnifierIcon />
               {fx.rules.tag}
             </span>
-            <h2>{fx.rules.title}</h2>
+            <h2>{fill(fx.rules.title, { name: who })}</h2>
             <ol className="steps">
               {fx.rules.steps.map((s, i) => (
                 <li key={i}>
