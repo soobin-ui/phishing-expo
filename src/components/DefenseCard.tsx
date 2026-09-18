@@ -202,7 +202,7 @@ export function DefenseCard({
           ref={cardRef}
           layout
           transition={{ type: 'spring', stiffness: 210, damping: 26 }}
-          className={`shrink-0 [perspective:1400px] ${flipped && hasReview ? 'w-[min(24rem,86vw,46vh)] sm:w-[min(20rem,40vw,46vh)]' : 'w-[min(24rem,86vw,46vh)]'}`}
+          className={`shrink-0 [perspective:1400px] ${flipped && hasReview ? 'w-[min(26rem,86vw,53vh)] sm:w-[min(22rem,40vw,50vh)]' : 'w-[min(26rem,86vw,53vh)]'}`}
         >
         {shown && (
           <motion.div
@@ -398,8 +398,8 @@ export function DefenseCard({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: shown ? 1 : 0, y: shown ? 0 : 10 }}
           transition={{ delay: 1.5 }}
-          // 폭은 카드 행과 같게 — 단, 낮은 노트북 화면(카드가 작아짐)에서는 글자가 버튼 밖으로 삐져나오므로 최소 폭을 보장
-          style={{ width: rowW ? `max(${rowW}px, min(26rem, 92vw))` : undefined }}
+          // 폭은 카드(+옆 판) 행과 정확히 같게 — 버튼이 카드보다 넓어 보이지 않도록(2026-09-19)
+          style={{ width: rowW || undefined }}
           className={`flex max-w-full max-[420px]:flex-col ${split ? 'gap-4' : 'gap-2.5'}`}
         >
           <motion.button
