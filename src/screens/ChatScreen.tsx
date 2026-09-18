@@ -135,7 +135,7 @@ export function ChatScreen({
   return (
     <div className="flex h-full w-full flex-col wide:flex-row">
       {/* ── 옆 칸(가로) / 윗줄(세로): 주제 · 진행 · 안전도 ── */}
-      <aside className="shrink-0 px-5 pt-[max(0.9rem,2vh)] pb-3 wide:flex wide:w-[32%] wide:max-w-[26rem] wide:flex-col wide:justify-center wide:gap-10 wide:px-[3%] wide:py-10">
+      <aside className="shrink-0 px-5 pt-[max(0.9rem,2dvh)] pb-3 wide:flex wide:w-[32%] wide:max-w-[26rem] wide:flex-col wide:justify-center wide:gap-10 wide:px-[3%] wide:py-10">
         <div className="mb-2 flex items-center justify-between text-[0.85rem] font-semibold wide:hidden">
           <span className="text-sky">{situationLabel}</span>
           <span className="text-white/40 tabular-nums">{counter}</span>

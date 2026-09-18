@@ -15,12 +15,12 @@ export function CautionTape({ text }: { text: string }) {
   const chunk = `${text}  ·  `
   return (
     <div
-      className="pointer-events-none absolute inset-x-[-4%] bottom-[clamp(0.6rem,2vh,1.2rem)] z-20 flex h-[clamp(2.2rem,5vh,2.9rem)] -rotate-[1.5deg] items-center overflow-hidden bg-gold shadow-[0_0.3rem_1.2rem_rgba(0,0,0,0.45)]"
+      className="pointer-events-none absolute inset-x-[-4%] bottom-[clamp(0.6rem,2dvh,1.2rem)] z-20 flex h-[clamp(2.2rem,5dvh,2.9rem)] -rotate-[1.5deg] items-center overflow-hidden bg-gold shadow-[0_0.3rem_1.2rem_rgba(0,0,0,0.45)]"
       aria-hidden="true"
     >
       <div className="absolute inset-x-0 top-0 h-[0.28rem] bg-[repeating-linear-gradient(-45deg,#0e1633_0_0.5rem,transparent_0.5rem_1rem)]" />
       <div className="absolute inset-x-0 bottom-0 h-[0.28rem] bg-[repeating-linear-gradient(-45deg,#0e1633_0_0.5rem,transparent_0.5rem_1rem)]" />
-      <div className="tape-marquee flex shrink-0 whitespace-nowrap font-display text-[clamp(0.85rem,2vh,1.05rem)] font-bold tracking-[0.12em] text-navy-deep">
+      <div className="tape-marquee flex shrink-0 whitespace-nowrap font-display text-[clamp(0.85rem,2dvh,1.05rem)] font-bold tracking-[0.12em] text-navy-deep">
         <span>{chunk.repeat(8)}</span>
         <span>{chunk.repeat(8)}</span>
       </div>

@@ -384,7 +384,7 @@ function Invitation({ name, onOpen }: { name: string; onOpen: () => void }) {
 
         {/* 콘서트 포스터 — 오리지널 그래픽(실제 포스터 사진·로고 미사용) */}
         {/* 포스터는 높이 기준(화면 34%)으로 — 팝업이 스크롤 없이 한 화면에 들어오게 */}
-        <div className="mx-auto mt-3 aspect-[3/4] h-[min(34vh,22rem)] overflow-hidden rounded-lg border border-[#d8b35a]/50 shadow-[0_0.4rem_1.4rem_rgba(0,0,0,0.6)]">
+        <div className="mx-auto mt-3 aspect-[3/4] h-[min(34dvh,22rem)] overflow-hidden rounded-lg border border-[#d8b35a]/50 shadow-[0_0.4rem_1.4rem_rgba(0,0,0,0.6)]">
           <ConcertPoster p={p} />
         </div>
         <p className="mt-2 inline-block rounded-full bg-[#e6c77a] px-3.5 py-0.5 font-display text-[1rem] font-bold text-[#2a1f08]">{p.ticketSeat}</p>
@@ -464,7 +464,7 @@ function ConcertPoster({ p }: { p: typeof vip.popup }) {
       <p className="absolute inset-x-0 top-[7%] text-center font-display text-[0.72rem] font-bold tracking-[0.42em] text-white/95">{p.ticketArtist}</p>
 
       {/* IM HERO — 가장 크게 */}
-      <p className="absolute inset-x-0 top-[15%] text-center font-display text-[clamp(1.6rem,5.2vh,2.5rem)] leading-none font-black tracking-tight text-white [text-shadow:0_0_0.9rem_rgba(150,190,255,0.95)]">
+      <p className="absolute inset-x-0 top-[15%] text-center font-display text-[clamp(1.6rem,5.2dvh,2.5rem)] leading-none font-black tracking-tight text-white [text-shadow:0_0_0.9rem_rgba(150,190,255,0.95)]">
         {p.ticketTour}
       </p>
 
@@ -760,7 +760,7 @@ function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void })
       data-role="vip-damage"
       className="absolute inset-0 z-40 flex items-center justify-center bg-[#1a0508]/92 px-4 py-4 backdrop-blur-sm"
     >
-      <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#ff6b6b]/60 bg-[#1f0a10]/95 px-[clamp(0.9rem,3.5vw,1.4rem)] py-[clamp(0.9rem,2vh,1.2rem)] text-white shadow-[0_0_2.4rem_rgba(255,107,107,0.35)]">
+      <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#ff6b6b]/60 bg-[#1f0a10]/95 px-[clamp(0.9rem,3.5vw,1.4rem)] py-[clamp(0.9rem,2dvh,1.2rem)] text-white shadow-[0_0_2.4rem_rgba(255,107,107,0.35)]">
         <div className="text-center">
           <span className="inline-block rounded-md bg-[#ff6b6b] px-2.5 py-1 font-display text-[0.8rem] leading-none font-bold text-[#2a0509]">{d.tag}</span>
           <h2 className="mt-2 font-display text-[min(1.2rem,4.6vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(255,107,107,0.6)]">{d.title}</h2>
@@ -922,7 +922,7 @@ function Brief({ name, onStart }: { name: string; onStart: () => void }) {
         initial={{ opacity: 0, y: 24, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-        className="w-full max-w-[30rem] rounded-2xl border border-[#2fa8ff]/60 bg-[#0b1631]/95 px-[clamp(1.2rem,4vw,1.8rem)] py-[clamp(1.2rem,3vh,1.8rem)] text-center text-white shadow-[0_0_2.4rem_rgba(47,168,255,0.35),inset_0_0_1.6rem_rgba(47,168,255,0.08)]"
+        className="w-full max-w-[30rem] rounded-2xl border border-[#2fa8ff]/60 bg-[#0b1631]/95 px-[clamp(1.2rem,4vw,1.8rem)] py-[clamp(1.2rem,3dvh,1.8rem)] text-center text-white shadow-[0_0_2.4rem_rgba(47,168,255,0.35),inset_0_0_1.6rem_rgba(47,168,255,0.08)]"
       >
         <span className="inline-flex items-center gap-1.5 rounded-md bg-gold px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-navy-deep">
           <GlobeIcon className="h-[0.95rem] w-[0.95rem]" />

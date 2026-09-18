@@ -167,7 +167,7 @@ function Brief({ brief, onStart }: { brief: { title: string; steps: string[]; no
         initial={{ opacity: 0, y: 24, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-        className="w-full max-w-[30rem] rounded-2xl border border-[#2fa8ff]/60 bg-[#0b1631]/95 px-[clamp(1.2rem,4vw,1.8rem)] py-[clamp(1.2rem,3vh,1.8rem)] text-center text-white shadow-[0_0_2.4rem_rgba(47,168,255,0.35),inset_0_0_1.6rem_rgba(47,168,255,0.08)]"
+        className="w-full max-w-[30rem] rounded-2xl border border-[#2fa8ff]/60 bg-[#0b1631]/95 px-[clamp(1.2rem,4vw,1.8rem)] py-[clamp(1.2rem,3dvh,1.8rem)] text-center text-white shadow-[0_0_2.4rem_rgba(47,168,255,0.35),inset_0_0_1.6rem_rgba(47,168,255,0.08)]"
       >
         <span className="inline-flex items-center gap-1.5 rounded-md bg-gold px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-navy-deep">
           <svg viewBox="0 0 24 24" className="h-[0.95rem] w-[0.95rem]" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -240,7 +240,7 @@ function CallRinging({
   const c = ui.channels.call
   return (
     <div className="flex h-full min-h-0 flex-col items-center bg-[radial-gradient(120%_70%_at_50%_0%,#33405e_0%,#151b2b_70%)] px-6 text-white">
-      <div className="mt-[max(3rem,10vh)] text-center">
+      <div className="mt-[max(3rem,10dvh)] text-center">
         <motion.p
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1.6, repeat: Infinity }}
@@ -258,7 +258,7 @@ function CallRinging({
         {c.arrive.declineHint}
       </p>
 
-      <div className="mt-auto flex w-full max-w-[24rem] items-end justify-between pb-[max(2.5rem,8vh)]">
+      <div className="mt-auto flex w-full max-w-[24rem] items-end justify-between pb-[max(2.5rem,8dvh)]">
         <CallAction
           label={c.arrive.decline}
           role="decline"

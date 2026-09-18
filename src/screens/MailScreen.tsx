@@ -268,7 +268,7 @@ export function MailScreen({
         }`}
       >
         {/* 검거 완료 카드가 뜨면 머리글·숫자 상자는 치웁니다 */}
-        <header className={`shrink-0 px-4 pt-[max(0.7rem,1.4vh)] pb-2.5 text-center ${card ? "hidden" : ""}`}>
+        <header className={`shrink-0 px-4 pt-[max(0.7rem,1.4dvh)] pb-2.5 text-center ${card ? "hidden" : ""}`}>
           <div className="mx-auto w-full max-w-[78rem]">
             {/* 지금 할 일 — 크게, 가운데, 튀어나오며. 받은편지함에서는 '메일 열기', 메일 안에서는 '수상한 문구 찾기' */}
             <p
@@ -561,7 +561,7 @@ function Rules({ total, onStart }: { total: number; onStart: () => void }) {
         initial={{ opacity: 0, y: 24, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-        className="w-full max-w-[30rem] rounded-2xl border border-[#2fa8ff]/60 bg-[#0b1631]/95 px-[clamp(1.2rem,4vw,1.8rem)] py-[clamp(1.2rem,3vh,1.8rem)] text-center text-white shadow-[0_0_2.4rem_rgba(47,168,255,0.35),inset_0_0_1.6rem_rgba(47,168,255,0.08)]"
+        className="w-full max-w-[30rem] rounded-2xl border border-[#2fa8ff]/60 bg-[#0b1631]/95 px-[clamp(1.2rem,4vw,1.8rem)] py-[clamp(1.2rem,3dvh,1.8rem)] text-center text-white shadow-[0_0_2.4rem_rgba(47,168,255,0.35),inset_0_0_1.6rem_rgba(47,168,255,0.08)]"
       >
         <span className="inline-flex items-center gap-1.5 rounded-md bg-gold px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-navy-deep">
           <RuleMail className="h-[0.95rem] w-[0.95rem]" />

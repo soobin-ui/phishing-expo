@@ -43,7 +43,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
           initial="hidden"
           animate="show"
           variants={stagger}
-          className="mx-auto flex w-full max-w-[36rem] flex-1 flex-col items-center justify-center px-6 pt-[max(1rem,2.5vh)] pb-[calc(clamp(2.6rem,6vh,3.4rem)+1.2rem)] text-center wide:max-w-[76rem] wide:flex-row wide:gap-[4%] wide:px-[5%] wide:pt-6"
+          className="mx-auto flex w-full max-w-[36rem] flex-1 flex-col items-center justify-center px-6 pt-[max(1rem,2.5dvh)] pb-[calc(clamp(2.6rem,6dvh,3.4rem)+1.2rem)] text-center wide:max-w-[76rem] wide:flex-row wide:gap-[4%] wide:px-[5%] wide:pt-6"
         >
           {/* ── 장면: 두 캐릭터 + 레이더 + 수상한 메시지들 ── */}
           <div className="flex w-full flex-col items-center wide:flex-1">
@@ -65,14 +65,14 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
 
             <motion.h1
               variants={rise}
-              className="mt-[min(1.2rem,2.2vh)] font-display text-[min(2.25rem,8.2vw)] leading-[1.25] font-bold text-white [text-shadow:0_0_1.2rem_rgba(47,168,255,0.75)] wide:mt-7 wide:text-[min(2.7rem,4.2vw)]"
+              className="mt-[min(1.2rem,2.2dvh)] font-display text-[min(2.25rem,8.2vw)] leading-[1.25] font-bold text-white [text-shadow:0_0_1.2rem_rgba(47,168,255,0.75)] wide:mt-7 wide:text-[min(2.7rem,4.2vw)]"
             >
               {t.title}
             </motion.h1>
 
             <motion.p
               variants={rise}
-              className="mt-[min(0.8rem,1.4vh)] text-[1.15rem] leading-relaxed text-white/75"
+              className="mt-[min(0.8rem,1.4dvh)] text-[1.15rem] leading-relaxed text-white/75"
             >
               {lines.map((line, i) => (
                 <span key={i} className="block">
@@ -81,7 +81,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
               ))}
             </motion.p>
 
-            <motion.div variants={rise} className="mt-[min(1.6rem,3vh)] w-full max-w-[26rem]">
+            <motion.div variants={rise} className="mt-[min(1.6rem,3dvh)] w-full max-w-[26rem]">
               <TapButton onClick={onStart} pulse>
                 <span className="inline-flex items-center gap-2">
                   <Magnifier className="h-[1.1em] w-[1.1em]" />
@@ -101,7 +101,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
 /** 행사 알약 아래 — 안전체험관 | 온라인 피싱 체험존 (주제 고르기 화면과 같은 이름) */
 function ZoneTitle() {
   return (
-    <p className="mt-[min(0.7rem,1.2vh)] flex items-center justify-center gap-[0.6em] font-display text-[min(1.45rem,5.6vw)] leading-none font-bold text-white wide:text-[1.6rem]">
+    <p className="mt-[min(0.7rem,1.2dvh)] flex items-center justify-center gap-[0.6em] font-display text-[min(1.45rem,5.6vw)] leading-none font-bold text-white wide:text-[1.6rem]">
       <span className="text-gold">{ui.menu.title}</span>
       <span className="h-[0.9em] w-[2px] rounded-full bg-white/30" aria-hidden="true" />
       <span>{ui.menu.headline}</span>
@@ -115,7 +115,7 @@ function ZoneTitle() {
  */
 function Scene() {
   return (
-    <div className="relative mx-auto mt-[min(0.6rem,1vh)] aspect-[10/8] h-[min(31vh,30rem)] max-w-full wide:mt-0 wide:h-[min(64vh,30rem)]">
+    <div className="relative mx-auto mt-[min(0.6rem,1dvh)] aspect-[10/8] h-[min(31dvh,30rem)] max-w-full wide:mt-0 wide:h-[min(64dvh,30rem)]">
       {/* 레이더 */}
       <div className="absolute top-[2%] left-1/2 aspect-square h-[88%] -translate-x-1/2">
         <div className="absolute inset-0 rounded-full border border-[#2fa8ff]/45 bg-[radial-gradient(circle,rgba(22,104,196,0.28),rgba(5,10,24,0)_70%)]" />
@@ -181,7 +181,7 @@ function Suspect({
       animate={{ y: [0, -6, 0] }}
       transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay }}
     >
-      <div className="relative flex h-[clamp(2.3rem,6vh,3.2rem)] w-[clamp(2.3rem,6vh,3.2rem)] items-center justify-center rounded-xl border border-[#2fa8ff]/55 bg-[#0b1631]/90 text-[#9fe0ff] shadow-[0_0_1rem_rgba(47,168,255,0.4)]">
+      <div className="relative flex h-[clamp(2.3rem,6dvh,3.2rem)] w-[clamp(2.3rem,6dvh,3.2rem)] items-center justify-center rounded-xl border border-[#2fa8ff]/55 bg-[#0b1631]/90 text-[#9fe0ff] shadow-[0_0_1rem_rgba(47,168,255,0.4)]">
         {children}
         <motion.span
           className="absolute -top-1.5 -right-1.5 flex h-[1.15rem] w-[1.15rem] items-center justify-center rounded-full bg-[#e5484d] font-display text-[0.72rem] leading-none font-bold text-white"

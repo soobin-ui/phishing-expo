@@ -51,7 +51,7 @@ export function ActionScreen({
 
   return (
     <ScrollScreen className="justify-center">
-      <div className="mx-auto flex w-full max-w-[38rem] flex-col px-6 pt-[max(1.25rem,3vh)] pb-5 wide:max-w-[76rem] wide:flex-row wide:items-center wide:gap-[5%] wide:px-[5%] wide:py-8">
+      <div className="mx-auto flex w-full max-w-[38rem] flex-col px-6 pt-[max(1.25rem,3dvh)] pb-5 wide:max-w-[76rem] wide:flex-row wide:items-center wide:gap-[5%] wide:px-[5%] wide:py-8">
         {/* ── 왼쪽 칸(가로) / 위(세로): 결과 한 줄 + 제목 + (가로) 버튼 ── */}
         <motion.div
           initial="hidden"
@@ -97,7 +97,7 @@ export function ActionScreen({
             </span>
           </motion.p>
 
-          <motion.div variants={rise} className="mx-auto my-[min(1.5rem,2.5vh)] h-px w-16 bg-white/20 wide:mx-0 wide:my-6" />
+          <motion.div variants={rise} className="mx-auto my-[min(1.5rem,2.5dvh)] h-px w-16 bg-white/20 wide:mx-0 wide:my-6" />
 
           <motion.h2
             variants={rise}
@@ -112,7 +112,7 @@ export function ActionScreen({
         </motion.div>
 
         {/* ── 오른쪽 칸(가로) / 아래(세로): 해야 할 일 4가지 ── */}
-        <div className="mt-[min(1.75rem,3vh)] flex flex-col gap-2 wide:mt-0 wide:gap-2.5 wide:w-[min(34rem,52%)]">
+        <div className="mt-[min(1.75rem,3dvh)] flex flex-col gap-2 wide:mt-0 wide:gap-2.5 wide:w-[min(34rem,52%)]">
           {a.steps.map((step, i) => (
             <motion.div
               key={step.n}
@@ -145,7 +145,7 @@ export function ActionScreen({
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 1.3 }}
-          className="mt-[min(1.75rem,3vh)] shrink-0 wide:hidden"
+          className="mt-[min(1.75rem,3dvh)] shrink-0 wide:hidden"
         >
           <Again label={a.again} note={fill(a.autoReset, { n: left })} onReset={onReset} />
         </motion.div>

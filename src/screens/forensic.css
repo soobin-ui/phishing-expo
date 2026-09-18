@@ -13,7 +13,7 @@
   overflow: hidden;
   background: #050a18;
   color: #fff;
-  padding-top: max(0.9rem, 1.6vh);
+  padding-top: max(0.9rem, 1.6dvh);
   padding-bottom: 0.8rem;
   word-break: keep-all;
   overflow-wrap: anywhere;
@@ -266,7 +266,7 @@
 
 /* 증거 보드 */
 .fx .rebuild .box { padding-top: 1rem; padding-bottom: 1rem; }
-.fx .boardwrap { position: relative; margin-top: 0.9rem; height: clamp(16rem, 44vh, 27rem); border-radius: 0.8rem; background: radial-gradient(circle at 30% 20%, #2a2118, #17120d); box-shadow: inset 0 0 1.6rem rgba(0, 0, 0, 0.6); overflow: hidden; }
+.fx .boardwrap { position: relative; margin-top: 0.9rem; height: clamp(16rem, 44dvh, 27rem); border-radius: 0.8rem; background: radial-gradient(circle at 30% 20%, #2a2118, #17120d); box-shadow: inset 0 0 1.6rem rgba(0, 0, 0, 0.6); overflow: hidden; }
 .fx .boardwrap svg.lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .fx .boardwrap line { stroke: #e5484d; stroke-width: 3; stroke-linecap: round; vector-effect: non-scaling-stroke; stroke-dasharray: 400; stroke-dashoffset: 400; animation: fx-draw 0.6s ease-out forwards; }
 @keyframes fx-draw { to { stroke-dashoffset: 0; } }

@@ -173,7 +173,7 @@ export function DefenseCard({
       </div>
 
       {/* ① 검거 완료 */}
-      <div className="relative z-10 shrink-0 px-5 pt-[max(0.8rem,2.5vh)] text-center">
+      <div className="relative z-10 shrink-0 px-5 pt-[max(0.8rem,2.5dvh)] text-center">
         <motion.p
           initial={{ scale: 1.7, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -202,7 +202,7 @@ export function DefenseCard({
           ref={cardRef}
           layout
           transition={{ type: 'spring', stiffness: 210, damping: 26 }}
-          className={`shrink-0 [perspective:1400px] ${flipped && hasReview ? 'w-[min(26rem,86vw,53vh)] sm:w-[min(22rem,40vw,50vh)]' : 'w-[min(26rem,86vw,53vh)]'}`}
+          className={`shrink-0 [perspective:1400px] ${flipped && hasReview ? 'w-[min(26rem,86vw,53dvh)] sm:w-[min(22rem,40vw,50dvh)]' : 'w-[min(26rem,86vw,53dvh)]'}`}
         >
         {shown && (
           <motion.div
@@ -415,7 +415,7 @@ export function DefenseCard({
               ],
             }}
             transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-            className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7fd4ff] bg-[#1668c4] px-3 py-3 font-display text-[clamp(0.95rem,2.4vh,1.1rem)] font-bold whitespace-nowrap text-white active:bg-[#12539e] [&>svg]:shrink-0"
+            className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7fd4ff] bg-[#1668c4] px-3 py-3 font-display text-[clamp(0.95rem,2.4dvh,1.1rem)] font-bold whitespace-nowrap text-white active:bg-[#12539e] [&>svg]:shrink-0"
           >
             <Flip />
             {flipped ? t.card.flipFront : t.card.flipBack}
@@ -429,7 +429,7 @@ export function DefenseCard({
               onClick={onNext}
               data-role="card-next"
               data-blink={allSeen ? 'on' : undefined}
-              className={`${allSeen ? 'next-blink ' : ''}min-w-0 flex-1 rounded-xl border-2 border-transparent bg-gold px-3 py-3 font-display text-[clamp(0.95rem,2.4vh,1.1rem)] font-bold whitespace-nowrap text-navy-deep active:bg-gold-deep`}
+              className={`${allSeen ? 'next-blink ' : ''}min-w-0 flex-1 rounded-xl border-2 border-transparent bg-gold px-3 py-3 font-display text-[clamp(0.95rem,2.4dvh,1.1rem)] font-bold whitespace-nowrap text-navy-deep active:bg-gold-deep`}
             >
               {t.cardNext}
             </motion.button>
@@ -448,7 +448,7 @@ function CardFace({ children, back = false }: { children: ReactNode; back?: bool
       className="absolute inset-0 [backface-visibility:hidden]"
       style={back ? { transform: 'rotateY(180deg)' } : undefined}
     >
-      <div className="relative h-full w-full overflow-hidden rounded-[0.9rem] border-2 border-[#2fa8ff] bg-[linear-gradient(160deg,#0a1226_0%,#0d1c3c_55%,#081022_100%)] p-[0.9em] text-[clamp(0.82rem,3.1vh,1.2rem)] shadow-[0_0_2.4rem_rgba(47,168,255,0.6),inset_0_0_1.8rem_rgba(47,168,255,0.16)]">
+      <div className="relative h-full w-full overflow-hidden rounded-[0.9rem] border-2 border-[#2fa8ff] bg-[linear-gradient(160deg,#0a1226_0%,#0d1c3c_55%,#081022_100%)] p-[0.9em] text-[clamp(0.82rem,3.1dvh,1.2rem)] shadow-[0_0_2.4rem_rgba(47,168,255,0.6),inset_0_0_1.8rem_rgba(47,168,255,0.16)]">
         <div className="pointer-events-none absolute inset-[0.3em] rounded-[0.6rem] border border-[#2fa8ff]/40" />
         <div className="relative h-full">{children}</div>
       </div>

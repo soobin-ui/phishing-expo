@@ -88,7 +88,7 @@ export function SmishScreen({
   }
 
   return (
-    <div className="relative flex h-full w-full flex-col px-4 pt-[max(0.9rem,2vh)] pb-4 wide:flex-row wide:items-stretch wide:gap-[3%] wide:px-[4%] wide:py-6">
+    <div className="relative flex h-full w-full flex-col px-4 pt-[max(0.9rem,2dvh)] pb-4 wide:flex-row wide:items-stretch wide:gap-[3%] wide:px-[4%] wide:py-6">
       {/* 받은 문자 — 휴대폰 문자 앱 그대로 */}
       <div className="min-h-0 flex-1 overflow-hidden rounded-2xl shadow-[0_0.6rem_2rem_rgba(0,0,0,0.35)] wide:min-w-0">
         <ChannelView
@@ -229,7 +229,7 @@ function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void })
       data-role="smish-damage"
       className="absolute inset-0 z-40 flex items-center justify-center bg-[#1a0508]/92 px-4 py-4 backdrop-blur-sm"
     >
-      <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#ff6b6b]/60 bg-[#1f0a10]/95 px-[clamp(1.1rem,4vw,1.7rem)] py-[clamp(1.1rem,3vh,1.7rem)] text-white shadow-[0_0_2.4rem_rgba(255,107,107,0.35)]">
+      <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#ff6b6b]/60 bg-[#1f0a10]/95 px-[clamp(1.1rem,4vw,1.7rem)] py-[clamp(1.1rem,3dvh,1.7rem)] text-white shadow-[0_0_2.4rem_rgba(255,107,107,0.35)]">
         <div className="text-center">
           <span className="inline-block rounded-md bg-[#ff6b6b] px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-[#2a0509]">{d.tag}</span>
           <h2 className="mt-3 font-display text-[min(1.45rem,5.6vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(255,107,107,0.6)]">{d.title}</h2>
@@ -593,7 +593,7 @@ function VerifyScene({ onDone }: { onDone: () => void }) {
       data-role="smish-verify-scene"
       className="absolute inset-0 z-40 flex items-center justify-center bg-[#050a18]/92 px-4 py-4 backdrop-blur-sm"
     >
-      <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#2fa8ff]/60 bg-[#0b1631]/95 px-[clamp(1.1rem,4vw,1.7rem)] py-[clamp(1.1rem,3vh,1.7rem)] text-white shadow-[0_0_2.4rem_rgba(47,168,255,0.35)]">
+      <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#2fa8ff]/60 bg-[#0b1631]/95 px-[clamp(1.1rem,4vw,1.7rem)] py-[clamp(1.1rem,3dvh,1.7rem)] text-white shadow-[0_0_2.4rem_rgba(47,168,255,0.35)]">
         <div className="text-center">
           <span className="inline-block rounded-md bg-gold px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-navy-deep">{v.tag}</span>
           <h2 className="mt-3 font-display text-[min(1.45rem,5.6vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(47,168,255,0.6)]">{v.title}</h2>

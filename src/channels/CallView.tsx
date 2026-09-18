@@ -23,7 +23,7 @@ export function CallView({ scenario, items, typing, render, compose, onHangUp }:
   return (
     <div className="flex h-full min-h-0 flex-col items-center bg-[radial-gradient(120%_70%_at_50%_0%,#33405e_0%,#151b2b_70%)] text-white">
       {/* 발신 정보 */}
-      <div className="shrink-0 px-4 pt-[max(1rem,2.5vh)] pb-2 text-center">
+      <div className="shrink-0 px-4 pt-[max(1rem,2.5dvh)] pb-2 text-center">
         <p className="flex items-center justify-center gap-1.5 text-[0.85rem] font-semibold text-[#8fd19e]">
           {live && <span className="h-1.5 w-1.5 rounded-full bg-[#8fd19e]" />}
           {live ? c.status : c.record}

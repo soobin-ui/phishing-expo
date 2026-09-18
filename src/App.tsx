@@ -17,6 +17,7 @@ import { ActionScreen } from './screens/ActionScreen'
 import { AdminScreen } from './screens/AdminScreen'
 import { fill, personalize, scenarioFor, situations, ui } from './lib/content'
 import { useIdleTimer } from './lib/useIdleTimer'
+import { requestKiosk } from './lib/viewport'
 import { newSessionId, saveRecord } from './lib/stats'
 import type { Act, Step } from './types'
 
@@ -152,7 +153,8 @@ export default function App() {
           <IntroScreen
             onStart={() => {
               // 전체화면 시도 (태블릿에서 주소창 숨김 — 실패해도 체험은 그대로 진행됩니다)
-              document.documentElement.requestFullscreen?.().catch(() => {})
+              // 이름을 적을 때 키보드가 올라와 풀려도 lib/viewport 가 다음 터치에 되돌립니다
+              requestKiosk()
               setStep('menu')
             }}
           />

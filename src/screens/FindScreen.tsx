@@ -132,7 +132,7 @@ export function FindScreen({
   )
 
   return (
-    <div className="flex h-full w-full flex-col px-4 pt-[max(1.25rem,2.5vh)] pb-4 wide:flex-row wide:gap-[3%] wide:px-[3%] wide:py-6">
+    <div className="flex h-full w-full flex-col px-4 pt-[max(1.25rem,2.5dvh)] pb-4 wide:flex-row wide:gap-[3%] wide:px-[3%] wide:py-6">
       {/* 세로 화면: 제목이 맨 위 */}
       <div className="shrink-0 wide:hidden">{heading}</div>
 

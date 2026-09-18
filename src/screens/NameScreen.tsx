@@ -70,7 +70,7 @@ export function NameScreen({
           initial="hidden"
           animate="show"
           variants={stagger}
-          className="mx-auto flex w-full max-w-[34rem] flex-1 flex-col items-center justify-center px-6 pt-[max(1.2rem,3vh)] pb-[calc(clamp(2.6rem,6vh,3.4rem)+1.6rem)] text-center"
+          className="mx-auto flex w-full max-w-[34rem] flex-1 flex-col items-center justify-center px-6 pt-[max(1.2rem,3dvh)] pb-[calc(clamp(2.6rem,6dvh,3.4rem)+1.6rem)] text-center"
         >
           {/* 고른 사건 */}
           <motion.span
@@ -88,7 +88,7 @@ export function NameScreen({
 
           <motion.p
             variants={rise}
-            className="mt-[min(1.4rem,2.6vh)] font-display text-[0.9rem] font-bold tracking-[0.18em] text-gold"
+            className="mt-[min(1.4rem,2.6dvh)] font-display text-[0.9rem] font-bold tracking-[0.18em] text-gold"
           >
             {t.eyebrow}
           </motion.p>
@@ -104,7 +104,7 @@ export function NameScreen({
 
           <motion.form
             variants={rise}
-            className="mt-[min(1.6rem,3vh)] w-full"
+            className="mt-[min(1.6rem,3dvh)] w-full"
             onSubmit={(e) => {
               e.preventDefault()
               submit()
@@ -127,7 +127,7 @@ export function NameScreen({
             />
             <p className="mt-2.5 text-[0.9rem] text-white/45">{t.privacy}</p>
 
-            <div className="mt-[min(1.4rem,2.6vh)]">
+            <div className="mt-[min(1.4rem,2.6dvh)]">
               <TapButton onClick={submit} disabled={!ok}>
                 {t.start}
               </TapButton>

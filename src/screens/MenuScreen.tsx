@@ -33,7 +33,7 @@ export function MenuScreen({ onPick }: { onPick: (situationId: string) => void }
           initial="hidden"
           animate="show"
           variants={stagger}
-          className="mx-auto flex w-full max-w-[40rem] flex-1 flex-col justify-center px-6 pt-[max(1.2rem,3vh)] pb-[calc(clamp(2.6rem,6vh,3.4rem)+1.6rem)]"
+          className="mx-auto flex w-full max-w-[40rem] flex-1 flex-col justify-center px-6 pt-[max(1.2rem,3dvh)] pb-[calc(clamp(2.6rem,6dvh,3.4rem)+1.6rem)]"
         >
           <header className="text-center">
             <motion.span
@@ -45,13 +45,13 @@ export function MenuScreen({ onPick }: { onPick: (situationId: string) => void }
             </motion.span>
             <motion.h1
               variants={rise}
-              className="mt-[min(0.9rem,1.6vh)] font-display text-[min(2rem,6.4vw)] leading-tight font-bold text-white [text-shadow:0_0_1.2rem_rgba(47,168,255,0.75)]"
+              className="mt-[min(0.9rem,1.6dvh)] font-display text-[min(2rem,6.4vw)] leading-tight font-bold text-white [text-shadow:0_0_1.2rem_rgba(47,168,255,0.75)]"
             >
               {m.tagline}
             </motion.h1>
           </header>
 
-          <ul className="mt-[min(1.6rem,3vh)] flex flex-col gap-[min(0.75rem,1.4vh)]">
+          <ul className="mt-[min(1.6rem,3dvh)] flex flex-col gap-[min(0.75rem,1.4dvh)]">
             {situations.map((s, i) => (
               <motion.li key={s.id} variants={rise}>
                 <CaseRow
@@ -91,7 +91,7 @@ function CaseRow({
       type="button"
       onClick={onClick}
       whileTap={{ scale: 0.985 }}
-      className="group flex min-h-[clamp(4.2rem,9.5vh,5.2rem)] w-full items-center gap-4 rounded-2xl max-[380px]:gap-3 border border-[#2fa8ff]/40 bg-[#0b1631]/85 px-4 py-2.5 text-left shadow-[0_0_1.2rem_rgba(47,168,255,0.12),inset_0_0_1.2rem_rgba(47,168,255,0.06)] transition-colors active:border-gold active:bg-[#12224a] wide:px-5"
+      className="group flex min-h-[clamp(4.2rem,9.5dvh,5.2rem)] w-full items-center gap-4 rounded-2xl max-[380px]:gap-3 border border-[#2fa8ff]/40 bg-[#0b1631]/85 px-4 py-2.5 text-left shadow-[0_0_1.2rem_rgba(47,168,255,0.12),inset_0_0_1.2rem_rgba(47,168,255,0.06)] transition-colors active:border-gold active:bg-[#12224a] wide:px-5"
     >
       <span className="flex h-[2.9rem] w-[2.9rem] shrink-0 items-center justify-center rounded-xl border border-[#2fa8ff]/50 bg-[#050a18] text-[#9fe0ff]">
         <ChannelIcon channel={channel} className="h-[58%] w-[58%]" />

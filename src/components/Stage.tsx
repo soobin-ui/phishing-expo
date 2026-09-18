@@ -24,9 +24,28 @@ const actClass: Record<Act, string> = {
 export function Stage({ act, children }: { act: Act; children: ReactNode }) {
   return (
     <div
-      className={`fixed inset-0 overflow-hidden transition-colors duration-500 ${actClass[act]}`}
+      className={`fixed top-0 left-0 w-full overflow-hidden transition-colors duration-500 ${actClass[act]}`}
+      // inset-0 만 쓰면 아이패드 사파리에서 도구막대 뒤까지를 화면으로 쳐서 아래가 잘립니다.
+      // lib/viewport 가 잰 '보이는 높이'를 쓰고, 못 재면 dvh 로 떨어집니다.
+      style={{ height: 'var(--app-h, 100dvh)' }}
     >
-      {children}
+      {/*
+        안쪽 틀 — 홈 화면에 추가해 띄우면 상태바·홈 표시줄이 화면 위에 겹치므로 그만큼 비켜 줍니다.
+        ⚠️ 바깥에 padding 을 주면 안 됩니다. 안의 화면들이 `absolute inset-0` 인데,
+           그건 padding 까지 포함한 자리(패딩 상자)를 채워서 안전영역을 그냥 지나갑니다.
+           그래서 '자리 자체'를 안으로 들여 잡습니다. 바탕색은 바깥이 계속 꽉 채웁니다.
+      */}
+      <div
+        className="absolute"
+        style={{
+          top: 'env(safe-area-inset-top)',
+          right: 'env(safe-area-inset-right)',
+          bottom: 'env(safe-area-inset-bottom)',
+          left: 'env(safe-area-inset-left)',
+        }}
+      >
+        {children}
+      </div>
     </div>
   )
 }
