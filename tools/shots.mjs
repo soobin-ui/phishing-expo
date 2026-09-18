@@ -64,7 +64,7 @@ await reload()
 // [0] 첫 화면 — 받아볼 문자 고르기
 await shot('menu')
 
-await tapText('연구실 · 산학협력')
+await tapText('이메일 피싱')
 await wait(1900)
 await shot('chat-turn1')
 

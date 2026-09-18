@@ -100,7 +100,7 @@ function CaseRow({
         <span className="block font-display text-[0.75rem] leading-none font-bold tracking-[0.16em] text-[#6f93c4] tabular-nums">
           CASE {String(no).padStart(2, '0')}
         </span>
-        <span className="mt-1.5 block truncate text-[1.35rem] leading-tight font-bold text-white">
+        <span className="mt-1.5 block text-[1.35rem] leading-tight font-bold text-white">
           {label}
         </span>
       </span>
