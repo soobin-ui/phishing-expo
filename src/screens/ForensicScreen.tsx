@@ -563,7 +563,7 @@ function AppView({ screen, found, hint, onGo, onInspect }: { screen: Screen; fou
   let body: ReactNode
   if (screen.list) {
     body = screen.list.map((it) => (
-      <button key={it.go} type="button" className={`li ${hint?.room === it.go ? 'hl' : ''}`} data-go={it.go} onClick={() => onGo(it.go)}>
+      <button key={it.go} type="button" className={`li ${EVIDENCE.some((e) => e.room === it.go && !found.includes(e.id)) ? 'pend' : ''} ${hint?.room === it.go ? 'hl' : ''}`} data-go={it.go} onClick={() => onGo(it.go)}>
         <span className="av" style={{ background: it.color }}>{it.av}</span>
         <span className="tx">
           <b>{it.name}</b>
@@ -581,7 +581,7 @@ function AppView({ screen, found, hint, onGo, onInspect }: { screen: Screen; fou
           ) : m.vid ? (
             <div key={i} className="vid"><i />{m.vid}</div>
           ) : (
-            <button key={i} type="button" data-i={i} className={`bub ${m.me ? 'me' : ''} ${m.ev && found.includes(m.ev) ? 'found' : ''} ${m.ev && !found.includes(m.ev) ? 'ev' : ''} ${hint && m.ev === hint.id ? 'hl' : ''}`} onClick={() => onInspect(m)}>
+            <button key={i} type="button" data-i={i} className={`bub ${m.me ? 'me' : ''} ${m.ev && found.includes(m.ev) ? 'found' : ''} ${m.ev && !found.includes(m.ev) ? 'pend' : ''} ${hint && m.ev === hint.id ? 'hl' : ''}`} onClick={() => onInspect(m)}>
               <Linked text={m.t ?? ''} />
             </button>
           ),
