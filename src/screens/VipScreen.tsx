@@ -510,8 +510,9 @@ function StageHead({ step, title }: { step: string; title: string }) {
 type Field = { id: string; label: string; ph: string; gave: string }
 
 /** 입력값 정리·형식 — 체험용이라 아무 숫자나 칠 수 있게, 자릿수만 제한 */
-const MIN: Record<string, number> = { name: 1, phone: 10, rrn: 13, card: 15, exp: 4, cvc: 3, pw: 2 }
-const MAXD: Record<string, number> = { phone: 11, rrn: 13, card: 16, exp: 4, cvc: 3, pw: 2 }
+const MIN: Record<string, number> = { name: 1, phone: 10, rrn: 6, card: 15, exp: 4, cvc: 3, pw: 2 }
+/** 주민등록번호는 앞 6자리만 치게 하고 뒷자리는 ******* 로 자동 표시(사용자 결정) */
+const MAXD: Record<string, number> = { phone: 11, rrn: 6, card: 16, exp: 4, cvc: 3, pw: 2 }
 function clean(id: string, v: string) {
   if (id === 'name') return v.slice(0, 12)
   return v.replace(/\D/g, '').slice(0, MAXD[id] ?? 20)
@@ -520,7 +521,7 @@ function display(id: string, raw: string) {
   if (id === 'name') return raw
   const d = raw
   if (id === 'phone') return d.replace(/^(\d{3})(\d{0,4})(\d{0,4}).*$/, (_m, a, b, c) => [a, b, c].filter(Boolean).join('-'))
-  if (id === 'rrn') return d.length > 6 ? `${d.slice(0, 6)}-${d.slice(6)}` : d
+  if (id === 'rrn') return d.length >= 6 ? `${d.slice(0, 6)}-*******` : d
   if (id === 'card') return (d.match(/.{1,4}/g) ?? []).join(' ')
   if (id === 'exp') return d.length > 2 ? `${d.slice(0, 2)} / ${d.slice(2)}` : d
   return d
@@ -967,7 +968,7 @@ function ReviewSite({ flag }: { flag: RedFlag }) {
   const sample: Record<string, string> = {
     name: '홍○○',
     phone: '010-●●●●-●●●●',
-    rrn: '●●●●●●-●●●●●●●',
+    rrn: '●●●●●●-*******',
   }
   return (
     <div className="flex flex-col gap-3 text-[#1c1f2a]" data-role="review-site">
