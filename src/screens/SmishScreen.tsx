@@ -43,6 +43,12 @@ export function SmishScreen({
   const [replied, setReplied] = useState(false)
   const [waiting, setWaiting] = useState(false)
   const openedOnce = useRef(false)
+  /**
+   * 한 번이라도 움직였는지(사진 확인으로 당했거나, 답장했거나).
+   * ★ '누르지 않고 먼저 확인하기'는 첫 화면엔 없습니다(2026-09-18) — 정답을 바로 눌러 빠져나가면 체험이 안 되니까.
+   *   직접 당해보거나 답장한 뒤에야 선택지로 나타납니다.
+   */
+  const [engaged, setEngaged] = useState(false)
   /** 가짜 페이지를 끝까지 가서 당한 횟수 · 그동안 넘긴 것들 — 검거 카드 별점에 씁니다 */
   const [falls, setFalls] = useState(0)
   const [gaveList, setGaveList] = useState<string[]>([])
@@ -65,11 +71,13 @@ export function SmishScreen({
       openedOnce.current = true
       give(-15, sm.page.gaveOpen)
     }
+    setEngaged(true)
     setPhase('page')
   }
 
   const reply = () => {
     if (replied || waiting) return
+    setEngaged(true)
     setWaiting(true)
     setItems((prev) => [...prev, { from: 'me', text: sm.myReply, at: new Date() }])
     later(() => {
@@ -105,14 +113,17 @@ export function SmishScreen({
           {!replied && (
             <Choice no={2} role="smish-reply" label={sm.options.reply.label} sub={`"${sm.myReply}"`} disabled={waiting} onClick={reply} />
           )}
-          <Choice
-            no={replied ? 2 : 3}
-            role="smish-verify"
-            label={sm.options.verify.label}
-            sub={sm.options.verify.sub}
-            disabled={waiting}
-            onClick={() => setPhase('verify')}
-          />
+          {/* '먼저 확인하기'는 한 번 움직인 뒤에만 나타납니다(첫 화면엔 없음) */}
+          {engaged && (
+            <Choice
+              no={replied ? 2 : 3}
+              role="smish-verify"
+              label={sm.options.verify.label}
+              sub={sm.options.verify.sub}
+              disabled={waiting}
+              onClick={() => setPhase('verify')}
+            />
+          )}
         </div>
       </div>
 
@@ -426,6 +437,14 @@ function FakePage({
 
       <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-[30rem] px-5 py-5">
+          {/* 체험 안내 — 실제 정보를 넣지 않도록 */}
+          <p className="mb-3 flex items-start gap-2 rounded-xl border border-[#cfe0ff] bg-[#eef4ff] px-3.5 py-2.5 text-[0.9rem] leading-snug font-semibold text-[#2f55b8]">
+            <svg viewBox="0 0 24 24" className="mt-0.5 h-[1.1rem] w-[1.1rem] shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 8h.01M11 12h1v4h1" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span>{p.demoNote}</span>
+          </p>
           <p className="text-center text-[0.95rem] font-bold text-[#3478f6]">{p.site}</p>
 
           {/* 공유한 사람 + 잠긴 사진 3장 */}
