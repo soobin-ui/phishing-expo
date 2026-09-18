@@ -87,6 +87,8 @@ export function DefenseCard({
     if (flipped) setSeen((v) => (v.includes(trick) ? v : [...v, trick]))
   }, [flipped, trick])
   const allSeen = seen.length >= flags.length
+  /** 뒷면을 한 번이라도 봤는지 — 보기 전에는 [이렇게 예방하세요]를 숨겨 뒷면부터 보게 합니다(2026-09-19, 1~4번 공통) */
+  const backSeen = seen.length > 0
   const flag = flags[Math.min(trick, flags.length - 1)]
   const reviewRef = useRef<HTMLDivElement>(null)
   /** 메일 판은 카드와 같은 높이 — 카드 높이를 재서 맞춥니다(내용이 길어도 판이 커지지 않게) */
@@ -390,8 +392,8 @@ export function DefenseCard({
         )}
         </div>
 
-        {/* 버튼 두 개 — 좌우로 나란히, 폭은 위 카드(+메일 판)와 똑같이. 아주 좁은 폰만 세로
-            ★ 뒷면에서 옆 판이 보일 때는 [앞면 보기]를 카드 폭에, [이렇게 예방하세요]를 옆 판 폭에 맞춥니다(사용자 요청, 1~4번 공통) */}
+        {/* 처음엔 [카드 뒷면 보기] 하나만(카드 폭). 뒷면을 한 번 본 뒤부터 [이렇게 예방하세요]가 같이 보입니다.
+            ★ 뒷면에서 옆 판이 보일 때는 [앞면 보기]를 카드 폭에, [이렇게 예방하세요]를 옆 판 폭에 맞춥니다(1~4번 공통) */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: shown ? 1 : 0, y: shown ? 0 : 10 }}
@@ -418,15 +420,20 @@ export function DefenseCard({
             <Flip />
             {flipped ? t.card.flipFront : t.card.flipBack}
           </motion.button>
-          <button
-            type="button"
-            onClick={onNext}
-            data-role="card-next"
-            data-blink={allSeen ? 'on' : undefined}
-            className={`${allSeen ? 'next-blink ' : ''}min-w-0 flex-1 rounded-xl border-2 border-transparent bg-gold px-3 py-3 font-display text-[clamp(0.95rem,2.4vh,1.1rem)] font-bold whitespace-nowrap text-navy-deep active:bg-gold-deep`}
-          >
-            {t.cardNext}
-          </button>
+          {backSeen && (
+            <motion.button
+              type="button"
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+              onClick={onNext}
+              data-role="card-next"
+              data-blink={allSeen ? 'on' : undefined}
+              className={`${allSeen ? 'next-blink ' : ''}min-w-0 flex-1 rounded-xl border-2 border-transparent bg-gold px-3 py-3 font-display text-[clamp(0.95rem,2.4vh,1.1rem)] font-bold whitespace-nowrap text-navy-deep active:bg-gold-deep`}
+            >
+              {t.cardNext}
+            </motion.button>
+          )}
         </motion.div>
         </div>
       </div>
