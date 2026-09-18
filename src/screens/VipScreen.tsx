@@ -948,7 +948,7 @@ function Brief({ name, onStart }: { name: string; onStart: () => void }) {
           onClick={onStart}
           className="mt-5 min-h-[3.8rem] w-full rounded-xl bg-gold px-4 font-display text-[1.25rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]"
         >
-          체험 시작하기
+          수사 시작하기
         </button>
       </motion.div>
     </motion.div>
