@@ -182,7 +182,7 @@ export function DefenseCard({
           ref={cardRef}
           layout
           transition={{ type: 'spring', stiffness: 210, damping: 26 }}
-          className={`shrink-0 [perspective:1400px] ${flipped && mail ? 'w-[min(24rem,86vw,40vh)] sm:w-[min(20rem,40vw,40vh)]' : 'w-[min(24rem,86vw,40vh)]'}`}
+          className={`shrink-0 [perspective:1400px] ${flipped && mail ? 'w-[min(24rem,86vw,46vh)] sm:w-[min(20rem,40vw,46vh)]' : 'w-[min(24rem,86vw,46vh)]'}`}
         >
         {shown && (
           <motion.div
@@ -373,7 +373,8 @@ export function DefenseCard({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: shown ? 1 : 0, y: shown ? 0 : 10 }}
           transition={{ delay: 1.5 }}
-          style={{ width: rowW || undefined }}
+          // 폭은 카드 행과 같게 — 단, 낮은 노트북 화면(카드가 작아짐)에서는 글자가 버튼 밖으로 삐져나오므로 최소 폭을 보장
+          style={{ width: rowW ? `max(${rowW}px, min(26rem, 92vw))` : undefined }}
           className="flex max-w-full gap-2.5 max-[420px]:flex-col"
         >
           <motion.button
@@ -388,7 +389,7 @@ export function DefenseCard({
               ],
             }}
             transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-            className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7fd4ff] bg-[#1668c4] px-3 py-3.5 font-display text-[1.1rem] font-bold whitespace-nowrap text-white active:bg-[#12539e]"
+            className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7fd4ff] bg-[#1668c4] px-3 py-3 font-display text-[clamp(0.95rem,2.4vh,1.1rem)] font-bold whitespace-nowrap text-white active:bg-[#12539e] [&>svg]:shrink-0"
           >
             <Flip />
             {flipped ? t.card.flipFront : t.card.flipBack}
@@ -396,7 +397,7 @@ export function DefenseCard({
           <button
             type="button"
             onClick={onNext}
-            className="min-w-0 flex-1 rounded-xl border-2 border-transparent bg-gold px-3 py-3.5 font-display text-[1.1rem] font-bold whitespace-nowrap text-navy-deep active:bg-gold-deep"
+            className="min-w-0 flex-1 rounded-xl border-2 border-transparent bg-gold px-3 py-3 font-display text-[clamp(0.95rem,2.4vh,1.1rem)] font-bold whitespace-nowrap text-navy-deep active:bg-gold-deep"
           >
             {t.cardNext}
           </button>
