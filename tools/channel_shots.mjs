@@ -1,5 +1,6 @@
 /**
- * 주제별 받는 화면(메일·문자·메신저·전화) 캡처 + 넘침 검사 (개발용).
+ * 주제별 받는 화면(메일·문자·전화) 캡처 + 넘침 검사 (개발용).
+ *   rnd=메일(수사) · family=문자(청첩장 스미싱, 잠금화면에 자녀 문자 알림) · agency=전화
  *
  *   node tools/channel_shots.mjs http://localhost:8899/
  *
@@ -39,7 +40,7 @@ async function run(topic, [label, w, h, mobile]) {
   // 메일은 도착 화면 대신 받은편지함으로 바로 시작합니다
   if (topic !== 'rnd') {
     await page.waitForSelector('[data-role="open-channel"]', { timeout: 10000 })
-    await wait(600)
+    await wait(1200)
     if (label === '폰') await page.screenshot({ path: join(OUT, `${topic}-폰-0-arrive.png`) })
     await page.click('[data-role="open-channel"]')
     await wait(1500)
@@ -82,7 +83,7 @@ async function run(topic, [label, w, h, mobile]) {
     await wait(800)
     await shot('2-mail')
     // 보낸 사람 주소 → 본문 협박 → 링크 → 첨부 (각각 말풍선에서 올바른 조사 방법 고르기)
-    await page.evaluate(() => [...document.querySelectorAll('span')].find((x) => x.textContent?.includes('mail-verify.net'))?.click())
+    await page.evaluate(() => [...document.querySelectorAll('span')].find((x) => x.textContent?.includes('nrf.ro.kr'))?.click())
     await wait(500)
     await shot('3-probe')
     await page.click('[data-role="probe-ok"]')

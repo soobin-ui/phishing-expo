@@ -19,12 +19,25 @@ export function fill(template: string, values: Record<string, string | number>):
 }
 
 /**
- * 시나리오 글의 {name} 자리에 관람객 이름을 넣습니다 — 제목·본문·맺음말·서명·대화·받은편지함 전부.
+ * 성을 뺀 이름 — 전수빈 → 수빈, 남궁민수 → 민수, 이든 → 이든.
+ * 한글 이름은 뒤의 두 글자를 이름으로 봅니다(두 글자면 그대로). 한글이 아니면 그대로 둡니다.
+ * 가족 잠금화면의 "금쪽같은 내새끼 수빈♥" 같은 자리에 씁니다.
+ */
+export function givenName(name: string): string {
+  const n = name.trim()
+  if (!/^[가-힣]+$/.test(n)) return n
+  return n.length >= 3 ? n.slice(-2) : n
+}
+
+/**
+ * 시나리오 글의 {name} 자리에 관람객 이름을 넣습니다 — 제목·본문·맺음말·서명·대화·받은편지함·잠금화면 알림 전부.
+ * {given} 은 성을 뺀 이름입니다(givenName).
  * redFlags 의 match 는 건드리지 않습니다(이름이 들어간 문장을 수상한 문구로 잡지 않도록).
  * 이름이 비어 있으면(시연용 바로가기 등) ui.name.fallback 을 씁니다.
  */
 export function personalize(scenario: Scenario, name: string): Scenario {
-  const v = { name: name.trim() || ui.name.fallback }
+  const full = name.trim() || ui.name.fallback
+  const v = { name: full, given: givenName(full) }
   const f = <T extends string | undefined>(t: T): T => (t === undefined ? t : (fill(t, v) as T))
   return {
     ...scenario,
@@ -40,5 +53,6 @@ export function personalize(scenario: Scenario, name: string): Scenario {
       closing: f(d.closing),
       signature: f(d.signature),
     })),
+    lockscreen: scenario.lockscreen?.map((n) => ({ ...n, from: fill(n.from, v), text: fill(n.text, v) })),
   }
 }

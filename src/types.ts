@@ -80,6 +80,20 @@ export interface MailDoc {
   signature?: string
 }
 
+/**
+ * 잠금화면 알림 한 줄 — 피싱 문자 위·아래에 같이 놓는 평범한 알림 (arrive).
+ * ★ "체험존이니까 이건 피싱이겠지"를 깨는 장치 — 여기엔 수상한 구석이 없어야 합니다.
+ *   from·text 의 {name} 은 입력한 이름, {given} 은 성을 뺀 이름(전수빈 → 수빈)으로 바뀝니다.
+ */
+export interface LockNotice {
+  /** 어느 앱의 알림인지 — 아이콘·앱 이름 */
+  app: 'sms' | 'messenger'
+  from: string
+  text: string
+  /** 알림에 붙는 시각 — "20분 전" */
+  ago: string
+}
+
 export interface Scenario {
   id: string
   situation: string
@@ -114,6 +128,11 @@ export interface Scenario {
    * ★ "체험존이니까 이건 피싱이겠지"를 깨는 장치 — 여기엔 수상한 구석이 없어야 합니다.
    */
   inbox?: MailDoc[]
+  /**
+   * 잠금화면에 피싱 문자와 함께 놓을 평범한 알림 (sms·messenger).
+   * 피싱 문자가 맨 위에 새로 튀어나오고, 이 알림들은 그 아래 이미 와 있던 것처럼 놓입니다.
+   */
+  lockscreen?: LockNotice[]
   turns: ScenarioTurn[]
   redFlags: RedFlag[]
 }

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { clock, day } from '../channels/shared'
 import { ui } from '../lib/content'
@@ -33,6 +34,12 @@ export function ArriveScreen({
 }
 
 /* ── 문자·메신저: 잠금화면 알림 배너 ── */
+/**
+ * scenario.lockscreen 이 있으면 평범한 알림(자녀 문자 등)이 먼저 와 있고,
+ * 잠시 뒤 피싱 문자가 맨 위로 **튀어나와 반짝입니다**(팝업 + 은은한 점멸 ≈ 1.5초 주기).
+ * ★ 점멸은 광과민성 기준(초당 3회 미만)을 넘기지 않습니다. 더 빠르게 하지 마세요.
+ * ★ 평범한 알림은 눌러도 아무 일도 없습니다 — 열 수 있는 건 새로 온 문자 하나뿐입니다.
+ */
 function PushNotice({
   scenario,
   preview,
@@ -46,6 +53,16 @@ function PushNotice({
   const c = sms ? ui.channels.sms : ui.channels.messenger
   const who = sms ? scenario.sender.number : scenario.sender.name
   const now = new Date()
+  const others = scenario.lockscreen ?? []
+
+  // 평범한 알림이 먼저 자리를 잡고, 피싱 문자는 1.4초 뒤에 도착합니다
+  const [arrived, setArrived] = useState(others.length === 0)
+  useEffect(() => {
+    if (arrived) return
+    const id = window.setTimeout(() => setArrived(true), 1400)
+    return () => window.clearTimeout(id)
+  }, [arrived])
+
   return (
     <div className="flex h-full min-h-0 flex-col items-center justify-center bg-gradient-to-b from-[#1a2440] to-[#0e1633] px-6 text-white">
       {/* 잠금화면 시계 */}
@@ -54,31 +71,81 @@ function PushNotice({
         <p className="mt-2 text-[1.05rem] text-white/60">{day(now)}</p>
       </div>
 
-      <motion.button
-        type="button"
-        data-role="open-channel"
-        onClick={onOpen}
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileTap={{ scale: 0.98 }}
-        className="w-full max-w-[30rem] rounded-2xl bg-white/95 px-5 py-4 text-left text-[#1f2430] shadow-[0_0.6rem_1.8rem_rgba(0,0,0,0.35)] active:bg-white"
-      >
-        <div className="mb-1.5 flex items-center gap-2">
-          <span className="flex h-[1.5rem] w-[1.5rem] items-center justify-center rounded-md bg-[#3478f6] text-white" aria-hidden="true">
-            {sms ? (
-              <svg width="62%" height="62%" viewBox="0 0 24 24" fill="#fff"><path d="M4 4h16v12H7l-3 3z" /></svg>
-            ) : (
-              <svg width="62%" height="62%" viewBox="0 0 24 24" fill="#fff"><path d="M4 4h16v11H9l-4 4z" /></svg>
-            )}
-          </span>
-          <span className="text-[0.85rem] font-bold text-[#3478f6]">{c.arrive.title}</span>
-          <span className="ml-auto text-[0.8rem] text-[#9aa1ad]">{c.arrive.now}</span>
-        </div>
-        <p className="text-[1.05rem] font-bold">{who}</p>
-        <p className="mt-0.5 line-clamp-2 text-[1rem] text-[#3a4250]">{preview}</p>
-      </motion.button>
+      <div className="flex w-full max-w-[30rem] flex-col gap-2.5">
+        {/* 새로 온 피싱 문자 — 위에서 튀어나온 뒤 계속 반짝입니다 */}
+        {arrived && (
+          <motion.div
+            layout
+            initial={{ opacity: 0, y: -34, scale: 0.82 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 24 }}
+            className="relative"
+          >
+            <motion.button
+              type="button"
+              data-role="open-channel"
+              onClick={onOpen}
+              animate={{
+                scale: [1, 1.025, 1],
+                boxShadow: [
+                  '0 0.6rem 1.8rem rgba(0,0,0,0.35), 0 0 0 0 rgba(140,200,255,0)',
+                  '0 0.6rem 1.8rem rgba(0,0,0,0.35), 0 0 1.4rem 0.22rem rgba(140,200,255,0.9)',
+                  '0 0.6rem 1.8rem rgba(0,0,0,0.35), 0 0 0 0 rgba(140,200,255,0)',
+                ],
+              }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full rounded-2xl bg-white px-5 py-4 text-left text-[#1f2430] active:bg-white"
+            >
+              <NoticeHead sms={sms} app={c.arrive.title} when={c.arrive.now} highlight />
+              <p className="text-[1.05rem] font-bold">{who}</p>
+              <p className="mt-0.5 line-clamp-2 text-[1rem] text-[#3a4250]">{preview}</p>
+            </motion.button>
+            {/* 안 읽음 점 — 천천히 깜빡입니다 */}
+            <motion.span
+              aria-hidden="true"
+              animate={{ opacity: [1, 0.25, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+              className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-[#ff3b30] shadow-[0_0_0.6rem_rgba(255,59,48,0.9)]"
+            />
+          </motion.div>
+        )}
+
+        {/* 이미 와 있던 평범한 알림 — 자녀 문자 등. 수상한 구석이 없어야 합니다 */}
+        {others.map((n, i) => (
+          <motion.div
+            layout
+            key={i}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.12 * i }}
+            className="w-full rounded-2xl bg-white/85 px-5 py-4 text-left text-[#1f2430] shadow-[0_0.4rem_1.2rem_rgba(0,0,0,0.25)]"
+          >
+            <NoticeHead sms={n.app === 'sms'} app={n.app === 'sms' ? ui.channels.sms.kind : ui.channels.messenger.arrive.title} when={n.ago} />
+            <p className="text-[1.05rem] font-bold">{n.from}</p>
+            <p className="mt-0.5 line-clamp-2 text-[1rem] text-[#3a4250]">{n.text}</p>
+          </motion.div>
+        ))}
+      </div>
 
       <p className="mt-6 text-[1rem] text-white/60">{c.arrive.openHint}</p>
+    </div>
+  )
+}
+
+/** 알림 카드 윗줄 — 앱 아이콘 · 앱 이름 · 시각 */
+function NoticeHead({ sms, app, when, highlight }: { sms: boolean; app: string; when: string; highlight?: boolean }) {
+  return (
+    <div className="mb-1.5 flex items-center gap-2">
+      <span className="flex h-[1.5rem] w-[1.5rem] items-center justify-center rounded-md bg-[#3478f6] text-white" aria-hidden="true">
+        {sms ? (
+          <svg width="62%" height="62%" viewBox="0 0 24 24" fill="#fff"><path d="M4 4h16v12H7l-3 3z" /></svg>
+        ) : (
+          <svg width="62%" height="62%" viewBox="0 0 24 24" fill="#fff"><path d="M4 4h16v11H9l-4 4z" /></svg>
+        )}
+      </span>
+      <span className={`text-[0.85rem] font-bold ${highlight ? 'text-[#3478f6]' : 'text-[#6b7280]'}`}>{app}</span>
+      <span className="ml-auto text-[0.8rem] text-[#9aa1ad]">{when}</span>
     </div>
   )
 }
