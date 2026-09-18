@@ -165,15 +165,15 @@ export function DefenseCard({
           뒷면(flipped): 큰 카드가 왼쪽으로 밀려나고, 오른쪽에 **방금 조사한 그 메일**이 다시 뜹니다.
           카드가 1번 수법을 보여줄 때 메일에서는 1번 문구가 붉게 빛나며 그 자리로 스크롤되고,
           [다음]으로 2번·3번·4번으로 넘기면 빛나는 자리도 따라 움직입니다 — "아, 여기였구나"를 다시 보게.
-          (mail 을 안 넘기는 주제 — 포렌식 — 는 카드만 가운데.) */}
+          (mail 을 안 넘기는 주제 — 포렌식 — 는 카드만 가운데. 폰(<640px)은 자리가 없어 메일 판을 숨기고 카드만.) */}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-3">
         <div className="flex w-full max-w-[52rem] flex-col items-center gap-2.5">
-        <div className={`flex w-full items-center justify-center gap-[3%] ${flipped && mail ? 'max-sm:flex-col max-sm:gap-3' : ''}`}>
+        <div className="flex w-full items-center justify-center gap-[3%]">
         <motion.div
           ref={cardRef}
           layout
           transition={{ type: 'spring', stiffness: 210, damping: 26 }}
-          className={`shrink-0 [perspective:1400px] ${flipped && mail ? 'w-[min(20rem,44%,40vh)] max-sm:w-[min(15rem,56vw,24vh)]' : 'w-[min(24rem,86vw,40vh)]'}`}
+          className={`shrink-0 [perspective:1400px] ${flipped && mail ? 'w-[min(24rem,86vw,40vh)] sm:w-[min(20rem,44%,40vh)]' : 'w-[min(24rem,86vw,40vh)]'}`}
         >
         {shown && (
           <motion.div
@@ -333,7 +333,7 @@ export function DefenseCard({
             transition={{ type: 'spring', stiffness: 210, damping: 26, delay: 0.45 }}
             data-role="review-mail"
             style={{ height: cardH || undefined }}
-            className="flex min-h-0 w-full min-w-0 max-w-[32rem] flex-1 flex-col overflow-hidden rounded-xl border-2 border-[#2fa8ff]/70 bg-white text-[#1f2430] shadow-[0_0_1.6rem_rgba(47,168,255,0.4)] max-sm:flex-none"
+            className="flex min-h-0 w-full min-w-0 max-w-[32rem] flex-1 flex-col overflow-hidden rounded-xl border-2 border-[#2fa8ff]/70 bg-white text-[#1f2430] shadow-[0_0_1.6rem_rgba(47,168,255,0.4)] max-sm:hidden"
           >
             <div className="flex shrink-0 items-center gap-2 border-b border-[#eceff4] bg-[#f7f9fc] px-3 py-2 text-[0.9rem] font-bold text-[#2f55b8]">
               <span className="flex h-[1.5rem] w-[1.5rem] items-center justify-center rounded-full bg-[#e5484d] font-display text-[0.8rem] text-white tabular-nums">
@@ -359,12 +359,12 @@ export function DefenseCard({
         )}
         </div>
 
-        {/* 버튼 — 앞면 카드와 같은 폭 */}
+        {/* 버튼 두 개 — 좌우로 나란히(위아래로 쌓으면 어색하다는 피드백). 아주 좁은 폰만 세로 */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: shown ? 1 : 0, y: shown ? 0 : 10 }}
           transition={{ delay: 1.5 }}
-          className="flex w-[min(24rem,86vw,40vh)] flex-col gap-2"
+          className="flex w-[min(32rem,92vw)] gap-2.5 max-[420px]:flex-col"
         >
           <motion.button
             type="button"
@@ -378,7 +378,7 @@ export function DefenseCard({
               ],
             }}
             transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-[#7fd4ff] bg-[#1668c4] px-4 py-3.5 font-display text-[1.15rem] font-bold text-white active:bg-[#12539e]"
+            className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7fd4ff] bg-[#1668c4] px-3 py-3.5 font-display text-[1.1rem] font-bold whitespace-nowrap text-white active:bg-[#12539e]"
           >
             <Flip />
             {flipped ? t.card.flipFront : t.card.flipBack}
@@ -386,7 +386,7 @@ export function DefenseCard({
           <button
             type="button"
             onClick={onNext}
-            className="w-full rounded-xl border-2 border-transparent bg-gold px-4 py-3.5 font-display text-[1.15rem] font-bold text-navy-deep active:bg-gold-deep"
+            className="min-w-0 flex-1 rounded-xl border-2 border-transparent bg-gold px-3 py-3.5 font-display text-[1.1rem] font-bold whitespace-nowrap text-navy-deep active:bg-gold-deep"
           >
             {t.cardNext}
           </button>

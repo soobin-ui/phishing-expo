@@ -43,11 +43,11 @@ export function ActionScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // '무엇을 답했는가'(안전도)와 '몇 개 찾았는가'를 반씩 봅니다.
-  const ratio = (safety / 100) * 0.5 + (total > 0 ? found / total : 0) * 0.5
-  const grade = ratio >= 0.8 ? a.gradeHigh : ratio >= 0.45 ? a.gradeMid : a.gradeLow
-  /** 아쉬움 등급만 '미해결' 도장(빨강), 나머지는 CASE CLOSED(금색) */
-  const solved = ratio >= 0.45
+  // ★ 등급을 나누지 않습니다 — 몇 개를 찾았든 "사건 해결!" + CASE CLOSED (2026-09-18 사용자 결정).
+  //   "놓친 단서가 있습니다"·"사기범을 놓쳤습니다" 같은 아쉬움 문구는 뺐습니다. 찾은 개수는 아래 줄에만.
+  void safety
+  const grade = a.gradeHigh
+  const solved = true
 
   return (
     <ScrollScreen className="justify-center">
