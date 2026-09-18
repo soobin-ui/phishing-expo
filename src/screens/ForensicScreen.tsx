@@ -251,29 +251,6 @@ export function ForensicScreen({
         <p>{guide.sub}</p>
       </div>
 
-      {/* 남은 시간 · 남은 기회 — 연구실(메일)과 같은 색 상자. 찾은 증거 수는 증거 폴더 배지(N/4)가 보여 주므로 상자는 둘만.
-          세로 화면은 제목 아래 한 줄, 가로 화면은 왼쪽 안내 문구 아래(오른쪽은 힌트·증거 폴더만 — 상자가 너무 많다는 피드백) */}
-      <div className="stats">
-        <div className={`stat time ${timeLeft <= 30 && running ? 'low' : ''}`}>
-          <small>{fx.hud.time}</small>
-          <b className={`timer ${timeLeft <= 30 && running ? 'timer-shake' : ''}`} data-role="timer">
-            {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
-          </b>
-          <span className="bar"><i style={{ width: `${(timeLeft / TIME_LIMIT) * 100}%` }} /></span>
-        </div>
-        <div className={`stat chance ${chances <= 1 ? 'last' : ''}`}>
-          <small>{fx.hud.chances}</small>
-          <b key={chances} className={chances < CHANCES ? 'pop' : ''}>
-            {chances}<em> / {CHANCES}</em>
-          </b>
-          <span className="dots">
-            {Array.from({ length: CHANCES }, (_, i) => (
-              <i key={i} className={i < chances ? '' : 'off'} />
-            ))}
-          </span>
-        </div>
-      </div>
-
       {/* 피해자 휴대폰 — 아이폰 모양(검은 테두리·다이내믹 아일랜드·상태 표시줄·홈 바) */}
       <div className="phonewrap">
         <div ref={shellRef} className="shell">
@@ -318,42 +295,70 @@ export function ForensicScreen({
         </div>
       </div>
 
-      {/* 힌트 버튼 · 증거 폴더 */}
-      <div className={`dock ${done ? 'top' : ''}`}>
-        {!full && (
+      {/* 상태·도구 묶음 — 세로 화면에서는 풀려서(display: contents) 숫자 상자는 휴대폰 위, 힌트·증거 폴더는 휴대폰 아래로 가고,
+          가로 화면에서는 휴대폰 오른쪽에 한 패널로: 남은 시간(전체 폭) / 남은 기회 + 힌트(같은 크기 타일 둘) / 증거 폴더(전체 폭) */}
+      <div className="side">
+        {/* 남은 시간 · 남은 기회 — 연구실(메일)과 같은 색 상자. 찾은 증거 수는 증거 폴더 배지(N/4)가 보여 주므로 상자는 둘만.
+            세로 화면은 제목 아래 한 줄, 가로 화면은 왼쪽 안내 문구 아래(오른쪽은 힌트·증거 폴더만 — 상자가 너무 많다는 피드백) */}
+        <div className="stats">
+          <div className={`stat time ${timeLeft <= 30 && running ? 'low' : ''}`}>
+            <small>{fx.hud.time}</small>
+            <b className={`timer ${timeLeft <= 30 && running ? 'timer-shake' : ''}`} data-role="timer">
+              {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
+            </b>
+            <span className="bar"><i style={{ width: `${(timeLeft / TIME_LIMIT) * 100}%` }} /></span>
+          </div>
+          <div className={`stat chance ${chances <= 1 ? 'last' : ''}`}>
+            <small>{fx.hud.chances}</small>
+            <b key={chances} className={chances < CHANCES ? 'pop' : ''}>
+              {chances}<em> / {CHANCES}</em>
+            </b>
+            <span className="dots">
+              {Array.from({ length: CHANCES }, (_, i) => (
+                <i key={i} className={i < chances ? '' : 'off'} />
+              ))}
+            </span>
+          </div>
+        </div>
+
+        {/* 힌트 버튼 · 증거 폴더 */}
+        <div className={`dock ${done ? 'top' : ''}`}>
+          {!full && (
+            <button
+              type="button"
+              data-role="hint"
+              className={`hintbtn ${nudge ? 'nudge' : ''} ${hintOn ? 'on' : ''}`}
+              onClick={() => {
+                if (rules || cur === 'lock' || !nextEv || busy.current) return
+                setHintOn(true)
+                showToast(fx.hint.title, nextEv.hint, 4500)
+              }}
+            >
+              <BulbIcon />
+              <span>
+                <b>{fx.hint.button}</b>
+                {nudge && <small>{fx.hint.nudge}</small>}
+                <em className="hcap">{fx.hint.nudge}</em>
+              </span>
+            </button>
+          )}
           <button
+            ref={folderRef}
             type="button"
-            data-role="hint"
-            className={`hintbtn ${nudge ? 'nudge' : ''} ${hintOn ? 'on' : ''}`}
-            onClick={() => {
-              if (rules || cur === 'lock' || !nextEv || busy.current) return
-              setHintOn(true)
-              showToast(fx.hint.title, nextEv.hint, 4500)
-            }}
+            data-role="folder"
+            className={`folder ${full ? 'full' : ''} ${folderOpen ? 'open' : ''}`}
+            onClick={openFolder}
           >
-            <BulbIcon />
+            <FolderIcon />
             <span>
-              <b>{fx.hint.button}</b>
-              {nudge && <small>{fx.hint.nudge}</small>}
+              <b>{fx.folder.name}</b>
+              <small>{full ? fx.folder.full : fx.folder.idle}</small>
+            </span>
+            <span className="cnt">
+              {found.length}/{EVIDENCE.length}
             </span>
           </button>
-        )}
-        <button
-          ref={folderRef}
-          type="button"
-          data-role="folder"
-          className={`folder ${full ? 'full' : ''} ${folderOpen ? 'open' : ''}`}
-          onClick={openFolder}
-        >
-          <FolderIcon />
-          <span>
-            <b>{fx.folder.name}</b>
-            <small>{full ? fx.folder.full : fx.folder.idle}</small>
-          </span>
-          <span className="cnt">
-            {found.length}/{EVIDENCE.length}
-          </span>
-        </button>
+        </div>
       </div>
 
       {snap && (
