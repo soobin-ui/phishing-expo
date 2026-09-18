@@ -241,15 +241,6 @@ export function ForensicScreen({
     <div className="fx">
       <div className="fx-bg" />
 
-      <header className="hud">
-        <div className="who">
-          <span className="tag">
-            <MagnifierIcon />
-            {fx.hud.tag}
-            <span className="tagsub"> · {fx.hud.tagSub}</span>
-          </span>
-        </div>
-      </header>
 
       {/* 지금 할 일 — 연구실(메일) 화면처럼 크게, 단계가 바뀔 때마다 튀어나오며 */}
       <div key={phase} className="guide">
@@ -260,7 +251,8 @@ export function ForensicScreen({
         <p>{guide.sub}</p>
       </div>
 
-      {/* 남은 시간 · 찾은 증거 · 남은 기회 — 연구실(메일)과 같은 색 상자 셋. 세로 화면은 제목 아래 한 줄, 가로 화면은 오른쪽에 크게 */}
+      {/* 남은 시간 · 남은 기회 — 연구실(메일)과 같은 색 상자. 찾은 증거 수는 증거 폴더 배지(N/4)가 보여 주므로 상자는 둘만.
+          세로 화면은 제목 아래 한 줄, 가로 화면은 왼쪽 안내 문구 아래(오른쪽은 힌트·증거 폴더만 — 상자가 너무 많다는 피드백) */}
       <div className="stats">
         <div className={`stat time ${timeLeft <= 30 && running ? 'low' : ''}`}>
           <small>{fx.hud.time}</small>
@@ -268,17 +260,6 @@ export function ForensicScreen({
             {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}
           </b>
           <span className="bar"><i style={{ width: `${(timeLeft / TIME_LIMIT) * 100}%` }} /></span>
-        </div>
-        <div className="stat got">
-          <small>{fx.hud.found}</small>
-          <b key={found.length} className={found.length ? 'pop' : ''} data-role="found-count">
-            {found.length}<em> / {EVIDENCE.length}</em>
-          </b>
-          <span className="dots">
-            {EVIDENCE.map((e, i) => (
-              <i key={e.id} className={i < found.length ? '' : 'off'} />
-            ))}
-          </span>
         </div>
         <div className={`stat chance ${chances <= 1 ? 'last' : ''}`}>
           <small>{fx.hud.chances}</small>
