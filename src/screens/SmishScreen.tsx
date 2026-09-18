@@ -312,8 +312,21 @@ function Choice({
   )
 }
 
+/** 숫자만 남겨 010-0000-0000 모양으로 — 치는 대로 하이픈이 붙습니다 */
+function formatPhone(raw: string): string {
+  const d = raw.replace(/\D/g, '').slice(0, 11)
+  if (d.length <= 3) return d
+  if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`
+  return `${d.slice(0, 3)}-${d.slice(3, d.length - 4)}-${d.slice(-4)}`
+}
+/** 010·011·016·017·018·019 로 시작하는 10~11자리만 휴대전화 번호로 봅니다 */
+const isPhone = (v: string) => /^01[016789]\d{7,8}$/.test(v.replace(/\D/g, ''))
+
 /**
  * ① 가짜 '사진 공유' 본인확인 페이지.
+ * ★ 진짜 본인확인처럼 **제대로 넣어야만** 넘어갑니다(2026-09-18 사용자 지시) —
+ *   휴대전화 번호는 010-0000-0000 형식이어야 [인증번호 전송]이 되고,
+ *   인증번호는 문자로 온 숫자(page.codeValue)와 똑같아야 인증됩니다. 틀리면 붉은 안내만 뜨고 그대로.
  * 이름·전화번호 → [인증번호 전송] → "전송했습니다" 팝업 → (가짜 인증 문자가 위에서 내려옴) → 인증번호 → [인증하기] → [본인 확인 후 사진 보기]
  * ★ 입력값은 이 컴포넌트 안에서만 쓰고 버립니다.
  */
@@ -335,16 +348,26 @@ function FakePage({
   const [banner, setBanner] = useState(false)
   const [verified, setVerified] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [phoneErr, setPhoneErr] = useState(false)
+  const [codeErr, setCodeErr] = useState(false)
   const gaveInfo = useRef(false)
   const timers = useRef<number[]>([])
   useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), [])
   const later = (fn: () => void, ms: number) => timers.current.push(window.setTimeout(fn, ms))
 
-  const canSend = name.trim().length > 0 && phone.replace(/\D/g, '').length >= 4
-  const canVerify = sent && code.replace(/\D/g, '').length >= 4
+  const canSend = name.trim().length > 0 && phone.replace(/\D/g, '').length > 0
+  const canVerify = sent && code.length > 0
+
+  /** 가짜 인증 문자를 위에서 내려 보냅니다(8초 뒤 올라감) — 처음·재전송·인증번호를 틀렸을 때 */
+  const showBanner = (after: number) => {
+    later(() => setBanner(true), after)
+    later(() => setBanner(false), after + 8000)
+  }
 
   const send = () => {
     if (!canSend) return
+    // 번호가 형식에 맞지 않으면 전송하지 않습니다
+    if (!isPhone(phone)) return setPhoneErr(true)
     if (!gaveInfo.current) {
       gaveInfo.current = true
       onGive(-40, p.gaveInfo)
@@ -354,11 +377,16 @@ function FakePage({
   const closePopup = () => {
     setPopup(false)
     setSent(true)
-    later(() => setBanner(true), 900)
-    later(() => setBanner(false), 9000)
+    showBanner(900)
   }
   const verify = () => {
     if (!canVerify || verified) return
+    // 문자로 온 숫자와 다르면 인증되지 않습니다 — 문자를 다시 보여 줍니다
+    if (code !== p.codeValue) {
+      setCodeErr(true)
+      showBanner(300)
+      return
+    }
     onGive(-45, p.gaveCode)
     setVerified(true)
   }
@@ -433,22 +461,61 @@ function FakePage({
             <label className="block">
               <span className="mb-1.5 block text-[0.92rem] font-bold text-[#3a4250]">{p.phone}</span>
               <span className="flex gap-2">
-                <input data-role="smish-phone" value={phone} onChange={(e) => setPhone(e.target.value)} maxLength={13} inputMode="numeric" placeholder={p.phonePh} autoComplete="off" className={`${field} min-w-0 flex-1`} />
+                <input
+                  data-role="smish-phone"
+                  value={phone}
+                  onChange={(e) => {
+                    setPhone(formatPhone(e.target.value))
+                    setPhoneErr(false)
+                  }}
+                  maxLength={13}
+                  inputMode="numeric"
+                  placeholder={p.phonePh}
+                  autoComplete="off"
+                  disabled={verified}
+                  className={`${field} min-w-0 flex-1 tabular-nums disabled:bg-[#eef1f6] ${phoneErr ? 'border-[#e5484d] focus:border-[#e5484d]' : ''}`}
+                />
                 <button type="button" data-role="smish-send" onClick={send} disabled={!canSend} className="shrink-0 rounded-xl bg-[#3478f6] px-4 text-[0.98rem] font-bold whitespace-nowrap text-white active:bg-[#2563d9] disabled:opacity-40">
                   {sent ? p.resend : p.send}
                 </button>
               </span>
+              {phoneErr && (
+                <span data-role="smish-phone-error" className="mt-1.5 block text-[0.9rem] font-semibold text-[#e5484d]">
+                  {p.phoneError}
+                </span>
+              )}
             </label>
 
             {sent && (
               <motion.label initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="block">
                 <span className="mb-1.5 block text-[0.92rem] font-bold text-[#3a4250]">{p.code}</span>
                 <span className="flex gap-2">
-                  <input data-role="smish-code" value={code} onChange={(e) => setCode(e.target.value)} maxLength={6} inputMode="numeric" placeholder={p.codePh} autoComplete="off" disabled={verified} className={`${field} min-w-0 flex-1 disabled:bg-[#eef1f6]`} />
+                  <input
+                    data-role="smish-code"
+                    value={code}
+                    onChange={(e) => {
+                      setCode(e.target.value.replace(/\D/g, '').slice(0, 6))
+                      setCodeErr(false)
+                    }}
+                    maxLength={6}
+                    inputMode="numeric"
+                    placeholder={p.codePh}
+                    autoComplete="off"
+                    disabled={verified}
+                    className={`${field} min-w-0 flex-1 tabular-nums disabled:bg-[#eef1f6] ${codeErr ? 'border-[#e5484d] focus:border-[#e5484d]' : ''}`}
+                  />
                   <button type="button" data-role="smish-verify-code" onClick={verify} disabled={!canVerify || verified} className="shrink-0 rounded-xl bg-[#3478f6] px-4 text-[0.98rem] font-bold whitespace-nowrap text-white active:bg-[#2563d9] disabled:opacity-40">
                     {verified ? p.verified : p.verify}
                   </button>
                 </span>
+                {!verified && (
+                  <span
+                    data-role={codeErr ? 'smish-code-error' : undefined}
+                    className={`mt-1.5 block text-[0.9rem] ${codeErr ? 'font-semibold text-[#e5484d]' : 'text-[#8a93a5]'}`}
+                  >
+                    {codeErr ? p.codeError : p.codeHelp}
+                  </span>
+                )}
               </motion.label>
             )}
 
