@@ -81,7 +81,6 @@ export function DefenseCard({
   ]
   const score = rows.reduce((sum, r) => sum + r.n, 0)
   const rank = score >= 18 ? t.card.rankHigh : score >= 13 ? t.card.rankMid : t.card.rankLow
-  const flag = flags[trick]
 
   return (
     <motion.div
@@ -209,19 +208,35 @@ export function DefenseCard({
                   </span>
                 </div>
 
-                <div className="flex min-h-0 flex-1 flex-col justify-center">
-                  <span className="flex h-[2.2em] w-[2.2em] items-center justify-center rounded-full bg-[#2fa8ff] font-display text-[1em] font-bold text-[#050a18]">
-                    {trick + 1}
-                  </span>
-                  <p className="mt-[0.6em] text-[1em] leading-snug font-bold text-white">
-                    {flag?.label}
-                  </p>
-                  <p className="mt-[0.45em] text-[0.78em] leading-relaxed text-[#b9cbe6]">
-                    {flag?.explain}
-                  </p>
-                  {!solved.includes(flag?.target ?? '') && (
-                    <p className="mt-[0.5em] text-[0.68em] font-bold text-[#ffb4b4]">{c.missed}</p>
-                  )}
+                {/* 수법 4장을 옆으로 이어 붙인 띠 — [다음]을 누르면 본 장은 왼쪽으로 밀리고 다음 장이 오른쪽에서 들어옵니다 */}
+                <div className="relative min-h-0 flex-1 overflow-hidden">
+                  <motion.div
+                    className="flex h-full"
+                    animate={{ x: `-${trick * 100}%` }}
+                    transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+                  >
+                    {flags.map((f, i) => (
+                      <div
+                        key={f.target}
+                        data-role="trick-slide"
+                        aria-hidden={i !== trick}
+                        className="flex h-full w-full shrink-0 flex-col justify-center pr-[0.3em]"
+                      >
+                        <span className="flex h-[2.2em] w-[2.2em] items-center justify-center rounded-full bg-[#2fa8ff] font-display text-[1em] font-bold text-[#050a18]">
+                          {i + 1}
+                        </span>
+                        <p className="mt-[0.6em] text-[1em] leading-snug font-bold text-white">
+                          {f.label}
+                        </p>
+                        <p className="mt-[0.45em] text-[0.78em] leading-relaxed text-[#b9cbe6]">
+                          {f.explain}
+                        </p>
+                        {!solved.includes(f.target) && (
+                          <p className="mt-[0.5em] text-[0.68em] font-bold text-[#ffb4b4]">{c.missed}</p>
+                        )}
+                      </div>
+                    ))}
+                  </motion.div>
                 </div>
 
                 <div className="flex items-center gap-2">

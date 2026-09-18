@@ -86,6 +86,24 @@ export function MailScreen({
 
   /** 제한 시간 — 수상한 메일을 열면 시작, 말풍선·카드 동안은 멈춤 */
   const [started, setStarted] = useState(false);
+
+  /** 메일 본문 아래에 더 남았는지 — 스크롤 힌트 표시용 */
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [moreBelow, setMoreBelow] = useState(false);
+  const checkScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setMoreBelow(el.scrollHeight - el.scrollTop - el.clientHeight > 24);
+  };
+  useEffect(() => {
+    if (view !== "mail") return;
+    const id = window.setTimeout(checkScroll, 60);
+    window.addEventListener("resize", checkScroll);
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, [view]);
   const [timeLeft, setTimeLeft] = useState(TIME_LIMIT);
   const [timedOut, setTimedOut] = useState(false);
   const low = timeLeft <= 30;
@@ -230,27 +248,31 @@ export function MailScreen({
           rules ? "pointer-events-none blur-[6px] select-none" : ""
         }`}
       >
-        <header className="shrink-0 px-4 pt-[max(0.7rem,1.4vh)] pb-2.5">
+        {/* 검거 완료 카드가 뜨면 머리글·숫자 상자는 치웁니다 */}
+        <header className={`shrink-0 px-4 pt-[max(0.7rem,1.4vh)] pb-2.5 text-center ${card ? "hidden" : ""}`}>
           <div className="mx-auto w-full max-w-[78rem]">
-            {/* 지금 할 일 — 크게, 튀어나오며. 받은편지함에서는 '메일 열기', 메일 안에서는 '수상한 문구 찾기' */}
-            <p className="font-display text-[0.8rem] font-bold tracking-[0.16em] text-[#6f93c4] tabular-nums">
+            {/* 지금 할 일 — 크게, 가운데, 튀어나오며. 받은편지함에서는 '메일 열기', 메일 안에서는 '수상한 문구 찾기' */}
+            <p
+              key={`step-${view}`}
+              className="headline-pop inline-block rounded-full bg-gold px-3 py-1 font-display text-[0.85rem] leading-none font-bold tracking-[0.16em] text-navy-deep tabular-nums"
+            >
               {fill(t.step, { n: view === "inbox" ? 1 : 2 })}
             </p>
             <h2
               key={view}
-              className="headline-pop mt-1 origin-left font-display text-[clamp(1.45rem,5.4vw,2.35rem)] leading-tight font-bold text-white [text-shadow:0_0_1.2rem_rgba(47,168,255,0.65)]"
+              className="headline-pop headline-glow mt-1.5 origin-center font-display text-[clamp(1.75rem,6.6vw,3rem)] leading-tight font-bold text-white"
             >
               <Strong
                 text={view === "inbox" ? t.openGoal : fill(t.goal, { n: total })}
                 pulse={view === "mail"}
               />
             </h2>
-            <p className="mt-1 text-[1rem] leading-snug text-white/65">
+            <p className="mt-1 text-[1.05rem] leading-snug text-white/70">
               {view === "inbox" ? t.openSub : t.goalSub}
             </p>
 
             {/* 세로 화면(세로 태블릿·휴대폰): 숫자 상자를 제목 아래 한 줄로 */}
-            <div className="mt-2.5 flex items-stretch gap-2 wide:hidden">
+            <div className="mt-2.5 flex items-stretch justify-center gap-2 wide:hidden">
               {renderStats(false)}
             </div>
           </div>
@@ -288,19 +310,49 @@ export function MailScreen({
                   ‹ {c.inbox}
                 </button>
               </div>
-              <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
-                <div className="mx-auto w-full max-w-[50rem] px-4 py-4">
-                  <EmailBody
-                    mail={scenario}
-                    render={render}
-                    onLink={(el, e) => linkFlag && tapFlag(linkFlag, el, e)}
-                    onAttachment={(el, e) =>
-                      fileFlag && tapFlag(fileFlag, el, e)
-                    }
-                    solvedLink={!!linkFlag && solved.includes(linkFlag.target)}
-                    solvedFile={!!fileFlag && solved.includes(fileFlag.target)}
-                  />
+              <div className="relative min-h-0 flex-1">
+                <div
+                  ref={scrollRef}
+                  onScroll={checkScroll}
+                  className="no-scrollbar h-full overflow-y-auto overscroll-contain"
+                >
+                  <div className="mx-auto w-full max-w-[50rem] px-4 py-4 pb-16">
+                    <EmailBody
+                      mail={scenario}
+                      render={render}
+                      onLink={(el, e) => linkFlag && tapFlag(linkFlag, el, e)}
+                      onAttachment={(el, e) =>
+                        fileFlag && tapFlag(fileFlag, el, e)
+                      }
+                      solvedLink={!!linkFlag && solved.includes(linkFlag.target)}
+                      solvedFile={!!fileFlag && solved.includes(fileFlag.target)}
+                    />
+                  </div>
                 </div>
+
+                {/* 아래에 더 있음 — 끝까지 내려 보기 전에는 통통 튀는 화살표로 알려줍니다 */}
+                <AnimatePresence>
+                  {moreBelow && !card && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      data-role="scroll-hint"
+                      className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center bg-gradient-to-t from-white via-white/85 to-transparent pt-8 pb-3"
+                    >
+                      <motion.span
+                        animate={{ y: [0, 7, 0] }}
+                        transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+                        className="flex items-center gap-2 rounded-full bg-navy-deep px-4 py-2 text-[1rem] font-bold text-white shadow-[0_0.4rem_1.2rem_rgba(0,0,0,0.3)]"
+                      >
+                        <svg viewBox="0 0 24 24" className="h-[1.1rem] w-[1.1rem]" fill="none" stroke="currentColor" strokeWidth="2.6" aria-hidden="true">
+                          <path d="M12 4v15M5 12l7 7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        {t.scrollHint}
+                      </motion.span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           )}
@@ -359,7 +411,7 @@ export function MailScreen({
         </motion.section>
 
         {/* 가로 화면(노트북·가로 태블릿): 남은 시간을 메일 오른쪽에 크게 */}
-        <aside className="hidden w-[13.5rem] shrink-0 flex-col gap-3 wide:flex">
+        <aside className={`w-[13.5rem] shrink-0 flex-col gap-3 ${card ? "hidden" : "hidden wide:flex"}`}>
           {renderStats(true)}
         </aside>
         </div>
@@ -378,7 +430,7 @@ export function MailScreen({
     const small = big ? "text-[1.3rem]" : "text-[1rem]";
     return (
       <>
-        <Stat label={t.time} low={urgent} big={big}>
+        <Stat label={t.time} tone="time" low={urgent} big={big}>
           <b
             data-role="timer"
             className={`mt-0.5 font-display ${digits} leading-none font-bold tabular-nums ${
@@ -397,7 +449,7 @@ export function MailScreen({
           </span>
         </Stat>
 
-        <Stat label={t.progressLabel} big={big}>
+        <Stat label={t.progressLabel} tone="found" big={big}>
           <motion.b
             key={solved.length}
             initial={{ scale: solved.length ? 1.6 : 1 }}
@@ -421,7 +473,7 @@ export function MailScreen({
           </span>
         </Stat>
 
-        <Stat label={t.chances} big={big}>
+        <Stat label={t.chances} tone="chance" big={big}>
           <motion.b
             key={left}
             initial={{ scale: left < TOOLS ? 1.6 : 1 }}
@@ -542,13 +594,31 @@ function Rules({ total, onStart }: { total: number; onStart: () => void }) {
 }
 
 /** 머리글의 숫자 상자 한 칸 — 남은 시간 / 찾은 문구 / 남은 기회. 시간이 얼마 안 남으면 붉게 */
+/** 상자마다 색이 다릅니다 — 시간=하늘색, 찾은 문구=금색, 기회=보라. 같은 색이면 셋이 한 덩어리로 보여 눈에 안 띕니다 */
+const TONE: Record<"time" | "found" | "chance", { box: string; label: string }> = {
+  time: {
+    box: "border-[#2fa8ff]/80 bg-[#0d2c5e]/90 shadow-[0_0_1.2rem_rgba(47,168,255,0.3)]",
+    label: "text-[#9fe0ff]",
+  },
+  found: {
+    box: "border-gold/80 bg-[#3d2f06]/90 shadow-[0_0_1.2rem_rgba(254,202,54,0.3)]",
+    label: "text-gold",
+  },
+  chance: {
+    box: "border-[#b48cff]/80 bg-[#2b1b52]/90 shadow-[0_0_1.2rem_rgba(180,140,255,0.3)]",
+    label: "text-[#d9c7ff]",
+  },
+};
+
 function Stat({
   label,
+  tone,
   low = false,
   big = false,
   children,
 }: {
   label: string;
+  tone: keyof typeof TONE;
   low?: boolean;
   /** 가로 화면 오른쪽 세로 상자 — 여백·글자 크게 */
   big?: boolean;
@@ -556,15 +626,19 @@ function Stat({
 }) {
   return (
     <div
-      className={`flex min-w-0 flex-1 flex-col items-center justify-center rounded-xl border transition-colors ${
+      className={`flex min-w-0 flex-1 flex-col items-center justify-center rounded-xl border-2 transition-colors ${
         big ? "px-3 py-4" : "px-2 py-1.5"
       } ${
         low
-          ? "border-red-400/70 bg-red-500/15 shadow-[0_0_1.4rem_rgba(255,128,128,0.35)]"
-          : "border-[#2fa8ff]/40 bg-[#0b1631]/85"
+          ? "border-red-400/80 bg-red-500/20 shadow-[0_0_1.4rem_rgba(255,128,128,0.45)]"
+          : TONE[tone].box
       }`}
     >
-      <span className={`font-semibold tracking-wide text-white/55 ${big ? "text-[0.95rem]" : "text-[0.72rem]"}`}>
+      <span
+        className={`font-bold tracking-wide ${low ? "text-[#ffb4b4]" : TONE[tone].label} ${
+          big ? "text-[1rem]" : "text-[0.75rem]"
+        }`}
+      >
         {label}
       </span>
       {children}

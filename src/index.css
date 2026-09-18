@@ -173,14 +173,24 @@ button {
   100% { opacity: 0; transform: translate(-50%, -4rem) scale(0.9); }
 }
 
-/* 지금 할 일 제목 — 메일을 여는 순간 튀어나옵니다 */
+/* 지금 할 일 제목 — 메일을 여는 순간 두 번 튕기며 튀어나옵니다 */
 .headline-pop {
-  animation: headline-pop 0.65s cubic-bezier(0.2, 1.2, 0.3, 1) both;
+  animation: headline-pop 0.9s cubic-bezier(0.2, 1, 0.3, 1) both;
 }
 @keyframes headline-pop {
-  0% { opacity: 0; transform: scale(0.55); }
-  60% { opacity: 1; transform: scale(1.12); }
-  100% { opacity: 1; transform: scale(1); }
+  0% { opacity: 0; transform: scale(0.4) rotate(-3deg); }
+  45% { opacity: 1; transform: scale(1.18) rotate(1.5deg); }
+  65% { transform: scale(0.95) rotate(-0.5deg); }
+  82% { transform: scale(1.05) rotate(0deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+/* 제목 빛 — 푸른 빛이 숨 쉬듯 커졌다 작아집니다 */
+.headline-glow {
+  animation: headline-pop 0.9s cubic-bezier(0.2, 1, 0.3, 1) both, headline-glow 2.2s ease-in-out 0.9s infinite;
+}
+@keyframes headline-glow {
+  0%, 100% { text-shadow: 0 0 0.8rem rgba(47, 168, 255, 0.6), 0 0 0.2rem rgba(255, 255, 255, 0.3); }
+  50% { text-shadow: 0 0 1.8rem rgba(47, 168, 255, 1), 0 0 0.6rem rgba(255, 255, 255, 0.7); }
 }
 /* 찾을 개수 — 천천히 커졌다 작아지며 눈에 띄게 */
 .gold-pulse {
@@ -206,5 +216,5 @@ button {
   75% { transform: translateX(-0.08rem) rotate(0deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .headline-pop, .gold-pulse, .timer-shake { animation: none; }
+  .headline-pop, .headline-glow, .gold-pulse, .timer-shake { animation: none; }
 }
