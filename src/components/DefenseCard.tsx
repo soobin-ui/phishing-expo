@@ -82,11 +82,19 @@ export function DefenseCard({
   /** 메일 판은 카드와 같은 높이 — 카드 높이를 재서 맞춥니다(내용이 길어도 판이 커지지 않게) */
   const cardRef = useRef<HTMLDivElement>(null)
   const [cardH, setCardH] = useState(0)
+  /** 버튼 두 개는 카드(뒷면이면 카드+메일 판) 폭에 딱 맞춥니다 — 폭이 따로 놀면 동떨어져 보입니다 */
+  const rowRef = useRef<HTMLDivElement>(null)
+  const [rowW, setRowW] = useState(0)
   useLayoutEffect(() => {
-    const el = cardRef.current
-    if (!el) return
-    const ro = new ResizeObserver(() => setCardH(el.offsetHeight))
-    ro.observe(el)
+    const card = cardRef.current
+    const row = rowRef.current
+    if (!card || !row) return
+    const ro = new ResizeObserver(() => {
+      setCardH(card.offsetHeight)
+      setRowW(row.offsetWidth)
+    })
+    ro.observe(card)
+    ro.observe(row)
     return () => ro.disconnect()
   }, [])
 
@@ -153,10 +161,10 @@ export function DefenseCard({
           transition={{ type: 'spring', stiffness: 300, damping: 15 }}
           className="font-display text-[clamp(1.8rem,7vw,2.6rem)] leading-none font-bold text-white [text-shadow:0_0_1.4rem_rgba(47,168,255,0.95),0_0_0.4rem_rgba(255,255,255,0.7)]"
         >
-          {all ? t.caughtTitle : c.failTitle}
+          {t.caughtTitle}
         </motion.p>
         <p className="mt-1.5 text-[0.92rem] text-sky/75">
-          {all ? fill(c.caughtBody, { n: stats.total }) : c.failBody}
+          {fill(all ? c.caughtBody : c.failBody, { n: stats.total })}
         </p>
       </div>
 
@@ -167,13 +175,14 @@ export function DefenseCard({
           [다음]으로 2번·3번·4번으로 넘기면 빛나는 자리도 따라 움직입니다 — "아, 여기였구나"를 다시 보게.
           (mail 을 안 넘기는 주제 — 포렌식 — 는 카드만 가운데. 폰(<640px)은 자리가 없어 메일 판을 숨기고 카드만.) */}
       <div className="relative z-10 flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-3">
-        <div className="flex w-full max-w-[52rem] flex-col items-center gap-2.5">
-        <div className="flex w-full items-center justify-center gap-[3%]">
+        <div className="flex w-full flex-col items-center gap-3">
+        {/* 카드 (+ 메일 판) — 내용 폭만큼만(w-fit) 차지해서 아래 버튼 폭의 기준이 됩니다 */}
+        <div ref={rowRef} className="flex w-fit max-w-full items-center justify-center gap-4">
         <motion.div
           ref={cardRef}
           layout
           transition={{ type: 'spring', stiffness: 210, damping: 26 }}
-          className={`shrink-0 [perspective:1400px] ${flipped && mail ? 'w-[min(24rem,86vw,40vh)] sm:w-[min(20rem,44%,40vh)]' : 'w-[min(24rem,86vw,40vh)]'}`}
+          className={`shrink-0 [perspective:1400px] ${flipped && mail ? 'w-[min(24rem,86vw,40vh)] sm:w-[min(20rem,40vw,40vh)]' : 'w-[min(24rem,86vw,40vh)]'}`}
         >
         {shown && (
           <motion.div
@@ -333,7 +342,7 @@ export function DefenseCard({
             transition={{ type: 'spring', stiffness: 210, damping: 26, delay: 0.45 }}
             data-role="review-mail"
             style={{ height: cardH || undefined }}
-            className="flex min-h-0 w-full min-w-0 max-w-[32rem] flex-1 flex-col overflow-hidden rounded-xl border-2 border-[#2fa8ff]/70 bg-white text-[#1f2430] shadow-[0_0_1.6rem_rgba(47,168,255,0.4)] max-sm:hidden"
+            className="flex min-h-0 w-[min(30rem,48vw)] shrink-0 flex-col overflow-hidden rounded-xl border-2 border-[#2fa8ff]/70 bg-white text-[#1f2430] shadow-[0_0_1.6rem_rgba(47,168,255,0.4)] max-sm:hidden"
           >
             <div className="flex shrink-0 items-center gap-2 border-b border-[#eceff4] bg-[#f7f9fc] px-3 py-2 text-[0.9rem] font-bold text-[#2f55b8]">
               <span className="flex h-[1.5rem] w-[1.5rem] items-center justify-center rounded-full bg-[#e5484d] font-display text-[0.8rem] text-white tabular-nums">
@@ -359,12 +368,13 @@ export function DefenseCard({
         )}
         </div>
 
-        {/* 버튼 두 개 — 좌우로 나란히(위아래로 쌓으면 어색하다는 피드백). 아주 좁은 폰만 세로 */}
+        {/* 버튼 두 개 — 좌우로 나란히, 폭은 위 카드(+메일 판)와 똑같이. 아주 좁은 폰만 세로 */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: shown ? 1 : 0, y: shown ? 0 : 10 }}
           transition={{ delay: 1.5 }}
-          className="flex w-[min(32rem,92vw)] gap-2.5 max-[420px]:flex-col"
+          style={{ width: rowW || undefined }}
+          className="flex max-w-full gap-2.5 max-[420px]:flex-col"
         >
           <motion.button
             type="button"
