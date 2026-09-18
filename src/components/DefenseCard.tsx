@@ -154,7 +154,9 @@ export function DefenseCard({
     { label: t.card.block, sub: 'ANTI VIRUS', icon: <IconVirus />, n: clamp(1 + stats.blocked * 2) },
   ]
   const score = rows.reduce((sum, r) => sum + r.n, 0)
-  const rank = score >= 18 ? t.card.rankHigh : score >= 13 ? t.card.rankMid : t.card.rankLow
+  /** 등급은 둘뿐(2026-09-18 사용자 결정, 1~4번 공통): 다 찾았으면 '검거 완료 · 보안 실드 마스터', 못 찾았으면 '수사 완료 · 수습 수사관'. 별점은 그대로 기록에서 나옵니다 */
+  const rank = all ? t.card.rankHigh : t.card.rankLow
+  void score
 
   return (
     <motion.div
