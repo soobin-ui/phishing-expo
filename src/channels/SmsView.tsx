@@ -37,7 +37,7 @@ export function SmsView({ scenario, items, readIndex, render, compose, onPreview
         </span>
       </div>
 
-      <div ref={ref} className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div ref={ref} data-scroll="thread" className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto flex w-full max-w-[46rem] flex-col gap-2 px-3 py-3">
           <p className="self-center py-1 text-[0.78rem] text-[#8a8f99]">{day(today)}</p>
 

@@ -342,6 +342,7 @@ export function MailScreen({
               <div className="relative min-h-0 flex-1">
                 <div
                   ref={scrollRef}
+                  data-scroll="mail"
                   onScroll={checkScroll}
                   className="no-scrollbar h-full overflow-y-auto overscroll-contain"
                 >
@@ -883,7 +884,7 @@ function Inbox({
         </span>
       </div>
 
-      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
+      <div data-scroll="mail" className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-[44rem]">
           {mails.map((m) => (
             <motion.button

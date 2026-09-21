@@ -394,6 +394,7 @@ export function DefenseCard({
             </div>
             <div
               ref={reviewRef}
+              data-scroll="review"
               className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3"
               style={{ zoom: REVIEW_ZOOM }}
             >

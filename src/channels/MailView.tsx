@@ -29,7 +29,7 @@ export function MailView({
       <div className="flex shrink-0 items-center gap-4 border-b border-[#eceff4] px-4 py-3 text-[0.95rem] text-[#5f6b80]">
         <span>‹ {c.inbox}</span>
       </div>
-      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div data-scroll="mail" className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto w-full max-w-[50rem] px-4 py-4">
           <EmailBody mail={scenario} render={render} revealUrl />
         </div>

@@ -435,8 +435,14 @@ function FakePage({
         </div>
       </div>
 
-      <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="mx-auto w-full max-w-[30rem] px-5 py-5">
+      <div data-scroll="smish-page" className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        {/*
+          ★ 가로 화면은 좌우 두 칸(왼쪽 사진 카드 · 오른쪽 본인 확인)으로 나눠 한 화면에 끝냅니다(2026-09-21).
+            한 줄로 쌓으면 인증번호 칸이 나타나는 순간 맨 아래 [사진 보기] 버튼이 화면 밖으로 밀려,
+            밀어 내려야만 다음으로 갈 수 있었습니다. 세로 화면(휴대폰)은 예전처럼 한 줄로 쌓습니다.
+        */}
+        <div className="mx-auto w-full max-w-[30rem] px-5 py-5 wide:grid wide:min-h-full wide:max-w-[62rem] wide:grid-cols-2 wide:items-center wide:gap-[2.5rem] wide:px-8 wide:py-4">
+          <div>
           <p className="text-center text-[0.95rem] font-bold text-[#3478f6]">{p.site}</p>
 
           {/* 공유한 사람 + 잠긴 사진 3장 */}
@@ -462,9 +468,10 @@ function FakePage({
             </div>
             <p className="mt-3 text-center text-[0.98rem] leading-snug text-[#5f6b80]">{p.notice}</p>
           </div>
+          </div>
 
           {/* 본인 확인 */}
-          <div className="mt-4 flex flex-col gap-3">
+          <div className="mt-4 flex flex-col gap-3 wide:mt-0">
             <label className="block">
               <span className="mb-1.5 block text-[0.92rem] font-bold text-[#3a4250]">{p.name}</span>
               <input data-role="smish-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={12} placeholder={p.namePh} autoComplete="off" className={field} />

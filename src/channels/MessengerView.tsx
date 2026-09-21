@@ -31,7 +31,7 @@ export function MessengerView({ scenario, items, typing, render, compose }: Chan
         </span>
       </div>
 
-      <div ref={ref} className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
+      <div ref={ref} data-scroll="thread" className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto flex w-full max-w-[46rem] flex-col gap-1.5 px-3 pb-3">
           {/* 친구 아님 경고 */}
           {scenario.sender.notice && (

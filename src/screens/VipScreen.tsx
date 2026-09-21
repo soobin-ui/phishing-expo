@@ -178,7 +178,7 @@ export function VipScreen({
             </motion.div>
           )}
 
-          <div className={`no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain ${guided ? 'pointer-events-none select-none' : ''}`}>
+          <div data-scroll={stage === 'home' ? 'site-home' : 'site-form'} className={`no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain ${guided ? 'pointer-events-none select-none' : ''}`}>
             <SiteHeader />
             {stage === 'home' && <Home />}
             {stage === 'verify' && (

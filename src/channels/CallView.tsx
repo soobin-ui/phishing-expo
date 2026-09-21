@@ -36,7 +36,7 @@ export function CallView({ scenario, items, typing, render, compose, onHangUp }:
       </div>
 
       {/* 자막 */}
-      <div ref={ref} className="no-scrollbar min-h-0 w-full flex-1 overflow-y-auto overscroll-contain">
+      <div ref={ref} data-scroll="thread" className="no-scrollbar min-h-0 w-full flex-1 overflow-y-auto overscroll-contain">
         <div className="mx-auto flex min-h-full w-full max-w-[40rem] flex-col justify-end gap-3 px-5 py-3">
           {items.map((it, i) => {
             const now = live && i === lastThem && !typing

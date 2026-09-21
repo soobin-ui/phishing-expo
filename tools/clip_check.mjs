@@ -40,6 +40,19 @@ const DEVICES = [
   ['폰-390x844', 390, 844],
 ]
 
+/*
+  --devices=1280x800,1920x1080,...  처럼 주면 그 해상도들만 봅니다(가로 화면 전수 점검용).
+  tools/responsive_matrix.txt 에 노트북·태블릿 가로 해상도 목록이 있습니다.
+*/
+const custom = process.argv.find((a) => a.startsWith('--devices='))
+if (custom) {
+  DEVICES.length = 0
+  for (const wh of custom.split('=')[1].split(',')) {
+    const [w, h] = wh.split('x').map(Number)
+    DEVICES.push([wh, w, h])
+  }
+}
+
 /** 눌러서 앞으로 나아가는 자리 — 앞에 있을수록 먼저 */
 const ADVANCE = [
   'brief-start', 'rules-start', 'open-channel', 'unlock', 'move-popup', 'move-app',
