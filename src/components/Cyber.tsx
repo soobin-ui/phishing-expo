@@ -102,3 +102,32 @@ export function ChannelIcon({ channel, className }: { channel: string; className
   if (channel === 'web') return <WebIcon className={className} />
   return <SmsIcon className={className} />
 }
+
+/**
+ * 경광등(사이렌) — 마지막 화면 신고 띠 앞에 붙습니다.
+ * ★ 이모지(🚨)를 쓰지 않고 직접 그립니다 — 태블릿 기종에 따라 이모지가 네모로 깨집니다.
+ *   깜빡이지 않습니다(광과민성 배려).
+ */
+export function SirenIcon({ className = 'h-[2rem] w-[2rem]' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
+      {/* 빛줄기 */}
+      <g stroke="#ff6b6b" strokeWidth="3" strokeLinecap="round">
+        <path d="M24 2.5v5" />
+        <path d="M9.5 8.5l3.4 3.8" />
+        <path d="M38.5 8.5l-3.4 3.8" />
+        <path d="M3 20.5l4.8 1.3" />
+        <path d="M45 20.5l-4.8 1.3" />
+      </g>
+      {/* 붉은 등 */}
+      <path d="M12 35V25a12 12 0 0124 0v10z" fill="#e5343b" />
+      <path d="M15.5 25a8.5 8.5 0 015-7.7" fill="none" stroke="#ff9a9e" strokeWidth="2" strokeLinecap="round" />
+      {/* 느낌표 */}
+      <rect x="22.3" y="18.5" width="3.4" height="9.5" rx="1.7" fill="#fff" />
+      <circle cx="24" cy="31.3" r="1.9" fill="#fff" />
+      {/* 받침 */}
+      <rect x="7.5" y="35" width="33" height="7" rx="2.2" fill="#56627e" />
+      <rect x="7.5" y="35" width="33" height="2.2" rx="1.1" fill="#7c89a8" />
+    </svg>
+  )
+}

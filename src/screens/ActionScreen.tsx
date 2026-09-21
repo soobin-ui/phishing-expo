@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { TapButton } from '../components/Buttons'
 import { ScrollScreen } from '../components/Stage'
-import { BadgeIcon } from '../components/Cyber'
+import { BadgeIcon, SirenIcon } from '../components/Cyber'
 import { fill, ui } from '../lib/content'
 
 const AUTO_RESET = 30 // 초 — 마지막 화면에서 처음으로 돌아가는 시간(2026-09-18 40→30)
 
 /**
- * [4] 마지막 화면 — 실제로 당했을 때 무엇을 해야 하는지.
+ * [4] 마지막 화면 — 피싱 대응 3원칙(의심하고, 멈추고, 확인하세요) + 꼭 기억할 한 가지 + 신고 띠.
+ *     예전에는 신고 번호만 나열해서, 피해자가 아닌 대부분의 관람객이 들고 갈 것이 없었습니다(2026-09-21 개편).
  *
  * ★ 전화번호를 함부로 바꾸지 마세요. 공개 전시물에 틀린 번호를 띄우면 안 됩니다.
  *   112  경찰청 — 지급정지·신고
@@ -51,7 +52,7 @@ export function ActionScreen({
 
   return (
     <ScrollScreen className="justify-center">
-      <div className="mx-auto flex w-full max-w-[38rem] flex-col px-6 pt-[max(1.25rem,3dvh)] pb-5 wide:max-w-[76rem] wide:flex-row wide:items-center wide:gap-[5%] wide:px-[5%] wide:py-8">
+      <div className="mx-auto flex w-full max-w-[38rem] flex-col px-6 pt-4 pb-4 wide:max-w-[76rem] wide:flex-row wide:items-center wide:gap-[5%] wide:px-[5%] wide:py-8">
         {/* ── 왼쪽 칸(가로) / 위(세로): 결과 한 줄 + 제목 + (가로) 버튼 ── */}
         <motion.div
           initial="hidden"
@@ -97,14 +98,21 @@ export function ActionScreen({
             </span>
           </motion.p>
 
-          <motion.div variants={rise} className="mx-auto my-[min(1.5rem,2.5dvh)] h-px w-16 bg-white/20 wide:mx-0 wide:my-6" />
+          <motion.div variants={rise} className="mx-auto my-6 hidden h-px w-16 bg-white/20 wide:mx-0 wide:block" />
 
           <motion.h2
             variants={rise}
-            className="font-display text-[min(1.8rem,7vw)] leading-snug font-bold whitespace-pre-line text-white wide:text-[min(2.5rem,3.6vw)]"
+            className="mt-4 font-display text-[min(1.8rem,7vw)] leading-snug font-bold whitespace-pre-line text-white wide:mt-0 wide:text-[min(2.5rem,3.6vw)]"
           >
             {a.title}
           </motion.h2>
+          {/* 3원칙 한 줄 — 금융감독원·범금융권 캠페인 슬로건(의심하고, 끊고, 확인하고)을 이 체험에 맞춰 멈추고 로. 한 줄에 들어오게 제목보다 작게 */}
+          <motion.p
+            variants={rise}
+            className="mt-2 font-display text-[min(1.3rem,5.2vw)] leading-snug font-bold whitespace-nowrap text-gold [text-shadow:0_0_1rem_rgba(254,202,54,0.45)] wide:text-[min(1.7rem,2.5vw)]"
+          >
+            {a.titleSub}
+          </motion.p>
 
           <motion.div variants={rise} className="mt-8 hidden wide:block">
             <Again label={a.again} note={fill(a.autoReset, { n: left })} onReset={onReset} />
@@ -112,21 +120,26 @@ export function ActionScreen({
         </motion.div>
 
         {/* ── 오른쪽 칸(가로) / 아래(세로): 해야 할 일 4가지 ── */}
-        <div className="mt-[min(1.75rem,3dvh)] flex flex-col gap-2 wide:mt-0 wide:gap-2.5 wide:w-[min(34rem,52%)]">
+        <div className="mt-4 flex flex-col gap-1.5 wide:mt-0 wide:gap-2.5 wide:w-[min(34rem,52%)]">
           {a.steps.map((step, i) => (
             <motion.div
               key={step.n}
               initial={{ opacity: 0, x: -18 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.42, delay: 0.5 + i * 0.14 }}
-              className="flex items-start gap-4 rounded-xl bg-white/[0.06] px-4 py-3 wide:px-5 wide:py-3.5"
+              className="flex items-start gap-4 rounded-xl bg-white/[0.06] px-4 py-2.5 wide:px-5 wide:py-3.5"
             >
-              <span className="flex h-[2rem] w-[2rem] shrink-0 items-center justify-center rounded-full bg-gold font-display text-[1.05rem] font-bold text-navy-deep tabular-nums">
+              {/* 1·2·3 은 원칙 번호(금색 동그라미), '!' 는 꼭 기억할 한 가지(테두리만) */}
+              <span
+                className={`flex h-[2rem] w-[2rem] shrink-0 items-center justify-center rounded-full font-display text-[1.05rem] font-bold tabular-nums ${
+                  step.n === '!' ? 'border-2 border-gold text-gold' : 'bg-gold text-navy-deep'
+                }`}
+              >
                 {step.n}
               </span>
               <div className="min-w-0">
                 <p className="text-[1.2rem] leading-snug font-bold text-white">{step.title}</p>
-                <p className="mt-1 text-[0.98rem] leading-snug text-white/65">{step.desc}</p>
+                <p className="mt-0.5 text-[0.98rem] leading-snug text-white/65 wide:mt-1">{step.desc}</p>
               </div>
             </motion.div>
           ))}
@@ -135,9 +148,21 @@ export function ActionScreen({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 1.15 }}
-            className="mt-1 rounded-xl border border-white/20 px-4 py-3 text-[0.98rem] wide:px-5 wide:py-3.5 leading-snug text-white/70"
+            className="mt-1 rounded-xl border border-gold/50 bg-gold/[0.07] px-4 py-3 wide:px-5 wide:py-3.5"
           >
-            {a.app}
+            {/* 신고 띠 — 번호는 크게, 기관 이름은 작게. ★ 번호를 함부로 바꾸지 마세요 */}
+            <span className="flex items-center gap-2.5 text-[1rem] leading-snug font-bold text-white">
+              <SirenIcon className="h-[2.1rem] w-[2.1rem] shrink-0" />
+              {a.report.title}
+            </span>
+            <span className="mt-2 flex flex-wrap items-baseline gap-x-5 gap-y-1">
+              {a.report.lines.map((l) => (
+                <span key={l.num} className="inline-flex items-baseline gap-1.5 whitespace-nowrap">
+                  <b className="font-display text-[1.35rem] leading-none font-bold text-gold tabular-nums">{l.num}</b>
+                  <span className="text-[0.92rem] text-white/70">{l.org}</span>
+                </span>
+              ))}
+            </span>
           </motion.p>
         </div>
 
@@ -145,7 +170,7 @@ export function ActionScreen({
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 1.3 }}
-          className="mt-[min(1.75rem,3dvh)] shrink-0 wide:hidden"
+          className="mt-4 shrink-0 wide:hidden"
         >
           <Again label={a.again} note={fill(a.autoReset, { n: left })} onReset={onReset} />
         </motion.div>

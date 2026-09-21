@@ -167,7 +167,7 @@ const scan = (page) =>
       alive: root.children.length > 0,
       recover: !!document.querySelector('[data-role=error-recover]'),
       hOverflow: Math.max(0, document.documentElement.scrollWidth - W),
-      ended: text.includes('이것만 기억하세요') || text.includes('수사 종료'),
+      ended: text.includes('피싱 대응 3원칙') || text.includes('수사 종료'),
       intro: text.includes('피싱 전문') && text.includes('수사 시작하기'),
       sig: text.slice(0, 400),
     }
