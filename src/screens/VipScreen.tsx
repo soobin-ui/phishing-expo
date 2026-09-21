@@ -929,7 +929,14 @@ function Brief({ name, onStart }: { name: string; onStart: () => void }) {
           사건 브리핑
         </span>
         <h2 className="mt-3 font-display text-[min(1.6rem,6vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(47,168,255,0.6)]">
-          {fill(b.title, { name })}
+          {/* 참여자 이름(**굵게** 부분)은 2번 브리핑과 같은 금색으로 */}
+          {fill(b.title, { name }).split('**').map((part, k) =>
+            k % 2 ? (
+              <b key={k} className="font-bold whitespace-nowrap text-gold [text-shadow:0_0_1rem_rgba(254,202,54,0.55)]">{part}</b>
+            ) : (
+              <span key={k}>{part}</span>
+            ),
+          )}
         </h2>
         <ol className="mt-5 flex flex-col gap-2.5 text-left">
           {b.steps.map((step, i) => (
