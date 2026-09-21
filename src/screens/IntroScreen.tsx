@@ -101,7 +101,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
 /** 행사 알약 아래 — 안전체험관 | 온라인 피싱 체험존 (주제 고르기 화면과 같은 이름) */
 function ZoneTitle() {
   return (
-    <p className="mt-[min(0.7rem,1.2dvh)] flex items-center justify-center gap-[0.6em] font-display text-[min(1.45rem,5.6vw)] leading-none font-bold text-white wide:text-[1.6rem]">
+    <p className="mt-[clamp(0.7rem,calc(10.8dvh_-_3.36rem),1.6rem)] flex items-center justify-center gap-[0.6em] font-display text-[min(1.45rem,5.6vw)] leading-none font-bold text-white wide:text-[1.6rem]">
       <span className="text-gold">{ui.menu.title}</span>
       <span className="h-[0.9em] w-[2px] rounded-full bg-white/30" aria-hidden="true" />
       <span>{ui.menu.headline}</span>
