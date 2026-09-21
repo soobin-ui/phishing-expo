@@ -754,17 +754,42 @@ function Bubble({
    */
   const ref = useRef<HTMLDivElement>(null);
   const [shift, setShift] = useState(0);
+  /** 안전장치 — 말풍선 하나에서 자리 보정은 몇 번까지만(무한 반복 방지) */
+  const nudges = useRef(0);
+  /*
+   * ★★ 반드시 '밀기 전 원래 자리'를 기준으로 계산합니다(2026-09-21 행사 전 장애 수정).
+   *   예전에는 이미 밀어 넣은 자리를 다시 재서 "이제 안 삐져나왔네 → 0 으로 되돌림 → 또 삐져나옴 → 다시 밈"을
+   *   끝없이 반복했고, React 가 'Maximum update depth exceeded' 로 앱 전체를 내려 **빈 화면**이 됐습니다.
+   *   (링크 버튼·첨부파일이 화면 아래쪽에 걸쳐 있을 때만 생겨서 점검 때 놓쳤습니다)
+   *   - offsetTop/offsetHeight 로 잽니다 → 등장 연출(scale)에 영향받지 않음
+   *   - 지금 적용된 shift 를 빼서 원래 자리로 환산 → 몇 번을 다시 재도 같은 값(수렴)
+   */
   useLayoutEffect(() => {
-    const el = ref.current;
-    const host = el?.offsetParent as HTMLElement | null;
-    if (!el || !host) return;
-    const r = el.getBoundingClientRect();
-    const p = host.getBoundingClientRect();
-    let dy = 0;
-    if (r.bottom > p.bottom - 8) dy = p.bottom - 8 - r.bottom;
-    if (r.top + dy < p.top + 8) dy = p.top + 8 - r.top;
-    setShift((v) => (Math.abs(v - dy) < 1 ? v : dy));
-  });
+    const measure = () => {
+      const el = ref.current;
+      const host = el?.offsetParent as HTMLElement | null;
+      if (!el || !host) return;
+      const top = el.offsetTop - shift;
+      const height = el.offsetHeight;
+      const room = host.clientHeight;
+      let dy = 0;
+      if (top + height > room - 8) dy = room - 8 - (top + height);
+      if (top + dy < 8) dy = 8 - top;
+      dy = Math.round(dy);
+      if (Math.abs(shift - dy) < 1) return;
+      if (nudges.current >= 6) return;
+      nudges.current += 1;
+      setShift(dy);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+    // ★ 의존 목록을 꼭 둡니다 — 목록 없이 매번 재면 위와 같은 무한 반복의 빌미가 됩니다
+  }, [pop.x, pop.y, pop.below, pop.wrong, shift]);
+  /* 말풍선 내용이 바뀌면(다른 자리·틀린 답 안내) 보정 횟수를 다시 셉니다 */
+  useEffect(() => {
+    nudges.current = 0;
+  }, [pop.x, pop.y, pop.below, pop.wrong]);
   if (!probe) return null;
   const wrong = pop.wrong === null ? null : probe.options[pop.wrong];
 
@@ -776,7 +801,7 @@ function Bubble({
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.18 }}
       data-role="probe"
-      className="absolute z-40 w-[min(23rem,calc(100%-1.5rem))]"
+      className="no-scrollbar absolute z-40 max-h-[calc(100%-1rem)] w-[min(23rem,calc(100%-1.5rem))] overflow-y-auto overscroll-contain rounded-2xl shadow-[0_0.8rem_2rem_rgba(0,0,0,0.35)]"
       style={{
         left: `clamp(0.75rem, ${pop.x}px, calc(100% - min(23rem, 100% - 1.5rem) - 0.75rem))`,
         top: pop.below ? pop.y : undefined,
@@ -785,7 +810,7 @@ function Bubble({
         marginBottom: pop.below ? undefined : -shift,
       }}
     >
-      <div className="rounded-2xl bg-navy-deep p-4 text-white shadow-[0_0.8rem_2rem_rgba(0,0,0,0.35)]">
+      <div className="rounded-2xl bg-navy-deep p-4 text-white">
         <p className="flex items-start gap-2 text-[1.02rem] leading-snug font-bold">
           <span className="mt-0.5 shrink-0 rounded-md bg-gold px-1.5 py-0.5 text-[0.7rem] font-extrabold text-navy-deep">
             발견

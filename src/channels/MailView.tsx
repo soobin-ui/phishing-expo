@@ -164,6 +164,8 @@ function LinkButton({
   const [peek, setPeek] = useState(false)
   const timer = useRef<number | undefined>(undefined)
   const longPressed = useRef(false)
+  /** 꾹 누름을 이미 '누름'으로 처리했으면, 뒤따라오는 click 은 한 번 흘려보냅니다(두 번 처리 방지) */
+  const swallowClick = useRef(false)
 
   const start = () => {
     longPressed.current = false
@@ -194,12 +196,31 @@ function LinkButton({
         type="button"
         data-role="mail-link"
         onPointerDown={start}
-        onPointerUp={end}
+        onPointerUp={(e) => {
+          const wasLong = longPressed.current
+          end()
+          /*
+           * ★ 수사 모드(onLink 있음)에서는 꾹 눌렀다 떼도 '누른 것'으로 칩니다(2026-09-21).
+           *   행사장에서는 버튼을 천천히 꾹 누르는 분이 많은데, 예전에는 0.45초만 넘어도 주소만 잠깐 보이고
+           *   아무 일도 안 일어나서 "눌렀는데 다음 화면이 안 나온다"가 됐습니다.
+           *   터치 기기는 꾹 누르면 click 자체가 안 오기도 해서, 손을 뗀 이 자리에서 바로 처리합니다.
+           */
+          if (wasLong && onLink) {
+            longPressed.current = false
+            swallowClick.current = true
+            window.setTimeout(() => (swallowClick.current = false), 400)
+            onLink(e.currentTarget, e)
+          }
+        }}
         onPointerLeave={end}
         onPointerCancel={end}
         onContextMenu={(e) => e.preventDefault()}
         onClick={(e) => {
-          // 꾹 눌러 주소만 확인한 경우에는 누른 것으로 치지 않습니다
+          if (swallowClick.current) {
+            swallowClick.current = false
+            return
+          }
+          // (수사 모드가 아닐 때) 꾹 눌러 주소만 확인한 경우에는 누른 것으로 치지 않습니다
           if (longPressed.current) {
             longPressed.current = false
             return
