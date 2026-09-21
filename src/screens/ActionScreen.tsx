@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { TapButton } from '../components/Buttons'
 import { ScrollScreen } from '../components/Stage'
@@ -155,9 +155,22 @@ export function ActionScreen({
 }
 
 function Again({ label, note, onReset }: { label: string; note: string; onReset: () => void }) {
+  /*
+   * ★ 화면이 뜨고 1.5초 동안은 [처음으로]를 받지 않습니다(2026-09-21).
+   *   앞 화면의 [이렇게 예방하세요]를 '톡톡' 두 번 누르면, 두 번째 터치가 같은 자리에 뜬 이 버튼에 들어가
+   *   예방 수칙(112·1332·118)을 보지도 못하고 첫 화면으로 돌아가 버렸습니다.
+   */
+  const shownAt = useRef(Date.now())
   return (
     <>
-      <TapButton onClick={onReset}>{label}</TapButton>
+      <TapButton
+        onClick={() => {
+          if (Date.now() - shownAt.current < 1500) return
+          onReset()
+        }}
+      >
+        {label}
+      </TapButton>
       <p className="mt-2.5 text-center text-[0.9rem] text-white/35 tabular-nums wide:text-left">
         {note}
       </p>

@@ -699,15 +699,21 @@ function Board({ onWrong, onDone }: { onWrong: () => void; onDone: () => void })
   const [lines, setLines] = useState<Array<[number, number, number, number]>>([])
   const [closed, setClosed] = useState(false)
 
-  const center = (id: string): [number, number] => {
-    const b = wrapRef.current!.getBoundingClientRect()
-    const r = wrapRef.current!.querySelector(`#${id}`)!.getBoundingClientRect()
+  /** ★ 화면이 이미 넘어갔거나(시간 종료·자동 리셋) 자리를 못 찾으면 null — 늦게 도는 타이머가 오류를 내지 않게 */
+  const center = (id: string): [number, number] | null => {
+    const wrap = wrapRef.current
+    const el = wrap?.querySelector(`#${id}`)
+    if (!wrap || !el) return null
+    const b = wrap.getBoundingClientRect()
+    const r = el.getBoundingClientRect()
+    if (!b.width || !b.height) return null
     return [((r.left + r.width / 2 - b.left) / b.width) * 100, ((r.top + r.height / 2 - b.top) / b.height) * 100]
   }
   const link = (a: string, b: string) => {
-    const [x1, y1] = center(a)
-    const [x2, y2] = center(b)
-    setLines((l) => [...l, [x1, y1, x2, y2]])
+    const from = center(a)
+    const to = center(b)
+    if (!from || !to) return
+    setLines((l) => [...l, [from[0], from[1], to[0], to[1]]])
   }
 
   const pick = (k: number) => {

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Stage } from './components/Stage'
 import { TapButton } from './components/Buttons'
@@ -77,6 +77,20 @@ export default function App() {
   const sessionRef = useRef({ id: newSessionId(), startedAt: Date.now() })
   const savedRef = useRef(false)
 
+  /*
+   * ★ 화면이 바뀐 직후 0.4초 동안의 터치는 흘려보냅니다(2026-09-21).
+   *   버튼을 '톡톡' 두 번 누르는 분이 많은데, 두 번째 터치가 새 화면의 같은 자리 버튼에 들어가
+   *   화면 하나를 통째로 건너뛰는 일이 있었습니다(예: 첫 화면 → 사건 고르기에서 바로 사건이 골라짐).
+   */
+  const stepAt = useRef(0)
+  const prevStep = useRef(step)
+  useEffect(() => {
+    // 화면이 '실제로 바뀐' 때만 겁니다 — 페이지를 처음 연 순간에는 앞 화면의 두 번째 터치가 있을 수 없습니다
+    if (prevStep.current === step) return
+    prevStep.current = step
+    stepAt.current = Date.now()
+  }, [step])
+
   /** 고른 사건에 관람객 이름을 넣은 시나리오 */
   const scenario = useMemo(() => personalize(scenarioFor(situation), name), [situation, name])
 
@@ -148,6 +162,9 @@ export default function App() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.22 }}
         className="absolute inset-0"
+        onClickCapture={(e) => {
+          if (Date.now() - stepAt.current < 400) e.stopPropagation()
+        }}
       >
         {step === 'intro' && (
           <IntroScreen
