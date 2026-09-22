@@ -385,8 +385,8 @@ function Invitation({ name, onOpen }: { name: string; onOpen: () => void }) {
 
         {/* 콘서트 포스터 — 사용자 제공 이미지(날짜 줄은 잘라 내고 글자로) */}
         {/* 포스터는 높이 기준(화면 34%)으로 — 팝업이 스크롤 없이 한 화면에 들어오게 */}
-        {/* 이미지가 4:3 이라 상자를 정사각으로 — 3:4 면 양옆이 잘려 포스터 글귀가 조각나 보입니다 */}
-        <div className="mx-auto mt-3 aspect-square h-[min(34dvh,22rem)] overflow-hidden rounded-lg border border-[#d8b35a]/50 shadow-[0_0.4rem_1.4rem_rgba(0,0,0,0.6)]">
+        {/* 포스터(날짜 자리를 이미지에 이어 붙임) — 폭 기준, 팝업이 스크롤 없이 들어오도록 최대 폭 제한 */}
+        <div className="mx-auto mt-3 w-[min(70dvh,17rem)] max-w-full overflow-hidden rounded-lg border border-[#d8b35a]/50 shadow-[0_0.4rem_1.4rem_rgba(0,0,0,0.6)]">
           <ConcertPoster p={p} />
         </div>
         <p className="mt-2 inline-block rounded-full bg-[#e6c77a] px-3.5 py-0.5 font-display text-[1rem] font-bold text-[#2a1f08]">{p.ticketSeat}</p>
@@ -430,22 +430,19 @@ function Invitation({ name, onOpen }: { name: string; onOpen: () => void }) {
  * ★ 실제 가수 얼굴·투어 로고가 들어간 이미지입니다 — 사용자 결정(2026-09-22). 다른 곳에 재사용하지 마세요.
  */
 function ConcertPoster({ p }: { p: typeof vip.popup }) {
-  // 상자 전체를 사진 아랫줄 색으로 깔아, 사진과 날짜 사이 빈 자리도 같은 색으로 이어집니다
+  // 이미지 자체를 아래로 이어 붙여(각 열의 바닥색을 세로로 연장) 날짜 자리를 만들었습니다 —
+  // 별도 색 띠가 없어 이질감이 없습니다. 날짜·장소 글자만 그 이어진 자리에 얹습니다(2026-09-22).
   return (
-    <div className="relative flex aspect-square w-full flex-col overflow-hidden" style={{ background: 'linear-gradient(90deg, #3552ad 0%, #2548a5 15%, #1b3c8a 30%, #142c62 42%, #0f275f 50%, #1f3f80 57%, #2b4e9e 70%, #254eb0 85%, #2650af 100%)' }}>
-      <img src={vipPoster} alt="" className="block h-auto w-full shrink-0" draggable={false} />
-      {/* 일정·장소 — 남은 자리 가운데. 아래로 갈수록 살짝 어두워져 글자가 읽힙니다.
-          바탕 그라데이션 = 사진 아래 8px 를 9군데 샘플한 색(2026-09-22). 이미지를 바꾸면 이 색도 다시 뽑을 것. */}
-      <div
-        className="relative flex min-h-0 flex-1 flex-col justify-center px-2 pb-1 text-center"
-        style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(3,8,30,0.3) 100%)' }}
-      >
+    <div className="relative w-full overflow-hidden bg-[#0b1636]">
+      <img src={vipPoster} alt="" className="block w-full" draggable={false} />
+      <div className="absolute inset-x-0 bottom-0 px-2 pb-[3.5%] text-center">
         <p className="font-display text-[0.66rem] leading-tight font-bold tracking-[0.08em] whitespace-nowrap text-white">{p.ticketDates.join('  ')}</p>
         <p className="mt-0.5 text-[0.5rem] font-semibold tracking-[0.2em] text-white/80">{p.ticketVenue}</p>
       </div>
     </div>
   )
 }
+
 
 /** 단계 머리 — STEP n · 제목 */
 function StageHead({ step, title }: { step: string; title: string }) {
