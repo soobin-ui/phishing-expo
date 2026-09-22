@@ -639,7 +639,15 @@ function VerifyScene({ onDone }: { onDone: () => void }) {
         {shown > v.chat.length + 1 && (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 18 }} className="mt-4 text-center">
             <p className="font-display text-[min(1.7rem,6.4vw)] font-bold text-gold [text-shadow:0_0_1rem_rgba(254,202,54,0.5)]">{v.done}</p>
-            <p className="mt-1.5 text-[0.98rem] leading-snug text-white/75">{v.doneSub}</p>
+            {/* 대응법 — 번호가 매겨진 3줄(2026-09-22 사용자 지시 문구). 왼쪽 정렬로 읽기 쉽게 */}
+            <ul className="mx-auto mt-3 flex max-w-[27rem] flex-col gap-2 text-left">
+              {v.doneSteps.map((step, i) => (
+                <li key={i} className="flex items-start gap-2.5">
+                  <span className="mt-[0.15rem] flex h-[1.5rem] w-[1.5rem] shrink-0 items-center justify-center rounded-full bg-gold text-[0.85rem] font-bold text-navy-deep">{i + 1}</span>
+                  <span className="text-[0.98rem] leading-snug break-keep text-white/85">{step}</span>
+                </li>
+              ))}
+            </ul>
             <button type="button" data-role="smish-verify-next" onClick={onDone} className="mt-4 min-h-[3.4rem] w-full rounded-xl bg-gold px-4 font-display text-[1.2rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]">
               {v.next}
             </button>
