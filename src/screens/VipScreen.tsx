@@ -57,7 +57,8 @@ export function VipScreen({
   const [beat, setBeat] = useState(0)
   const [siteLeft, setSiteLeft] = useState(SITE_LIMIT)
   const [alerts, setAlerts] = useState(0)
-  const [falls, setFalls] = useState(0)
+  // falls(당한 횟수)는 더 이상 별점 계산에 쓰지 않지만, 흐름 제어용으로 카운트만 유지합니다.
+  const [, setFalls] = useState(0)
   const [gave, setGave] = useState<string[]>([])
   const timers = useRef<number[]>([])
   useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), [])
@@ -228,11 +229,13 @@ export function VipScreen({
         {phase === 'card' && (
           <DefenseCard
             stats={{
+              // 4번은 일부러 당해 보는 체험이라 실수 기록으로 별점을 깎지 않습니다 —
+              // 끝까지 되짚어 배웠으므로 네 항목 모두 별 5개 고정(2026-09-22 사용자 지시).
               found: flags.length,
               total: flags.length,
-              wrongs: falls * 2,
-              misses: gave.length,
-              blocked: falls > 0 ? 0 : 2,
+              wrongs: 0,
+              misses: 0,
+              blocked: 2,
             }}
             flags={flags}
             solved={flags.map((f) => f.target)}
