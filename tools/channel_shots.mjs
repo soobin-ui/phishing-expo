@@ -1,6 +1,6 @@
 /**
  * 주제별 받는 화면(메일·문자·전화) 캡처 + 넘침 검사 (개발용).
- *   rnd=메일(수사) · family=문자(동창 사칭 사진 스미싱, 브리핑 → 잠금화면에 자녀·남편 문자 알림) · agency=전화
+ *   rnd=메일(수사) · family=문자(청첩장 스미싱, 브리핑 → 잠금화면에 친구·광고 문자 알림) · agency=전화
  *
  *   node tools/channel_shots.mjs http://localhost:8899/
  *

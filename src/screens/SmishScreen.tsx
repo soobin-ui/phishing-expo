@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { ChannelView } from '../channels'
 import { DefenseCard } from '../components/DefenseCard'
 import type { Item } from '../channels'
-import { OldPhoto } from '../components/OldPhoto'
+import { WeddingCard } from '../components/WeddingCard'
 import sm from '../content/smish.json'
 import { splitByFlags } from '../lib/highlight'
 import { scrollToWithin } from '../lib/scroll'
@@ -12,7 +12,7 @@ import type { RedFlag, Scenario } from '../types'
 /**
  * [3번 스미싱] 선택형 체험 — 문자를 주고받지 않고, 받은 문자를 보고 **무엇을 할지 고릅니다**.
  *
- *   ① 사진 확인하기  → 가짜 '사진 공유' 본인확인 페이지(이름·전화번호 → 인증번호 → 사진 보기)
+ *   ① 청첩장 확인하기 → 가짜 '모바일 청첩장' 본인확인 페이지(이름·전화번호 → 인증번호 → 청첩장 보기)
  *                     → **피해 카드**(소액결제·대출·지인에게 같은 문자) → [다시 시도해 보세요] → 선택 화면으로
  *   ② 답장하기      → "지현이가 누구지?" → 범인이 질문은 얼버무리고 링크를 다시 누르게 함 → 다시 고르기
  *   ③ 누르지 않고 먼저 확인하기 → 동창회 단톡방에 물어봄 → 가짜로 드러남 → 번호 차단·신고 → 위험 차단
@@ -334,11 +334,11 @@ function formatPhone(raw: string): string {
 const isPhone = (v: string) => /^01[016789]\d{7,8}$/.test(v.replace(/\D/g, ''))
 
 /**
- * ① 가짜 '사진 공유' 본인확인 페이지.
+ * ① 가짜 '모바일 청첩장' 본인확인 페이지 (2026-09-22 청첩장 스미싱으로 교체 — 사진 앨범 → 청첩장).
  * ★ 진짜 본인확인처럼 **제대로 넣어야만** 넘어갑니다(2026-09-18 사용자 지시) —
  *   휴대전화 번호는 010-0000-0000 형식이어야 [인증번호 전송]이 되고,
  *   인증번호는 문자로 온 숫자(page.codeValue)와 똑같아야 인증됩니다. 틀리면 붉은 안내만 뜨고 그대로.
- * 이름·전화번호 → [인증번호 전송] → "전송했습니다" 팝업 → (가짜 인증 문자가 위에서 내려옴) → 인증번호 → [인증하기] → [본인 확인 후 사진 보기]
+ * 이름·전화번호 → [인증번호 전송] → "전송했습니다" 팝업 → (가짜 인증 문자가 위에서 내려옴) → 인증번호 → [인증하기] → [본인 확인 후 청첩장 보기]
  * ★ 입력값은 이 컴포넌트 안에서만 쓰고 버립니다.
  */
 function FakePage({
@@ -437,34 +437,30 @@ function FakePage({
 
       <div data-scroll="smish-page" className="no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {/*
-          ★ 가로 화면은 좌우 두 칸(왼쪽 사진 카드 · 오른쪽 본인 확인)으로 나눠 한 화면에 끝냅니다(2026-09-21).
-            한 줄로 쌓으면 인증번호 칸이 나타나는 순간 맨 아래 [사진 보기] 버튼이 화면 밖으로 밀려,
+          ★ 가로 화면은 좌우 두 칸(왼쪽 청첩장 카드 · 오른쪽 본인 확인)으로 나눠 한 화면에 끝냅니다(2026-09-21).
+            한 줄로 쌓으면 인증번호 칸이 나타나는 순간 맨 아래 [청첩장 보기] 버튼이 화면 밖으로 밀려,
             밀어 내려야만 다음으로 갈 수 있었습니다. 세로 화면(휴대폰)은 예전처럼 한 줄로 쌓습니다.
         */}
         <div className="mx-auto w-full max-w-[30rem] px-5 py-5 wide:grid wide:min-h-full wide:max-w-[62rem] wide:grid-cols-2 wide:items-center wide:gap-[2.5rem] wide:px-8 wide:py-4">
           <div>
           <p className="text-center text-[0.95rem] font-bold text-[#3478f6]">{p.site}</p>
 
-          {/* 공유한 사람 + 잠긴 사진 3장 */}
+          {/* 잠긴 청첩장 한 장 — 본인 확인 전에는 흐리게, 열람하면 또렷하게 */}
           <div className="mt-3 rounded-2xl bg-white p-4 shadow-[0_0.2rem_0.8rem_rgba(20,30,60,0.08)]">
             <div className="flex items-center gap-3">
-              <span className="flex h-[2.8rem] w-[2.8rem] shrink-0 items-center justify-center rounded-full bg-[#e3ebff] text-[1.1rem] font-bold text-[#2f55b8]">김</span>
+              <span className="flex h-[2.8rem] w-[2.8rem] shrink-0 items-center justify-center rounded-full bg-[#fbeee6] text-[1.3rem]" aria-hidden="true">💌</span>
               <p className="text-[1.08rem] leading-snug font-bold">{p.shared}</p>
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2">
-              {([0, 1, 2] as const).map((v) => (
-                <div key={v} className="relative aspect-square overflow-hidden rounded-xl">
-                  <OldPhoto variant={v} className={`h-full w-full ${loading ? '' : 'scale-110 blur-[7px]'} transition-[filter] duration-700`} />
-                  {!loading && (
-                    <span className="absolute inset-0 flex items-center justify-center bg-black/15 text-white">
-                      <svg viewBox="0 0 24 24" className="h-[1.6rem] w-[1.6rem]" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
-                        <rect x="5" y="11" width="14" height="9" rx="2" />
-                        <path d="M8 11V8a4 4 0 018 0v3" />
-                      </svg>
-                    </span>
-                  )}
-                </div>
-              ))}
+            <div className="relative mt-3 aspect-[4/3] overflow-hidden rounded-xl">
+              <WeddingCard className={`h-full w-full ${loading ? '' : 'scale-110 blur-[7px]'} transition-[filter] duration-700`} />
+              {!loading && (
+                <span className="absolute inset-0 flex items-center justify-center bg-black/15 text-white">
+                  <svg viewBox="0 0 24 24" className="h-[2rem] w-[2rem]" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden="true">
+                    <rect x="5" y="11" width="14" height="9" rx="2" />
+                    <path d="M8 11V8a4 4 0 018 0v3" />
+                  </svg>
+                </span>
+              )}
             </div>
             <p className="mt-3 text-center text-[0.98rem] leading-snug text-[#5f6b80]">{p.notice}</p>
           </div>

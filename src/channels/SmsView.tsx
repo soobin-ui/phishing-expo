@@ -2,6 +2,7 @@ import { Fragment } from 'react'
 import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { OldPhoto } from '../components/OldPhoto'
+import { WeddingCard } from '../components/WeddingCard'
 import { ui } from '../lib/content'
 import { Hint, clock, day, pop, sendOnEnter, useStickBottom } from './shared'
 import type { ChannelProps } from './shared'
@@ -87,14 +88,18 @@ export function SmsView({ scenario, items, readIndex, render, compose, onPreview
                   )}
                 </div>
 
-                {/* 사진 썸네일이 붙은 링크 미리보기 — 아이폰 문자처럼 말풍선 아래 따로. 주소(도메인)는 찾기 화면에서 누를 수 있습니다 */}
+                {/* 썸네일(청첩장·사진)이 붙은 링크 미리보기 — 아이폰 문자처럼 말풍선 아래 따로. 주소(도메인)는 찾기 화면에서 누를 수 있습니다 */}
                 {turn?.preview?.thumb && (
                   <div
                     data-role="sms-preview"
                     onClick={onPreview}
                     className={`mt-1.5 flex w-[min(82%,24rem)] items-center gap-3 rounded-[1.1rem] bg-[#eef0f3] p-2.5 ${onPreview ? 'cursor-pointer active:bg-[#e2e5ea]' : ''}`}
                   >
-                    <OldPhoto variant={0} className="h-[4.6rem] w-[4.6rem] shrink-0 rounded-lg" />
+                    {turn.preview.thumb === 'wedding' ? (
+                      <WeddingCard className="h-[4.6rem] w-[4.6rem] shrink-0 rounded-lg" />
+                    ) : (
+                      <OldPhoto variant={0} className="h-[4.6rem] w-[4.6rem] shrink-0 rounded-lg" />
+                    )}
                     <span className="min-w-0 flex-1">
                       <span className="block text-[1.02rem] leading-tight font-bold">{turn.preview.title}</span>
                       <span className="mt-0.5 block text-[0.88rem] text-[#8a8f99]">{turn.preview.site}</span>

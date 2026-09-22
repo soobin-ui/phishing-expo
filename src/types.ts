@@ -56,7 +56,7 @@ export interface ScenarioTurn {
   /** 문자 첨부파일 카드 (sms) */
   attachment?: { name: string; meta: string }
   /** 링크 미리보기 카드 (sms) */
-  preview?: { site: string; title: string; domain: string; /** 'school' 이면 사진 썸네일이 붙은 가로 카드(아이폰 문자 모양) */ thumb?: string }
+  preview?: { site: string; title: string; domain: string; /** 'wedding'(청첩장)·'school'(옛날 사진) 이면 썸네일이 붙은 가로 카드(아이폰 문자 모양) */ thumb?: string }
   /** 입력창 위에 뜨는 안내 — 관람객이 직접 답장을 타이핑합니다 */
   hint: string
   /** 내가 쓴 답의 성격에 따라 상대가 바로 받아치는 한 줄 */
