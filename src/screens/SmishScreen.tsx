@@ -232,7 +232,7 @@ function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void })
       <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#ff6b6b]/60 bg-[#1f0a10]/95 px-[clamp(1.1rem,4vw,1.7rem)] py-[clamp(1.1rem,3dvh,1.7rem)] text-white shadow-[0_0_2.4rem_rgba(255,107,107,0.35)]">
         <div className="text-center">
           <span className="inline-block rounded-md bg-[#ff6b6b] px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-[#2a0509]">{d.tag}</span>
-          <h2 className="mt-[clamp(0.5rem,1.5dvh,0.75rem)] font-display text-[min(1.4rem,5.4vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(255,107,107,0.6)]">{d.title}</h2>
+          <h2 className="mt-[clamp(0.4rem,1.2dvh,0.7rem)] font-display text-[clamp(1.1rem,2.9dvh,1.4rem)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(255,107,107,0.6)]">{d.title}</h2>
         </div>
 
         {/* 그 뒤 내 휴대폰에 온 알림들 */}
@@ -625,23 +625,23 @@ function VerifyScene({ onDone }: { onDone: () => void }) {
         {/* 내용은 스크롤, [다음] 버튼은 아래 고정 푸터로 빼서 화면이 짧아도 늘 보이게(2026-09-22) */}
         <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
         <div className="text-center">
-          <span className="inline-block rounded-md bg-gold px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-navy-deep">{v.tag}</span>
-          <h2 className="mt-[clamp(0.5rem,1.5dvh,0.75rem)] font-display text-[min(1.4rem,5.4vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(47,168,255,0.6)]">{v.title}</h2>
+          <span className="inline-block rounded-md bg-gold px-2.5 py-[clamp(0.2rem,0.7dvh,0.25rem)] font-display text-[clamp(0.78rem,2dvh,0.85rem)] leading-none font-bold text-navy-deep">{v.tag}</span>
+          <h2 className="mt-[clamp(0.4rem,1.2dvh,0.7rem)] font-display text-[clamp(1.1rem,2.9dvh,1.4rem)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(47,168,255,0.6)]">{v.title}</h2>
         </div>
 
         {/* 단톡방 */}
-        <div className="mt-[clamp(0.6rem,1.8dvh,1rem)] rounded-xl bg-[#b2c7d9] p-3 text-[#1f2430]">
-          <p className="mb-2 text-center text-[0.8rem] font-bold text-[#47607a]">{v.room}</p>
-          <div className="flex min-h-[clamp(6.5rem,14dvh,9rem)] flex-col gap-2">
+        <div className="mt-[clamp(0.5rem,1.4dvh,0.9rem)] rounded-xl bg-[#b2c7d9] p-[clamp(0.5rem,1.4dvh,0.75rem)] text-[#1f2430]">
+          <p className="mb-[clamp(0.3rem,0.9dvh,0.5rem)] text-center text-[clamp(0.72rem,1.9dvh,0.8rem)] font-bold text-[#47607a]">{v.room}</p>
+          <div className="flex flex-col gap-[clamp(0.35rem,1dvh,0.5rem)]">
             {v.chat.slice(0, shown).map((m, i) =>
               'me' in m && m.me ? (
-                <motion.p key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-[82%] self-end rounded-xl rounded-br-sm bg-[#fee500] px-3 py-2 text-[0.98rem] leading-snug">
+                <motion.p key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-[82%] self-end rounded-xl rounded-br-sm bg-[#fee500] px-3 py-[clamp(0.35rem,1dvh,0.5rem)] text-[clamp(0.85rem,2.2dvh,0.98rem)] leading-snug">
                   {m.text}
                 </motion.p>
               ) : (
                 <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-[82%] self-start">
-                  <p className="mb-0.5 ml-1 text-[0.78rem] font-bold text-[#47607a]">{'who' in m ? m.who : ''}</p>
-                  <p className="rounded-xl rounded-bl-sm bg-white px-3 py-2 text-[0.98rem] leading-snug">{m.text}</p>
+                  <p className="mb-[0.1rem] ml-1 text-[clamp(0.7rem,1.8dvh,0.78rem)] font-bold text-[#47607a]">{'who' in m ? m.who : ''}</p>
+                  <p className="rounded-xl rounded-bl-sm bg-white px-3 py-[clamp(0.35rem,1dvh,0.5rem)] text-[clamp(0.85rem,2.2dvh,0.98rem)] leading-snug">{m.text}</p>
                 </motion.div>
               ),
             )}
@@ -650,9 +650,9 @@ function VerifyScene({ onDone }: { onDone: () => void }) {
 
         {/* 조치 */}
         {shown > v.chat.length && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-[clamp(0.5rem,1.5dvh,0.75rem)] flex flex-wrap justify-center gap-2">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-[clamp(0.4rem,1.2dvh,0.7rem)] flex flex-wrap justify-center gap-2">
             {v.actions.map((a) => (
-              <span key={a} className="inline-flex items-center gap-1.5 rounded-full border border-[#2fa8ff]/60 bg-[#050a18] px-3 py-1.5 text-[0.95rem] font-bold text-[#9fe0ff]">
+              <span key={a} className="inline-flex items-center gap-1.5 rounded-full border border-[#2fa8ff]/60 bg-[#050a18] px-3 py-[clamp(0.3rem,0.9dvh,0.4rem)] text-[clamp(0.85rem,2.1dvh,0.95rem)] font-bold text-[#9fe0ff]">
                 <svg viewBox="0 0 24 24" className="h-[1rem] w-[1rem]" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
                   <path d="M5 12.5l4.5 4.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -664,14 +664,14 @@ function VerifyScene({ onDone }: { onDone: () => void }) {
 
         {/* 완료 */}
         {shown > v.chat.length + 1 && (
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 18 }} className="mt-[clamp(0.6rem,1.8dvh,1rem)] text-center">
-            <p className="font-display text-[min(1.7rem,6.4vw)] font-bold text-gold [text-shadow:0_0_1rem_rgba(254,202,54,0.5)]">{v.done}</p>
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 18 }} className="mt-[clamp(0.45rem,1.3dvh,0.8rem)] text-center">
+            <p className="font-display text-[clamp(1.3rem,3.6dvh,1.7rem)] font-bold text-gold [text-shadow:0_0_1rem_rgba(254,202,54,0.5)]">{v.done}</p>
             {/* 대응법 — 번호가 매겨진 3줄(2026-09-22 사용자 지시 문구). 왼쪽 정렬로 읽기 쉽게 */}
-            <ul className="mx-auto mt-[clamp(0.6rem,1.6dvh,0.85rem)] flex max-w-[27rem] flex-col gap-[clamp(0.4rem,1.2dvh,0.6rem)] text-left">
+            <ul className="mx-auto mt-[clamp(0.45rem,1.3dvh,0.75rem)] flex max-w-[27rem] flex-col gap-[clamp(0.3rem,0.9dvh,0.55rem)] text-left">
               {v.doneSteps.map((step, i) => (
                 <li key={i} className="flex items-start gap-2.5">
-                  <span className="mt-[0.15rem] flex h-[1.5rem] w-[1.5rem] shrink-0 items-center justify-center rounded-full bg-gold text-[0.85rem] font-bold text-navy-deep">{i + 1}</span>
-                  <span className="text-[0.98rem] leading-snug break-keep text-white/85">{step}</span>
+                  <span className="mt-[0.1rem] flex h-[clamp(1.3rem,3.2dvh,1.5rem)] w-[clamp(1.3rem,3.2dvh,1.5rem)] shrink-0 items-center justify-center rounded-full bg-gold text-[0.82rem] font-bold text-navy-deep">{i + 1}</span>
+                  <span className="text-[clamp(0.85rem,2.2dvh,0.98rem)] leading-snug break-keep text-white/85">{step}</span>
                 </li>
               ))}
             </ul>
