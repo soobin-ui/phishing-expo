@@ -132,8 +132,9 @@ async function run(topic, [label, w, h, mobile]) {
     await shot('2-page')
     await page.type('[data-role="smish-code"]', '482913')
     await page.click('[data-role="smish-verify-code"]')
-    await wait(400)
-    await page.click('[data-role="smish-view"]')
+    await wait(500)
+    // 인증하기 직후 뜨는 '본인 확인 완료' 팝업 안의 [청첩장 보기]로 진행(2026-09-22)
+    await page.click('[data-role="smish-verified-view"]')
     await wait(6500)
     await shot('3-damage') // 피해 카드 → 다시 시도 → 먼저 확인 → 검거 카드
     await page.click('[data-role="smish-retry"]')

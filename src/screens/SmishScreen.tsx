@@ -232,7 +232,7 @@ function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void })
       <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#ff6b6b]/60 bg-[#1f0a10]/95 px-[clamp(1.1rem,4vw,1.7rem)] py-[clamp(1.1rem,3dvh,1.7rem)] text-white shadow-[0_0_2.4rem_rgba(255,107,107,0.35)]">
         <div className="text-center">
           <span className="inline-block rounded-md bg-[#ff6b6b] px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-[#2a0509]">{d.tag}</span>
-          <h2 className="mt-3 font-display text-[min(1.45rem,5.6vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(255,107,107,0.6)]">{d.title}</h2>
+          <h2 className="mt-[clamp(0.5rem,1.5dvh,0.75rem)] font-display text-[min(1.4rem,5.4vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(255,107,107,0.6)]">{d.title}</h2>
         </div>
 
         {/* 그 뒤 내 휴대폰에 온 알림들 */}
@@ -358,6 +358,8 @@ function FakePage({
   const [sent, setSent] = useState(false)
   const [banner, setBanner] = useState(false)
   const [verified, setVerified] = useState(false)
+  // 인증 성공 즉시 뜨는 "본인확인 완료" 팝업 — [청첩장 보기]가 그 안에 있습니다(2026-09-22 사용자 지시)
+  const [okPopup, setOkPopup] = useState(false)
   const [loading, setLoading] = useState(false)
   const [phoneErr, setPhoneErr] = useState(false)
   const [codeErr, setCodeErr] = useState(false)
@@ -400,6 +402,7 @@ function FakePage({
     }
     onGive(-45, p.gaveCode)
     setVerified(true)
+    setOkPopup(true)
   }
   const view = () => {
     if (!verified || loading) return
@@ -573,6 +576,28 @@ function FakePage({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 인증하기 직후 뜨는 "본인 확인 완료" 팝업 — 여기서 [청첩장 보기]를 누르면 유출(피해)로 이어집니다 */}
+      <AnimatePresence>
+        {okPopup && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 z-50 flex items-center justify-center bg-black/45 px-6">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} role="alertdialog" data-role="smish-verified-popup" className="w-full max-w-[22rem] rounded-2xl bg-white p-5 text-center shadow-xl">
+              <span className="mx-auto mb-3 flex h-[3.2rem] w-[3.2rem] items-center justify-center rounded-full bg-[#e6f2ea]">
+                <svg viewBox="0 0 24 24" className="h-[1.8rem] w-[1.8rem]" fill="none" stroke="#1fa971" strokeWidth="2.6" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </span>
+              <p className="text-[1.15rem] leading-snug font-bold text-[#1f2430]">{p.verifiedPopup}</p>
+              <button
+                type="button"
+                data-role="smish-verified-view"
+                onClick={() => { setOkPopup(false); view() }}
+                className="mt-4 min-h-[3.2rem] w-full rounded-xl bg-[#1f2a44] text-[1.05rem] font-bold text-white active:bg-[#151d31]"
+              >
+                {p.view}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   )
 }
@@ -596,16 +621,16 @@ function VerifyScene({ onDone }: { onDone: () => void }) {
       data-role="smish-verify-scene"
       className="absolute inset-0 z-40 flex items-center justify-center bg-[#050a18]/92 px-4 py-4 backdrop-blur-sm"
     >
-      <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#2fa8ff]/60 bg-[#0b1631]/95 px-[clamp(1.1rem,4vw,1.7rem)] py-[clamp(1.1rem,3dvh,1.7rem)] text-white shadow-[0_0_2.4rem_rgba(47,168,255,0.35)]">
+      <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#2fa8ff]/60 bg-[#0b1631]/95 px-[clamp(1.1rem,4vw,1.7rem)] py-[clamp(0.9rem,2.4dvh,1.6rem)] text-white shadow-[0_0_2.4rem_rgba(47,168,255,0.35)]">
         <div className="text-center">
           <span className="inline-block rounded-md bg-gold px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-navy-deep">{v.tag}</span>
-          <h2 className="mt-3 font-display text-[min(1.45rem,5.6vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(47,168,255,0.6)]">{v.title}</h2>
+          <h2 className="mt-[clamp(0.5rem,1.5dvh,0.75rem)] font-display text-[min(1.4rem,5.4vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(47,168,255,0.6)]">{v.title}</h2>
         </div>
 
         {/* 단톡방 */}
-        <div className="mt-4 rounded-xl bg-[#b2c7d9] p-3 text-[#1f2430]">
+        <div className="mt-[clamp(0.6rem,1.8dvh,1rem)] rounded-xl bg-[#b2c7d9] p-3 text-[#1f2430]">
           <p className="mb-2 text-center text-[0.8rem] font-bold text-[#47607a]">{v.room}</p>
-          <div className="flex min-h-[9rem] flex-col gap-2">
+          <div className="flex min-h-[clamp(6.5rem,14dvh,9rem)] flex-col gap-2">
             {v.chat.slice(0, shown).map((m, i) =>
               'me' in m && m.me ? (
                 <motion.p key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="max-w-[82%] self-end rounded-xl rounded-br-sm bg-[#fee500] px-3 py-2 text-[0.98rem] leading-snug">
@@ -623,7 +648,7 @@ function VerifyScene({ onDone }: { onDone: () => void }) {
 
         {/* 조치 */}
         {shown > v.chat.length && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-3 flex flex-wrap justify-center gap-2">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-[clamp(0.5rem,1.5dvh,0.75rem)] flex flex-wrap justify-center gap-2">
             {v.actions.map((a) => (
               <span key={a} className="inline-flex items-center gap-1.5 rounded-full border border-[#2fa8ff]/60 bg-[#050a18] px-3 py-1.5 text-[0.95rem] font-bold text-[#9fe0ff]">
                 <svg viewBox="0 0 24 24" className="h-[1rem] w-[1rem]" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden="true">
@@ -637,10 +662,10 @@ function VerifyScene({ onDone }: { onDone: () => void }) {
 
         {/* 완료 */}
         {shown > v.chat.length + 1 && (
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 18 }} className="mt-4 text-center">
+          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 260, damping: 18 }} className="mt-[clamp(0.6rem,1.8dvh,1rem)] text-center">
             <p className="font-display text-[min(1.7rem,6.4vw)] font-bold text-gold [text-shadow:0_0_1rem_rgba(254,202,54,0.5)]">{v.done}</p>
             {/* 대응법 — 번호가 매겨진 3줄(2026-09-22 사용자 지시 문구). 왼쪽 정렬로 읽기 쉽게 */}
-            <ul className="mx-auto mt-3 flex max-w-[27rem] flex-col gap-2 text-left">
+            <ul className="mx-auto mt-[clamp(0.6rem,1.6dvh,0.85rem)] flex max-w-[27rem] flex-col gap-[clamp(0.4rem,1.2dvh,0.6rem)] text-left">
               {v.doneSteps.map((step, i) => (
                 <li key={i} className="flex items-start gap-2.5">
                   <span className="mt-[0.15rem] flex h-[1.5rem] w-[1.5rem] shrink-0 items-center justify-center rounded-full bg-gold text-[0.85rem] font-bold text-navy-deep">{i + 1}</span>
@@ -648,7 +673,7 @@ function VerifyScene({ onDone }: { onDone: () => void }) {
                 </li>
               ))}
             </ul>
-            <button type="button" data-role="smish-verify-next" onClick={onDone} className="mt-4 min-h-[3.4rem] w-full rounded-xl bg-gold px-4 font-display text-[1.2rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]">
+            <button type="button" data-role="smish-verify-next" onClick={onDone} className="mt-[clamp(0.7rem,2dvh,1rem)] min-h-[clamp(3rem,6.5dvh,3.4rem)] w-full rounded-xl bg-gold px-4 font-display text-[1.2rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]">
               {v.next}
             </button>
           </motion.div>
