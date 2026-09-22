@@ -430,13 +430,18 @@ function Invitation({ name, onOpen }: { name: string; onOpen: () => void }) {
  * ★ 실제 가수 얼굴·투어 로고가 들어간 이미지입니다 — 사용자 결정(2026-09-22). 다른 곳에 재사용하지 마세요.
  */
 function ConcertPoster({ p }: { p: typeof vip.popup }) {
+  // 상자 전체를 사진 아랫줄 색으로 깔아, 사진과 날짜 사이 빈 자리도 같은 색으로 이어집니다
   return (
-    <div className="relative flex aspect-square w-full flex-col overflow-hidden bg-[#0b1636]">
-      <img src={vipPoster} alt="" className="block w-full min-h-0 flex-1 object-contain object-top" draggable={false} />
-      {/* 일정·장소 띠 — 사진과 같은 남색 계열로 이어지게 */}
-      <div className="shrink-0 bg-gradient-to-b from-[#12245c] to-[#060c1f] px-2 pb-2 pt-1.5 text-center">
+    <div className="relative flex aspect-square w-full flex-col overflow-hidden" style={{ background: 'linear-gradient(90deg, #3552ad 0%, #2548a5 15%, #1b3c8a 30%, #142c62 42%, #0f275f 50%, #1f3f80 57%, #2b4e9e 70%, #254eb0 85%, #2650af 100%)' }}>
+      <img src={vipPoster} alt="" className="block h-auto w-full shrink-0" draggable={false} />
+      {/* 일정·장소 — 남은 자리 가운데. 아래로 갈수록 살짝 어두워져 글자가 읽힙니다.
+          바탕 그라데이션 = 사진 아래 8px 를 9군데 샘플한 색(2026-09-22). 이미지를 바꾸면 이 색도 다시 뽑을 것. */}
+      <div
+        className="relative flex min-h-0 flex-1 flex-col justify-center px-2 pb-1 text-center"
+        style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(3,8,30,0.3) 100%)' }}
+      >
         <p className="font-display text-[0.66rem] leading-tight font-bold tracking-[0.08em] whitespace-nowrap text-white">{p.ticketDates.join('  ')}</p>
-        <p className="mt-0.5 text-[0.5rem] font-semibold tracking-[0.2em] text-white/70">{p.ticketVenue}</p>
+        <p className="mt-0.5 text-[0.5rem] font-semibold tracking-[0.2em] text-white/80">{p.ticketVenue}</p>
       </div>
     </div>
   )
