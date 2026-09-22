@@ -621,7 +621,9 @@ function VerifyScene({ onDone }: { onDone: () => void }) {
       data-role="smish-verify-scene"
       className="absolute inset-0 z-40 flex items-center justify-center bg-[#050a18]/92 px-4 py-4 backdrop-blur-sm"
     >
-      <div className="no-scrollbar max-h-full w-full max-w-[32rem] overflow-y-auto rounded-2xl border border-[#2fa8ff]/60 bg-[#0b1631]/95 px-[clamp(1.1rem,4vw,1.7rem)] py-[clamp(0.9rem,2.4dvh,1.6rem)] text-white shadow-[0_0_2.4rem_rgba(47,168,255,0.35)]">
+      <div className="flex max-h-full w-full max-w-[32rem] flex-col rounded-2xl border border-[#2fa8ff]/60 bg-[#0b1631]/95 px-[clamp(1.1rem,4vw,1.7rem)] pt-[clamp(0.9rem,2.4dvh,1.6rem)] pb-[clamp(0.8rem,2dvh,1.3rem)] text-white shadow-[0_0_2.4rem_rgba(47,168,255,0.35)]">
+        {/* 내용은 스크롤, [다음] 버튼은 아래 고정 푸터로 빼서 화면이 짧아도 늘 보이게(2026-09-22) */}
+        <div className="no-scrollbar min-h-0 flex-1 overflow-y-auto">
         <div className="text-center">
           <span className="inline-block rounded-md bg-gold px-2.5 py-1 font-display text-[0.85rem] leading-none font-bold text-navy-deep">{v.tag}</span>
           <h2 className="mt-[clamp(0.5rem,1.5dvh,0.75rem)] font-display text-[min(1.4rem,5.4vw)] leading-snug font-bold whitespace-pre-line [text-shadow:0_0_1rem_rgba(47,168,255,0.6)]">{v.title}</h2>
@@ -673,10 +675,22 @@ function VerifyScene({ onDone }: { onDone: () => void }) {
                 </li>
               ))}
             </ul>
-            <button type="button" data-role="smish-verify-next" onClick={onDone} className="mt-[clamp(0.7rem,2dvh,1rem)] min-h-[clamp(3rem,6.5dvh,3.4rem)] w-full rounded-xl bg-gold px-4 font-display text-[1.2rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]">
-              {v.next}
-            </button>
           </motion.div>
+        )}
+        </div>
+
+        {/* 고정 푸터 — [다음]. 스크롤 영역 밖이라 화면 높이와 상관없이 항상 보입니다 */}
+        {shown > v.chat.length + 1 && (
+          <motion.button
+            type="button"
+            data-role="smish-verify-next"
+            onClick={onDone}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-[clamp(0.6rem,1.6dvh,0.9rem)] min-h-[clamp(3rem,6.5dvh,3.4rem)] w-full shrink-0 rounded-xl bg-gold px-4 font-display text-[1.2rem] font-bold text-navy-deep shadow-[0_0.3rem_0_var(--color-gold-deep)] active:translate-y-[0.15rem] active:shadow-[0_0.15rem_0_var(--color-gold-deep)]"
+          >
+            {v.next}
+          </motion.button>
         )}
       </div>
     </motion.div>
