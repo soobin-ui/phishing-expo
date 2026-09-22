@@ -110,12 +110,15 @@ export default function App() {
     setStep('intro')
   }, [])
 
-  // 채팅 중에는 타이핑하느라 화면을 안 건드릴 수 있어 자동 리셋을 걸지 않습니다
+  // 글자를 쳐서 답하는 대화(chat, mode≠choice)는 타이핑하느라 화면을 안 건드릴 수 있어 자동 리셋을 걸지 않습니다
   // (이름 입력은 키 입력도 활동으로 치므로 그대로 둡니다)
+  // ★ 3번 스미싱(chat, mode=choice)은 선택지만 누르므로 자동 리셋을 겁니다(2026-09-22) —
+  //   답장을 고르다 자리를 뜨면 다음 관람객이 남의 화면을 이어받았습니다.
   // ★ 수사 화면(arrive)은 제한 시간이 2분이라, 메일을 읽느라 60초 손을 안 대도 리셋되면 안 됩니다
   //   → 150초. 버려진 태블릿은 2분 종료 → 카드가 뜬 뒤 그래도 손을 안 대면 처음으로.
   const idleRemaining = useIdleTimer({
-    enabled: step !== 'intro' && step !== 'admin' && step !== 'action' && step !== 'chat',
+    enabled:
+      step !== 'intro' && step !== 'admin' && step !== 'action' && (step !== 'chat' || scenario.mode === 'choice'),
     idleMs: step === 'arrive' ? 150_000 : 60_000,
     onReset: reset,
   })
