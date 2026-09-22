@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { DefenseCard } from '../components/DefenseCard'
 import { fill } from '../lib/content'
+import vipPoster from '../assets/vip-poster.webp'
 import vip from '../content/vip.json'
 import type { RedFlag, Scenario } from '../types'
 
@@ -19,7 +20,7 @@ import type { RedFlag, Scenario } from '../types'
  *   ★ '공식 고객센터 먼저 확인' 선택지·닫기 ✕ 는 삭제 — 무조건 끝까지 체험하도록.
  *
  * ★ 본인확인·결제 입력칸은 관람객이 직접 칩니다(체험용이라 아무 숫자나). 화면 상태로만 있다가 사라지며 저장·전송하지 않습니다.
- * ★ KTT · 스페셜 T 는 지어낸 이름입니다(실존 통신사 금지). 콘서트만 사용자 지시로 임영웅 IM HERO THE STADIUM 2 를 씀.
+ * ★ KTT · 스페셜 T 는 지어낸 이름입니다(실존 통신사 금지). 콘서트만 사용자 지시로 임영웅 IM HERO THE STADIUM 2 를 씀(포스터 이미지도 2026-09-22 사용자 제공).
  *   ★ 실제 포스터의 사진·로고는 복제하지 않고, 무대 조명 + 얼굴이 보이지 않는 일반 실루엣 + 공연명 글자로 새로 그림.
  * ★ 이모지 금지 — 아이콘·빵빠레 모두 SVG/도형.
  */
@@ -382,9 +383,10 @@ function Invitation({ name, onOpen }: { name: string; onOpen: () => void }) {
         <p className="mt-2.5 font-display text-[1.2rem] leading-snug font-bold">{fill(p.hello, { name })}</p>
         <p className="mt-1 text-[0.92rem] leading-snug text-white/80">{p.selected}</p>
 
-        {/* 콘서트 포스터 — 오리지널 그래픽(실제 포스터 사진·로고 미사용) */}
+        {/* 콘서트 포스터 — 사용자 제공 이미지(날짜 줄은 잘라 내고 글자로) */}
         {/* 포스터는 높이 기준(화면 34%)으로 — 팝업이 스크롤 없이 한 화면에 들어오게 */}
-        <div className="mx-auto mt-3 aspect-[3/4] h-[min(34dvh,22rem)] overflow-hidden rounded-lg border border-[#d8b35a]/50 shadow-[0_0.4rem_1.4rem_rgba(0,0,0,0.6)]">
+        {/* 이미지가 4:3 이라 상자를 정사각으로 — 3:4 면 양옆이 잘려 포스터 글귀가 조각나 보입니다 */}
+        <div className="mx-auto mt-3 aspect-square h-[min(34dvh,22rem)] overflow-hidden rounded-lg border border-[#d8b35a]/50 shadow-[0_0.4rem_1.4rem_rgba(0,0,0,0.6)]">
           <ConcertPoster p={p} />
         </div>
         <p className="mt-2 inline-block rounded-full bg-[#e6c77a] px-3.5 py-0.5 font-display text-[1rem] font-bold text-[#2a1f08]">{p.ticketSeat}</p>
@@ -422,56 +424,18 @@ function Invitation({ name, onOpen }: { name: string; onOpen: () => void }) {
 }
 
 /**
- * 콘서트 포스터 — 전부 오리지널 그래픽입니다.
- * ★ 실제 공연 포스터의 사진·로고·디자인을 복제하지 않습니다. 무대 조명과 얼굴이 보이지 않는(역광)
- *   일반 가수 실루엣을 직접 그리고, 공연명은 큰 글자로만 얹습니다. IM HERO 를 가장 크게.
+ * 콘서트 포스터 — 사용자 제공 이미지(2026-09-22, src/assets/vip-poster.webp).
+ * ★ 원본 이미지 아래쪽 날짜 줄(2026.09.04~06)은 잘라 냈고, 사진 자체는 손대지 않았습니다.
+ *   날짜·장소는 vip.json 의 ticketDates·ticketVenue 글자를 사진 밑 띠에 얹습니다(크리스마스로 변경).
+ * ★ 실제 가수 얼굴·투어 로고가 들어간 이미지입니다 — 사용자 결정(2026-09-22). 다른 곳에 재사용하지 마세요.
  */
 function ConcertPoster({ p }: { p: typeof vip.popup }) {
   return (
-    <div className="relative aspect-[3/4] w-full overflow-hidden bg-[radial-gradient(90%_60%_at_50%_28%,#6d93d6_0%,#2a4a8c_38%,#0b1636_78%)]">
-      {/* 무대 조명 빔(머리 뒤가 가장 밝아 얼굴이 역광으로 안 보이게) */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute left-1/2 top-[6%] h-[70%] w-[38%] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,rgba(220,235,255,0.85),transparent)] blur-[2px]" />
-        <div className="absolute left-1/2 -top-8 h-[120%] w-14 -translate-x-1/2 rotate-[15deg] bg-[linear-gradient(180deg,rgba(255,255,255,0.4),transparent)] blur-md" />
-        <div className="absolute left-1/2 -top-8 h-[120%] w-10 -translate-x-1/2 -rotate-[17deg] bg-[linear-gradient(180deg,rgba(255,255,255,0.3),transparent)] blur-md" />
-      </div>
-
-      {/* 얼굴이 보이지 않는 역광 실루엣(오리지널) — 마이크 스탠드 앞에 선 가수, 사람 비율로 */}
-      <svg viewBox="0 0 200 300" className="absolute inset-x-0 bottom-0 mx-auto h-[86%]" aria-hidden="true">
-        <g fill="#050a1c">
-          {/* 머리(머리카락 결) */}
-          <path d="M86 44c-3-14 6-27 20-27 13 0 22 10 21 24 1 3 1 7-1 10 2 6-1 13-6 16-3 6-9 9-15 9s-12-3-15-9c-5-3-8-10-6-16-1-3-1-5 2-7z" />
-          <path d="M84 30c4-10 14-16 24-15 8 1 14 6 17 13-8-3-16-2-22 1-6-2-13-1-19 1z" />
-          {/* 목 */}
-          <rect x="97" y="72" width="14" height="14" />
-          {/* 상의(반팔 티) 몸통 */}
-          <path d="M72 96c6-8 16-13 32-13s26 5 32 13l6 60c0 4-3 7-7 7H73c-4 0-7-3-7-7z" />
-          {/* 마이크 스탠드를 잡은 오른팔(위로) */}
-          <path d="M130 100c9 2 16 8 20 18l7 26c1 6-6 9-9 3l-9-22-9-7z" />
-          <path d="M137 88c4-2 9 0 11 4l6 14-9 5-8-16c-2-3-2-5 0-7z" />
-          {/* 주머니에 넣은 왼팔 */}
-          <path d="M74 100c-7 4-11 11-13 20l-4 30c-1 6 6 8 8 2l6-24 8-8z" />
-          {/* 바지·다리 */}
-          <path d="M70 160h70l-6 118c0 4-3 6-7 6h-12c-4 0-6-3-6-7l-3-72-5 72c0 4-3 7-7 7H82c-4 0-7-3-7-6z" />
-          {/* 마이크 스탠드 + 빈티지 마이크 */}
-          <rect x="148" y="70" width="4" height="220" rx="2" />
-          <ellipse cx="150" cy="290" rx="18" ry="4" />
-          <rect x="141" y="58" width="18" height="24" rx="8" />
-          <path d="M141 66h18v3h-18zM141 72h18v3h-18z" fill="#1c2a55" />
-        </g>
-      </svg>
-      {/* 아티스트명(작게, 위) */}
-      <p className="absolute inset-x-0 top-[7%] text-center font-display text-[0.72rem] font-bold tracking-[0.42em] text-white/95">{p.ticketArtist}</p>
-
-      {/* IM HERO — 가장 크게 */}
-      <p className="absolute inset-x-0 top-[15%] text-center font-display text-[clamp(1.6rem,5.2dvh,2.5rem)] leading-none font-black tracking-tight text-white [text-shadow:0_0_0.9rem_rgba(150,190,255,0.95)]">
-        {p.ticketTour}
-      </p>
-
-      {/* THE STADIUM 2 + 일정/장소(아래) */}
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#060c1f] via-[#060c1f]/80 to-transparent px-2 pb-2.5 pt-6 text-center">
-        <p className="font-display text-[1.15rem] leading-none font-black tracking-tight text-white">{p.ticketTitle}</p>
-        <p className="mt-1.5 text-[0.5rem] font-semibold leading-tight text-white/85">{p.ticketDates.join('  ')}</p>
+    <div className="relative flex aspect-square w-full flex-col overflow-hidden bg-[#0b1636]">
+      <img src={vipPoster} alt="" className="block w-full min-h-0 flex-1 object-contain object-top" draggable={false} />
+      {/* 일정·장소 띠 — 사진과 같은 남색 계열로 이어지게 */}
+      <div className="shrink-0 bg-gradient-to-b from-[#12245c] to-[#060c1f] px-2 pb-2 pt-1.5 text-center">
+        <p className="font-display text-[0.66rem] leading-tight font-bold tracking-[0.08em] whitespace-nowrap text-white">{p.ticketDates.join('  ')}</p>
         <p className="mt-0.5 text-[0.5rem] font-semibold tracking-[0.2em] text-white/70">{p.ticketVenue}</p>
       </div>
     </div>
