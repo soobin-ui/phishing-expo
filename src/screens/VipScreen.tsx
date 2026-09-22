@@ -798,7 +798,7 @@ function DamageScene({ gave, onRetry }: { gave: string[]; onRetry: () => void })
                 </div>
               </div>
             )}
-            <p className="mt-2.5 text-center text-[0.9rem] leading-snug text-white/80">{d.lesson}</p>
+            <p className="mt-2.5 text-center text-[0.9rem] leading-snug whitespace-pre-line text-white/80">{d.lesson}</p>
             <button
               type="button"
               data-role="vip-retry"
