@@ -75,8 +75,10 @@ for (const [dev0, w, h, kb] of DEVICES) {
   /** 끝까지 밀었을 때 버튼이 키보드 위로 올라오는가 */
   const button = async (screen, role) => {
     checks += 1
-    const r = await page.evaluate((role) => { const e = document.querySelector(`[data-role="${role}"]`); const box = e.closest('[data-scroll], [data-scroll-screen]'); box.scrollTop = box.scrollHeight; const q = e.getBoundingClientRect(); return { top: Math.round(q.top), bottom: Math.round(q.bottom) } }, role)
-    if (!(r.top >= 0 && r.bottom <= seen)) fails.push(`${dev} ${screen} [${role}]: 끝까지 밀어도 버튼이 키보드에 가림 (${r.top}~${r.bottom}px, 보이는 높이 ${seen}px)`)
+    const r = await page.evaluate((role) => { const e = document.querySelector(`[data-role="${role}"]`); const box = e.closest('[data-scroll], [data-scroll-screen]'); box.scrollTop = box.scrollHeight; const q = e.getBoundingClientRect(); const typing = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName); return { top: Math.round(q.top), bottom: Math.round(q.bottom), typing } }, role)
+    // 마지막 칸을 다 채우면 키보드가 내려갑니다 — 그때는 화면 전체가 보이는 높이입니다
+    const seenNow = r.typing ? seen : h
+    if (!(r.top >= 0 && r.bottom <= seenNow)) fails.push(`${dev} ${screen} [${role}]: 끝까지 밀어도 버튼이 키보드에 가림 (${r.top}~${r.bottom}px, 보이는 높이 ${seen}px)`)
     await page.screenshot({ path: join(OUT, `${dev}-${screen}.png`), captureBeyondViewport: false })
   }
   /** 키보드 내림 → 원래대로 */
