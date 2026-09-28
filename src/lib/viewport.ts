@@ -10,6 +10,13 @@
  *  - 소프트 키보드가 올라와 높이가 뚝 떨어질 때는 줄이지 않습니다
  *    (입력창 하나 때문에 배치가 무너지면 더 이상하니까 — 키보드가 그 위를 덮게 둡니다).
  *
+ * ── 1-2. 키보드가 입력칸을 가리는 문제 (`--kb-h`, 2026-09-28 현장 피드백)
+ *  - 위처럼 키보드가 화면을 덮게 두었더니, 화면 아래쪽 입력칸(4번 본인확인·결제, 3번 본인 확인)이
+ *    키보드 뒤에 숨었습니다. 입력 화면은 한 화면에 딱 맞게 짜여 있어 밀어 볼 여지도 없었습니다.
+ *  - 그래서 키보드 높이를 `--kb-h` 에 넣어 주고, 입력칸이 있는 스크롤 상자는 그만큼 아래 여백을 둡니다
+ *    (index.css). → 손으로 밀어 볼 수 있고, 누른 입력칸은 키보드 위로 저절로 올라옵니다(revealFocused).
+ *  - ★ element.scrollIntoView() 는 쓰지 않습니다 — 바깥 무대까지 밀어 올립니다(lib/scroll.ts 참고).
+ *
  * ── 2. 전체화면이 자꾸 풀리는 문제 (`requestKiosk`)
  *  - 안드로이드 태블릿: **소프트 키보드가 올라오면 크롬이 전체화면을 스스로 풉니다.**
  *    (수사관 이름을 적을 때 풀리는 게 이것입니다) 가장자리를 쓸어 상태표시줄을 부르거나,
@@ -50,14 +57,39 @@ export function installKiosk() {
   /** 키보드가 올라오기 전, 이 기기의 '꽉 찬' 보이는 높이 */
   let full = 0
 
+  /** 지금 누른 입력칸을 키보드 위 보이는 자리로 — 그 칸이 든 스크롤 상자만 움직입니다 */
+  const revealFocused = () => {
+    const el = document.activeElement
+    if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return
+    const box = el.closest<HTMLElement>('[data-scroll], [data-scroll-screen]')
+    if (!box) return
+    const seen = vv?.height ?? window.innerHeight
+    const top = Math.max(vv?.offsetTop ?? 0, box.getBoundingClientRect().top)
+    const bottom = (vv?.offsetTop ?? 0) + seen
+    const r = el.getBoundingClientRect()
+    // 이미 잘 보이면 건드리지 않습니다(위로는 이름표 한 줄, 아래로는 여유 조금)
+    if (r.top - 36 >= top && r.bottom + 20 <= bottom) return
+    // 보이는 자리의 위에서 1/3 쯤에 오도록
+    const want = top + (bottom - top) * 0.33
+    box.scrollTo({ top: Math.max(0, box.scrollTop + (r.top - want)), behavior: 'smooth' })
+  }
+
   const measure = () => {
     const h = vv?.height ?? window.innerHeight
     if (h > full * 0.75) full = Math.max(full, h)
     const keyboard = full > 0 && h < full * 0.75
-    document.documentElement.style.setProperty('--app-h', `${Math.round(keyboard ? full : h)}px`)
+    const root = document.documentElement
+    root.style.setProperty('--app-h', `${Math.round(keyboard ? full : h)}px`)
+    // 키보드가 가린 높이 — 입력칸이 있는 스크롤 상자가 이만큼 아래 여백을 둡니다
+    root.style.setProperty('--kb-h', `${keyboard ? Math.max(0, Math.round(full - h)) : 0}px`)
+    if (keyboard) window.setTimeout(revealFocused, 60)
   }
 
   measure()
+  // 입력칸을 누르면(키보드가 이미 떠 있어도) 그 칸이 보이게 — 키보드가 올라오는 동안 몇 번 더 맞춥니다
+  document.addEventListener('focusin', () => {
+    ;[80, 300, 600].forEach((ms) => window.setTimeout(revealFocused, ms))
+  })
   vv?.addEventListener('resize', measure)
   window.addEventListener('resize', measure)
   window.addEventListener('orientationchange', () => {

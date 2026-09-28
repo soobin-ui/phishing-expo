@@ -373,3 +373,18 @@ button[aria-hidden='true'] {
     animation: none;
   }
 }
+
+
+/*
+  ★ 키보드가 입력칸을 가리지 않게 (2026-09-28).
+    lib/viewport 가 키보드 높이를 --kb-h 에 넣어 줍니다(키보드가 없으면 0 → 평소 배치는 그대로).
+    입력칸이 있는 스크롤 상자는 그만큼 아래 여백을 둬서, 손으로 밀어 올릴 수 있고
+    누른 입력칸과 그 아래 버튼까지 키보드 위로 올라옵니다.
+      site-form   4번 본인확인·좌석·결제      smish-page  3번 본인 확인
+      data-scroll-screen  이름 입력 화면 등 한 화면짜리 틀
+*/
+[data-scroll='site-form'],
+[data-scroll='smish-page'],
+[data-scroll-screen] {
+  padding-bottom: var(--kb-h, 0px);
+}
