@@ -266,7 +266,8 @@
       "flipFront": "카드 앞면 보기",
       "nextTrick": "다음",
       "missed": "이번에는 찾지 못한 수법입니다. 꼭 기억해 두세요",
-      "reviewTitle": "방금 받은 그 메일 · {n}번 수법은 여기"
+      "reviewTitle": "방금 받은 그 메일 · {n}번 수법은 여기",
+      "seeAll": "[다음]을 눌러 수법 {total}가지를 모두 확인하세요 ({seen}/{total})"
     },
     "rules": {
       "tag": "사건 브리핑",

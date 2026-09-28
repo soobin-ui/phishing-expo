@@ -87,7 +87,11 @@ export function DefenseCard({
     if (flipped) setSeen((v) => (v.includes(trick) ? v : [...v, trick]))
   }, [flipped, trick])
   const allSeen = seen.length >= flags.length
-  /** 뒷면을 한 번이라도 봤는지 — 보기 전에는 [이렇게 예방하세요]를 숨겨 뒷면부터 보게 합니다(2026-09-19, 1~4번 공통) */
+  /**
+   * ★ [이렇게 예방하세요]는 수법을 **전부 본 뒤에만** 나타납니다(2026-09-28, 1~4번 공통 · 사용자 결정).
+   *   예전에는 뒷면을 한 번만 봐도 나타나서, 관람객이 [다음]을 누르지 않고 바로 넘어가 버렸습니다.
+   *   그 전까지는 그 자리에 '[다음]을 눌러 모두 확인하세요 (n/4)' 안내를 둡니다.
+   */
   const backSeen = seen.length > 0
   const flag = flags[Math.min(trick, flags.length - 1)]
   const reviewRef = useRef<HTMLDivElement>(null)
@@ -366,9 +370,12 @@ export function DefenseCard({
                     data-blink={allSeen ? undefined : 'on'}
                     onClick={() => setTrick((v) => (v + 1) % flags.length)}
                     // 아직 안 본 수법이 남아 있으면 반짝 — 다 보면 꺼지고 [이렇게 예방하세요]가 반짝입니다
-                    className={`${allSeen ? '' : 'trick-blink '}rounded-full bg-[#2fa8ff] px-[1.1em] py-[0.4em] font-display text-[0.75em] font-bold text-[#050a18] active:bg-[#1d8ede]`}
+                    className={`${allSeen ? '' : 'trick-blink '}flex shrink-0 items-center gap-[0.35em] rounded-full bg-[#2fa8ff] px-[1.5em] py-[0.6em] font-display text-[1em] leading-none font-bold text-[#050a18] active:bg-[#1d8ede]`}
                   >
                     {t.card.nextTrick}
+                    <svg viewBox="0 0 24 24" className="h-[1em] w-[1em]" fill="none" stroke="currentColor" strokeWidth="3.2" aria-hidden="true">
+                      <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -452,7 +459,15 @@ export function DefenseCard({
             <Flip />
             {flipped ? t.card.flipFront : t.card.flipBack}
           </motion.button>
-          {backSeen && (
+          {backSeen && !allSeen && (
+            <p
+              data-role="card-gate"
+              className="flex min-w-0 flex-1 items-center justify-center rounded-xl border-2 border-dashed border-white/25 px-3 py-2 text-center text-[clamp(0.85rem,2.1dvh,1rem)] leading-snug font-semibold text-white/75"
+            >
+              {fill(t.card.seeAll, { seen: seen.length, total: flags.length })}
+            </p>
+          )}
+          {allSeen && (
             <motion.button
               type="button"
               initial={{ opacity: 0, scale: 0.94 }}

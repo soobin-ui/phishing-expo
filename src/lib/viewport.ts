@@ -34,6 +34,16 @@ export function requestKiosk() {
   enter()
 }
 
+/** 이 기기가 전체화면을 지원하는지 (아이패드 사파리는 지원하지 않습니다 — '홈 화면에 추가'로 띄워야 합니다) */
+export function canFullscreen(): boolean {
+  return typeof document !== 'undefined' && !!document.documentElement.requestFullscreen
+}
+
+/** 지금 전체화면인지 */
+export function isFullscreen(): boolean {
+  return typeof document !== 'undefined' && !!document.fullscreenElement
+}
+
 /** 앱이 뜰 때 한 번 — 보이는 높이 재기 + 전체화면 되돌리기 */
 export function installKiosk() {
   const vv = window.visualViewport

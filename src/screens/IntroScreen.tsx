@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import mascot from '../assets/mascot.webp'
@@ -5,6 +6,7 @@ import mascot2 from '../assets/mascot2.webp'
 import { EventPill, TapButton } from '../components/Buttons'
 import { ScrollScreen } from '../components/Stage'
 import { ui } from '../lib/content'
+import { canFullscreen, isFullscreen, requestKiosk } from '../lib/viewport'
 import { CautionTape, CyberBackdrop, Magnifier, MailIcon, PhoneIcon, SmsIcon } from '../components/Cyber'
 
 const rise = {
@@ -37,6 +39,7 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
   return (
     <div className="relative h-full w-full bg-[#050a18]">
       <CyberBackdrop />
+      <FullscreenButton />
 
       <ScrollScreen className="relative z-10">
         <motion.div
@@ -95,6 +98,37 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
 
       <CautionTape text={t.tape} />
     </div>
+  )
+}
+
+/**
+ * [전체화면] 버튼 — 전체화면이 풀려 있을 때만 첫 화면 왼쪽 위에 작게 보입니다(운영자용 · 2026-09-28).
+ *
+ * 전체화면은 [수사 시작하기]를 누를 때 자동으로 들어가고, 풀려도 다음 터치에 스스로 돌아옵니다.
+ * 다만 새로고침 직후처럼 아직 아무도 누르지 않았을 때 운영자가 바로 맞출 수 있게 버튼을 둡니다.
+ * - 전체화면이면 숨습니다(관람객 화면을 가리지 않게).
+ * - 아이패드 사파리처럼 전체화면을 지원하지 않는 기기에서는 아예 나오지 않습니다.
+ */
+function FullscreenButton() {
+  const [on, setOn] = useState(() => isFullscreen())
+  useEffect(() => {
+    const sync = () => setOn(isFullscreen())
+    document.addEventListener('fullscreenchange', sync)
+    return () => document.removeEventListener('fullscreenchange', sync)
+  }, [])
+  if (!canFullscreen() || on) return null
+  return (
+    <button
+      type="button"
+      data-role="go-fullscreen"
+      onClick={requestKiosk}
+      className="absolute top-3 left-3 z-30 flex items-center gap-1.5 rounded-full border border-white/25 bg-white/[0.08] px-3 py-1.5 text-[0.85rem] font-semibold text-white/70 active:bg-white/20"
+    >
+      <svg viewBox="0 0 24 24" className="h-[1rem] w-[1rem]" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true">
+        <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      전체화면
+    </button>
   )
 }
 
