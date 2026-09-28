@@ -4,9 +4,13 @@ import './index.css'
 import App from './App.tsx'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { installKiosk } from './lib/viewport'
+import { preloadAssets } from './lib/preload'
 
 // 보이는 높이 재기(--app-h) + 전체화면 되돌리기 — 어떤 노트북·태블릿이든 화면이 잘리지 않게
 installKiosk()
+
+// 이미지·글꼴을 전부 미리 받아 둡니다 — 도중에 행사장 인터넷이 끊겨도 화면이 비지 않게
+preloadAssets()
 
 // 우클릭 / 롱프레스 컨텍스트 메뉴 차단
 document.addEventListener('contextmenu', (e) => e.preventDefault())

@@ -437,7 +437,8 @@ function ConcertPoster({ p }: { p: typeof vip.popup }) {
   // 별도 색 띠가 없어 이질감이 없습니다. 날짜·장소 글자만 그 이어진 자리에 얹습니다(2026-09-22).
   return (
     <div className="relative w-full overflow-hidden bg-[#0b1636]">
-      <img src={vipPoster} alt="" className="block w-full" draggable={false} />
+      {/* 크기(900×857)를 적어 둬서, 이미지가 늦게 떠도 자리가 무너지지 않습니다(빈 줄로 보이던 문제 · 2026-09-28) */}
+      <img src={vipPoster} alt="" width={900} height={857} className="block h-auto w-full" draggable={false} />
       <div className="absolute inset-x-0 bottom-0 px-2 pb-[3.5%] text-center">
         <p className="font-display text-[0.66rem] leading-tight font-bold tracking-[0.08em] whitespace-nowrap text-white">{p.ticketDates.join('  ')}</p>
         <p className="mt-0.5 text-[0.5rem] font-semibold tracking-[0.2em] text-white/80">{p.ticketVenue}</p>
