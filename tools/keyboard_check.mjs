@@ -72,21 +72,30 @@ for (const [dev0, w, h, kb] of DEVICES) {
     await page.keyboard.type(text, { delay: 8 })
     return r
   }
-  /** 끝까지 밀었을 때 버튼이 키보드 위로 올라오는가 */
+  /** 밀면 버튼이 키보드 위로 올라오는가 — 버튼이 보일 만큼만 밉니다(끝까지 밀면 위로 지나쳐 버립니다) */
   const button = async (screen, role) => {
     checks += 1
-    const r = await page.evaluate((role) => { const e = document.querySelector(`[data-role="${role}"]`); const box = e.closest('[data-scroll], [data-scroll-screen]'); box.scrollTop = box.scrollHeight; const q = e.getBoundingClientRect(); const typing = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName); return { top: Math.round(q.top), bottom: Math.round(q.bottom), typing } }, role)
-    // 마지막 칸을 다 채우면 키보드가 내려갑니다 — 그때는 화면 전체가 보이는 높이입니다
-    const seenNow = r.typing ? seen : h
-    if (!(r.top >= 0 && r.bottom <= seenNow)) fails.push(`${dev} ${screen} [${role}]: 끝까지 밀어도 버튼이 키보드에 가림 (${r.top}~${r.bottom}px, 보이는 높이 ${seen}px)`)
+    const r = await page.evaluate((role, seen, h) => {
+      const e = document.querySelector(`[data-role="${role}"]`)
+      const box = e.closest('[data-scroll], [data-scroll-screen]')
+      const typing = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)
+      const limit = (typing ? seen : h) - 16 // 마지막 칸을 채우면 키보드가 내려갑니다 — 그때는 화면 전체
+      const need = e.getBoundingClientRect().bottom - limit
+      if (need > 0) box.scrollTop += need
+      const q = e.getBoundingClientRect()
+      return { top: Math.round(q.top), bottom: Math.round(q.bottom), limit: Math.round(limit), boxTop: Math.round(box.getBoundingClientRect().top) }
+    }, role, seen, h)
+    if (!(r.top >= r.boxTop && r.bottom <= r.limit + 1)) fails.push(`${dev} ${screen} [${role}]: 밀어도 버튼이 키보드 위로 안 올라옴 (${r.top}~${r.bottom}px, 보이는 범위 ${r.boxTop}~${r.limit}px)`)
     await page.screenshot({ path: join(OUT, `${dev}-${screen}.png`), captureBeyondViewport: false })
   }
-  /** 키보드 내림 → 원래대로 */
+  /** 키보드 내림 → 한 화면짜리 틀(이름 입력)은 원래대로. 입력 화면(site-form·smish-page)은 늘 밀 수 있는 것이 정상 */
   const close = async (screen, sel) => {
     checks += 1
     await page.evaluate(() => { document.activeElement?.blur(); window.__kb(0) }); await wait(500)
-    const r = await page.evaluate((s) => { const box = document.querySelector(s)?.closest('[data-scroll], [data-scroll-screen]'); return box ? { pad: getComputedStyle(box).paddingBottom, top: box.scrollTop, over: box.scrollHeight - box.clientHeight } : null }, sel)
-    if (!r || r.pad !== '0px' || r.top > 2) fails.push(`${dev} ${screen}: 키보드를 내려도 원래대로 안 돌아옴 ${JSON.stringify(r)}`)
+    const r = await page.evaluate((s) => { const box = document.querySelector(s)?.closest('[data-scroll], [data-scroll-screen]'); return box ? { form: box.hasAttribute('data-scroll'), pad: getComputedStyle(box).paddingBottom, top: box.scrollTop, over: box.scrollHeight - box.clientHeight } : null }, sel)
+    if (!r) return fails.push(`${dev} ${screen}: 스크롤 상자를 못 찾음`)
+    if (r.form) { if (r.over < 100) fails.push(`${dev} ${screen}: 키보드가 없을 때 밀 여유가 없음 (${r.over}px)`) }
+    else if (r.pad !== '0px' || r.top > 2) fails.push(`${dev} ${screen}: 키보드를 내려도 원래대로 안 돌아옴 ${JSON.stringify(r)}`)
   }
 
   try {

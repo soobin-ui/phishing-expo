@@ -377,14 +377,30 @@ button[aria-hidden='true'] {
 
 /*
   ★ 키보드가 입력칸을 가리지 않게 (2026-09-28).
-    lib/viewport 가 키보드 높이를 --kb-h 에 넣어 줍니다(키보드가 없으면 0 → 평소 배치는 그대로).
-    입력칸이 있는 스크롤 상자는 그만큼 아래 여백을 둬서, 손으로 밀어 올릴 수 있고
-    누른 입력칸과 그 아래 버튼까지 키보드 위로 올라옵니다.
-      site-form   4번 본인확인·좌석·결제      smish-page  3번 본인 확인
-      data-scroll-screen  이름 입력 화면 등 한 화면짜리 틀
+
+  ① 입력칸이 여러 개인 화면(4번 본인확인·좌석·결제 = site-form, 3번 본인 확인 = smish-page)
+     터치 기기에서는 **키보드가 떴는지와 상관없이 늘** 아래에 화면 절반 남짓의 빈 자리를 둡니다.
+     → 언제든 손으로 밀어 올릴 수 있습니다.
+     처음에는 키보드 높이를 알아채서 그만큼만 비웠는데, 실물 태블릿(전체화면 안드로이드)에서
+     키보드를 알아채지 못해 밀리지 않았습니다. 알아채는 데 기대지 않는 쪽이 현장에서 안전합니다.
+     ★ padding 이 아니라 ::after 빈 칸으로 넣습니다 — padding 을 주면 안쪽의 min-h-full(가운데 정렬)
+       기준 높이가 줄어 배치가 위로 쏠립니다.
+  ② 그 밖의 한 화면짜리 틀(data-scroll-screen — 이름 입력 등)
+     키보드가 떴을 때만 그 높이(--kb-h, lib/viewport 가 넣어 줌)만큼 비웁니다.
+     첫 화면·사건 고르기까지 늘 밀리면 안 되기 때문입니다.
 */
-[data-scroll='site-form'],
-[data-scroll='smish-page'],
+[data-scroll='site-form']::after,
+[data-scroll='smish-page']::after {
+  content: '';
+  display: block;
+  height: var(--kb-h, 0px);
+}
+@media (any-pointer: coarse) {
+  [data-scroll='site-form']::after,
+  [data-scroll='smish-page']::after {
+    height: max(var(--kb-h, 0px), 55vh);
+  }
+}
 [data-scroll-screen] {
   padding-bottom: var(--kb-h, 0px);
 }

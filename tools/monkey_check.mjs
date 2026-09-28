@@ -273,12 +273,21 @@ async function runOne(topic, device, seed) {
         idleSince = Date.now()
       }
       let usable = s.items.filter((i) => !(i.input && i.filled))
-      if (!usable.length) usable = s.items.filter((i) => i.input) // 달리 누를 것이 없으면 채워진 칸을 다시 채워 봅니다
+      if (!usable.length && s.items.some((i) => i.input)) {
+        // 채워진 칸만 보이면: 위로 밀려 안 보이는 빈 칸이 있을 수 있으니 맨 위로 돌려 한 번 더 보고, 그래도 없으면 다시 채웁니다
+        await page.evaluate(() => document.querySelectorAll('[data-scroll]').forEach((b) => (b.scrollTop = 0)))
+        await wait(300)
+        const again = await scan(page)
+        usable = again.items.filter((i) => !(i.input && i.filled))
+        if (!usable.length) usable = again.items.filter((i) => i.input)
+      }
       if (!usable.length) {
         if (Date.now() - idleSince > 12000) {
           res.problems.push(`멈춤 — 누를 것이 없음: "${s.sig.slice(0, 60).replace(/\s+/g, ' ')}"`)
           break
         }
+        // 밀어 올린 채라 앞 칸·버튼이 화면 밖에 있을 수 있습니다 — 스크롤 상자를 맨 위로 돌려 다시 봅니다
+        await page.evaluate(() => document.querySelectorAll('[data-scroll]').forEach((b) => (b.scrollTop = 0)))
         await wait(500)
         step -= 1
         continue
@@ -360,7 +369,9 @@ if (AUDIT) {
       review     검거 카드 뒷면 '다시 보기' — 방금 그 메일·문자를 다시 띄우고 해당 자리로 저절로 스크롤
       site-home  4번 가짜 사이트 첫 화면 — 브리핑·팝업 뒤에 흐리게 깔리는 배경(관람객이 밀 일이 없음)
   */
-  const NATURAL = /^(mail|thread|phone-app|review|site-home)$/
+  //   site-form  4번 본인확인·좌석·결제   smish-page  3번 본인 확인
+  //              — 터치 기기에서는 키보드와 상관없이 늘 밀 수 있게 아래를 비워 둡니다(2026-09-28 사용자 결정)
+  const NATURAL = /^(mail|thread|phone-app|review|site-home|site-form|smish-page)$/
   console.log('\n── 반응형 감사 ──')
   for (const d of DEVICES) {
     const rs = results.filter((r) => r.id.split(':')[1] === d[0])

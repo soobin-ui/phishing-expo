@@ -72,7 +72,18 @@ export function installKiosk() {
   const isField = (el: Element | null): el is HTMLInputElement | HTMLTextAreaElement =>
     el instanceof HTMLTextAreaElement ||
     (el instanceof HTMLInputElement && !['checkbox', 'radio', 'button', 'submit', 'range', 'file'].includes(el.type))
-  const touch = () => window.matchMedia?.('(pointer: coarse)').matches ?? false
+  /**
+   * 화면 키보드를 쓰는 기기인가(태블릿·휴대폰).
+   * - 터치스크린 노트북은 터치는 되지만 화면 키보드가 없습니다 → 어림값으로 화면을 밀면 안 됩니다.
+   * - 키보드 커버·펜을 붙인 태블릿은 '주 입력'이 마우스로 잡히기도 해서, 기기 종류(UA)로도 봅니다.
+   *   아이패드는 UA 가 맥으로 나오므로 '맥 + 터치'로 구분합니다.
+   */
+  const touch = () => {
+    const ua = navigator.userAgent
+    if (/Android|iPad|iPhone|iPod/i.test(ua)) return true
+    if (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1) return true
+    return window.matchMedia?.('(pointer: coarse)').matches ?? false
+  }
 
   /** 지금 누른 입력칸을 키보드 위 보이는 자리로 — 그 칸이 든 스크롤 상자만 움직입니다 */
   const revealFocused = () => {

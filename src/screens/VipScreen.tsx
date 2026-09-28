@@ -46,6 +46,11 @@ export function VipScreen({
 
   const [brief, setBrief] = useState(true)
   const [stage, setStage] = useState<Stage>('home')
+  /** 가짜 사이트의 스크롤 상자 — 단계가 바뀌면 맨 위로 돌립니다(앞 단계에서 밀어 올린 채로 다음 화면이 뜨지 않게) */
+  const siteRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    siteRef.current?.scrollTo({ top: 0 })
+  }, [stage])
   const [phase, setPhase] = useState<Phase>('none')
   /** 1회차에 결제까지 가서 당한 뒤에는 안내(STOP) 모드 — 각 페이지에서 수법을 짚어 줍니다 */
   const [guided, setGuided] = useState(false)
@@ -180,7 +185,7 @@ export function VipScreen({
             </motion.div>
           )}
 
-          <div data-scroll={stage === 'home' ? 'site-home' : 'site-form'} className={`no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain ${guided ? 'pointer-events-none select-none' : ''}`}>
+          <div ref={siteRef} data-scroll={stage === 'home' ? 'site-home' : 'site-form'} className={`no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain ${guided ? 'pointer-events-none select-none' : ''}`}>
             <SiteHeader />
             {stage === 'home' && <Home />}
             {stage === 'verify' && (
