@@ -273,3 +273,57 @@ button {
   .focus-glow { background-color: rgba(229, 72, 77, 0.35); }
   .hint-glow { background-color: rgba(254, 202, 54, 0.7); }
 }
+
+/*
+  1번 메일 — '어떻게 확인할까요?' 말풍선.
+  테두리 바깥으로 금빛이 천천히 숨 쉬듯 번집니다(1.6초 주기 — 빠른 깜빡임은 광과민성 때문에 쓰지 않습니다).
+  다른 곳을 누르면 한 번 좌우로 흔들려 '여기를 먼저' 를 알립니다.
+*/
+.probe-glow {
+  animation: probe-glow 1.6s ease-in-out infinite;
+}
+@keyframes probe-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0.8rem 2rem rgba(0, 0, 0, 0.45),
+      0 0 0.6rem rgba(254, 202, 54, 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0.8rem 2rem rgba(0, 0, 0, 0.45),
+      0 0 1.8rem rgba(254, 202, 54, 0.85);
+  }
+}
+.probe-nudge {
+  animation: probe-nudge 0.42s ease-in-out;
+}
+@keyframes probe-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-0.5rem);
+  }
+  45% {
+    transform: translateX(0.5rem);
+  }
+  70% {
+    transform: translateX(-0.25rem);
+  }
+  85% {
+    transform: translateX(0.25rem);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .probe-glow {
+    animation: none;
+    box-shadow:
+      0 0.8rem 2rem rgba(0, 0, 0, 0.45),
+      0 0 1.2rem rgba(254, 202, 54, 0.7);
+  }
+  .probe-nudge {
+    animation: none;
+  }
+}

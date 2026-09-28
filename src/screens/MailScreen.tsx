@@ -38,6 +38,8 @@ type Pop = {
   y: number;
   below: boolean;
   wrong: number | null;
+  /** 누른 문구의 자리(메일 판 기준) — 주변을 어둡게 가릴 때 이 자리만 밝게 남깁니다 */
+  hole: { x: number; y: number; w: number; h: number };
 };
 
 const PHISH = "__phish__";
@@ -84,6 +86,8 @@ export function MailScreen({
   } | null>(null);
   const paneRef = useRef<HTMLElement>(null);
   const done = useRef(false);
+  /** 말풍선이 떠 있는데 다른 곳을 누른 횟수 — 바뀔 때마다 말풍선이 한 번 흔들립니다 */
+  const [nudge, setNudge] = useState(0);
 
   /** 제한 시간 — 수상한 메일을 열면 시작, 말풍선·카드 동안은 멈춤 */
   const [started, setStarted] = useState(false);
@@ -199,6 +203,7 @@ export function MailScreen({
       y: below ? bottom + 8 : r.top - pane.top - 8,
       below,
       wrong: null,
+      hole: { x: r.left - pane.left, y: r.top - pane.top, w: r.width, h: r.height },
     });
   };
 
@@ -268,7 +273,7 @@ export function MailScreen({
         }`}
       >
         {/* 검거 완료 카드가 뜨면 머리글·숫자 상자는 치웁니다 */}
-        <header className={`shrink-0 px-4 pt-[max(0.7rem,1.4dvh)] pb-2.5 text-center ${card ? "hidden" : ""}`}>
+        <header className={`shrink-0 px-4 pt-[max(0.7rem,1.4dvh)] pb-2.5 text-center transition-opacity duration-200 ${card ? "hidden" : ""} ${pop ? "opacity-25" : ""}`}>
           <div className="mx-auto w-full max-w-[78rem]">
             {/* 지금 할 일 — 크게, 가운데, 튀어나오며. 받은편지함에서는 '메일 열기', 메일 안에서는 '수상한 문구 찾기' */}
             <p
@@ -389,10 +394,47 @@ export function MailScreen({
             </div>
           )}
 
+          {/*
+            ★ 말풍선이 뜨면 주변을 어둡게 가립니다(2026-09-28).
+              기능으로는 원래도 말풍선에 답해야 다음으로 갈 수 있었지만, 화면이 그걸 알려 주지 않아
+              관람객이 말풍선을 무시하고 메일만 계속 눌렀습니다(눌러도 반응이 없어 고장으로 느낌).
+              - 막은 누른 문구 자리만 남기고 메일 판 전체를 덮습니다(큰 그림자로 구멍을 냄)
+              - 막을 누르면 말풍선이 한 번 흔들리며 '먼저 답해 주세요'
+              ★ 말풍선 자리 계산(Bubble 의 shift)은 건드리지 않습니다 — 빈 화면 장애가 났던 곳입니다.
+          */}
+          <AnimatePresence>
+            {pop && (
+              <motion.div
+                key="probe-dim"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                data-role="probe-dim"
+                className="absolute inset-0 z-30 overflow-hidden"
+                onClick={() => {
+                  setNudge((n) => n + 1);
+                  showToast(t.answerFirst, 1500);
+                }}
+              >
+                <span
+                  className="pointer-events-none absolute rounded-lg shadow-[0_0_0_200rem_rgba(8,14,40,0.64)] ring-[3px] ring-gold"
+                  style={{
+                    left: pop.hole.x - 5,
+                    top: pop.hole.y - 4,
+                    width: pop.hole.w + 10,
+                    height: pop.hole.h + 8,
+                  }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <AnimatePresence>
             {pop && (
               <Bubble
                 pop={pop}
+                nudge={nudge}
                 onPick={choose}
                 onRetry={() => setPop({ ...pop, wrong: null })}
               />
@@ -444,7 +486,7 @@ export function MailScreen({
         </motion.section>
 
         {/* 가로 화면(노트북·가로 태블릿): 남은 시간을 메일 오른쪽에 크게 */}
-        <aside className={`w-[15.5rem] shrink-0 flex-col gap-3 ${card ? "hidden" : "hidden wide:flex"}`}>
+        <aside className={`w-[15.5rem] shrink-0 flex-col gap-3 transition-opacity duration-200 ${card ? "hidden" : "hidden wide:flex"} ${pop ? "opacity-25" : ""}`}>
           {renderStats(true)}
         </aside>
         </div>
@@ -739,10 +781,13 @@ function RuleTarget() {
 /** 어떻게 조사할까요? — 찾은 자리 바로 옆 말풍선 */
 function Bubble({
   pop,
+  nudge,
   onPick,
   onRetry,
 }: {
   pop: Pop;
+  /** 다른 곳을 누를 때마다 1씩 늘어남 — 늘 때마다 한 번 흔들립니다 */
+  nudge: number;
   onPick: (i: number) => void;
   onRetry: () => void;
 }) {
@@ -802,17 +847,24 @@ function Bubble({
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.18 }}
       data-role="probe"
-      className="no-scrollbar absolute z-40 max-h-[calc(100%-1rem)] w-[min(23rem,calc(100%-1.5rem))] overflow-y-auto overscroll-contain rounded-2xl shadow-[0_0.8rem_2rem_rgba(0,0,0,0.35)]"
+      className="no-scrollbar probe-glow absolute z-40 max-h-[calc(100%-1rem)] w-[min(25rem,calc(100%-1.5rem))] overflow-y-auto overscroll-contain rounded-2xl"
       style={{
-        left: `clamp(0.75rem, ${pop.x}px, calc(100% - min(23rem, 100% - 1.5rem) - 0.75rem))`,
+        left: `clamp(0.75rem, ${pop.x}px, calc(100% - min(25rem, 100% - 1.5rem) - 0.75rem))`,
         top: pop.below ? pop.y : undefined,
         bottom: pop.below ? undefined : `calc(100% - ${pop.y}px)`,
         marginTop: pop.below ? shift : undefined,
         marginBottom: pop.below ? undefined : -shift,
       }}
     >
-      <div className="rounded-2xl bg-navy-deep p-4 text-white">
-        <p className="flex items-start gap-2 text-[1.02rem] leading-snug font-bold">
+      {/*
+        밝은 바탕 + 금색 테두리 — 어두운 막 위에서 화면에서 가장 밝은 것이 이 말풍선입니다.
+        (예전 남색 말풍선은 남색 화면에 묻혀 메일의 일부처럼 보였습니다)
+      */}
+      <div
+        key={nudge}
+        className={`rounded-2xl border-[3px] border-gold bg-white p-4 text-navy-deep ${nudge ? "probe-nudge" : ""}`}
+      >
+        <p className="flex items-start gap-2 text-[0.98rem] leading-snug font-bold text-[#5f6b80]">
           <span className="mt-0.5 shrink-0 rounded-md bg-gold px-1.5 py-0.5 text-[0.7rem] font-extrabold text-navy-deep">
             발견
           </span>
@@ -821,36 +873,40 @@ function Bubble({
 
         {wrong ? (
           <>
-            <p className="mt-3 text-[0.95rem] font-bold text-[#fca5a5]">
+            <p className="mt-3 text-[1.05rem] font-bold text-[#d92d2d]">
               {t.wrong}
             </p>
-            <p className="mt-1.5 text-[0.98rem] leading-relaxed text-white/80">
+            <p className="mt-1.5 text-[0.98rem] leading-relaxed text-[#3a4250]">
               {wrong.why}
             </p>
             <button
               type="button"
               data-role="probe-retry"
               onClick={onRetry}
-              className="mt-3 w-full rounded-xl bg-white/12 px-4 py-2.5 text-[0.98rem] font-bold text-white active:bg-white/20"
+              className="mt-3 w-full rounded-xl bg-gold px-4 py-3 text-[1.02rem] font-bold text-navy-deep shadow-[0_0.2rem_0_#e9b21c] active:translate-y-[0.1rem] active:shadow-none"
             >
               {t.retry}
             </button>
           </>
         ) : (
           <>
-            <p className="mt-2.5 text-[0.92rem] font-semibold text-sky">
+            <p className="mt-2.5 font-display text-[1.2rem] leading-snug font-bold text-navy-deep">
               {probe.question}
             </p>
-            <div className="mt-2 flex flex-col gap-1.5">
+            <p className="mt-0.5 text-[0.9rem] font-semibold text-[#2f6be0]">{t.pickOne}</p>
+            <div className="mt-2.5 flex flex-col gap-2">
               {probe.options.map((o, i) => (
                 <button
                   key={i}
                   type="button"
                   data-role={o.ok ? "probe-ok" : "probe-no"}
                   onClick={() => onPick(i)}
-                  className="rounded-xl bg-white/10 px-3.5 py-2.5 text-left text-[0.98rem] leading-snug font-semibold text-white active:bg-white/20"
+                  className="flex items-center gap-2.5 rounded-xl border-2 border-[#c9d6f2] bg-[#f1f5ff] px-3.5 py-2.5 text-left text-[1rem] leading-snug font-bold text-navy-deep active:border-gold active:bg-[#fff6d6]"
                 >
-                  {o.label}
+                  <span className="flex h-[1.6rem] w-[1.6rem] shrink-0 items-center justify-center rounded-full bg-navy-deep font-display text-[0.85rem] font-bold text-white tabular-nums">
+                    {i + 1}
+                  </span>
+                  <span className="min-w-0 flex-1">{o.label}</span>
                 </button>
               ))}
             </div>
