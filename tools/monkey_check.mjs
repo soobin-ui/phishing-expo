@@ -272,7 +272,8 @@ async function runOne(topic, device, seed) {
         lastSig = s.sig
         idleSince = Date.now()
       }
-      const usable = s.items.filter((i) => !(i.input && i.filled))
+      let usable = s.items.filter((i) => !(i.input && i.filled))
+      if (!usable.length) usable = s.items.filter((i) => i.input) // 달리 누를 것이 없으면 채워진 칸을 다시 채워 봅니다
       if (!usable.length) {
         if (Date.now() - idleSince > 12000) {
           res.problems.push(`멈춤 — 누를 것이 없음: "${s.sig.slice(0, 60).replace(/\s+/g, ' ')}"`)
@@ -299,7 +300,13 @@ async function runOne(topic, device, seed) {
       if (it.input) {
         await page.mouse.click(it.x, it.y)
         // 자릿수를 채워야 다음 버튼이 켜지는 칸이 있어서(전화·카드번호 등) 넉넉히 칩니다. 넘치는 자리는 앱이 잘라냅니다
-        await page.keyboard.type(/name|이름/.test(it.label) ? '홍길동' : '0101234567812345', { delay: 8 })
+        // 칸마다 맞는 값을 칩니다 — 다 채우면 다음 칸으로 저절로 넘어가므로, 길게 몰아 치면 남은 글자가 다음 칸에 들어갑니다
+        const SAMPLE = [[/name|이름/, '홍길동'], [/phone/, '01098765432'], [/rrn/, '900101'], [/card/, '5327123412340412'], [/exp/, '0929'], [/pw/, '12'], [/cvc/, '123'], [/code/, '482913']]
+        const text = (SAMPLE.find(([re]) => re.test(it.label)) ?? [0, '01098765432'])[1]
+        await page.keyboard.down('Control')
+        await page.keyboard.press('KeyA')
+        await page.keyboard.up('Control')
+        await page.keyboard.type(text, { delay: 8 })
         if (rand() < 0.5) await page.keyboard.press('Enter')
       } else if (!AUDIT && rand() < 0.12) {
         await page.mouse.click(5 + rand() * (w - 10), 5 + rand() * (h - 10)) // 엉뚱한 곳

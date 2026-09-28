@@ -3,8 +3,10 @@
  *
  *   node tools/keyboard_check.mjs http://localhost:5175/
  *
- * PC 에는 화면 키보드가 없어서, 키보드가 올라온 상태를 흉내 냅니다:
- *   '보이는 높이(visualViewport)'만 줄이고 화면 크기는 그대로 둡니다(안드로이드 크롬·아이패드 사파리와 같은 동작).
+ * PC 에는 화면 키보드가 없어서, 키보드가 올라온 상태를 세 가지 방식으로 흉내 냅니다(기기마다 알려 주는 방식이 다름):
+ *   vv    '보이는 높이(visualViewport)'만 줄어듦 — 아이패드 사파리, 전체화면이 아닌 안드로이드 크롬
+ *   vk    VirtualKeyboard API 가 키보드 높이를 알려 줌 — 안드로이드 크롬
+ *   none  아무 신호도 없음 — **전체화면 안드로이드**(키보드가 떠도 화면 크기가 안 바뀜). 입력칸을 누른 것만으로 알아채야 함
  * 입력칸이 있는 화면마다(이름 입력 · 3번 본인 확인 · 4번 본인확인/결제) 칸을 하나씩 눌러 보고 확인합니다.
  *   1) 누른 입력칸이 키보드 위 보이는 자리에 있는가
  *   2) 손으로 밀 수 있는가(스크롤 여유가 생겼는가), 끝까지 밀면 아래 버튼이 키보드 위로 올라오는가
@@ -33,16 +35,25 @@ const fails = []
 let checks = 0
 
 const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args: ['--hide-scrollbars'] })
-for (const [dev, w, h, kb] of DEVICES) {
+for (const mode of ['vv', 'vk', 'none'])
+for (const [dev0, w, h, kb] of DEVICES) {
+  const dev = `${dev0}[${mode}]`
   const page = await browser.newPage()
   await page.setViewport({ width: w, height: h, deviceScaleFactor: 1, isMobile: true, hasTouch: true })
-  // 가짜 visualViewport — 높이만 바꿀 수 있게
-  await page.evaluateOnNewDocument(() => {
+  await page.evaluateOnNewDocument((mode) => {
+    // 가짜 visualViewport — vv 방식일 때만 높이가 줄어듭니다
     const t = new EventTarget()
     const fake = { height: window.innerHeight, width: window.innerWidth, offsetTop: 0, offsetLeft: 0, scale: 1, addEventListener: t.addEventListener.bind(t), removeEventListener: t.removeEventListener.bind(t), dispatchEvent: t.dispatchEvent.bind(t) }
     Object.defineProperty(window, 'visualViewport', { value: fake, configurable: true })
-    window.__kb = (px) => { fake.height = window.innerHeight - px; fake.dispatchEvent(new Event('resize')) }
-  })
+    // 가짜 VirtualKeyboard — vk 방식일 때만 둡니다
+    const k = new EventTarget()
+    const vk = { overlaysContent: false, boundingRect: { height: 0 }, addEventListener: k.addEventListener.bind(k), removeEventListener: k.removeEventListener.bind(k), dispatchEvent: k.dispatchEvent.bind(k) }
+    Object.defineProperty(navigator, 'virtualKeyboard', { value: mode === 'vk' ? vk : undefined, configurable: true })
+    window.__kb = (px) => {
+      if (mode === 'vv') { fake.height = window.innerHeight - px; fake.dispatchEvent(new Event('resize')) }
+      if (mode === 'vk') { vk.boundingRect = { height: px }; vk.dispatchEvent(new Event('geometrychange')) }
+    }
+  }, mode)
   const errors = []
   page.on('pageerror', (e) => errors.push(String(e.message).slice(0, 100)))
   const seen = h - kb

@@ -40,6 +40,10 @@ export function IntroScreen({ onStart }: { onStart: () => void }) {
     <div className="relative h-full w-full bg-[#050a18]">
       <CyberBackdrop />
       <FullscreenButton />
+      {/* 빌드 표시 — 새로고침 뒤 이 시각이 바뀌었는지 보면 최신 버전인지 알 수 있습니다(운영자용, 아주 옅게) */}
+      <span data-role="build" className="pointer-events-none absolute top-3 right-4 z-30 text-[0.7rem] text-white/30 tabular-nums">
+        ver {__BUILD__}
+      </span>
 
       <ScrollScreen className="relative z-10">
         <motion.div

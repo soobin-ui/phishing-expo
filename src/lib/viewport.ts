@@ -57,15 +57,33 @@ export function installKiosk() {
   /** 키보드가 올라오기 전, 이 기기의 '꽉 찬' 보이는 높이 */
   let full = 0
 
+  /*
+   * 키보드 높이는 세 가지 신호 중 큰 값을 씁니다(2026-09-28 실물 태블릿에서 첫 방식이 안 먹힘).
+   *   kbVv    보이는 높이(visualViewport)가 줄어든 만큼 — 아이패드 사파리, 전체화면이 아닌 안드로이드 크롬
+   *   kbVk    VirtualKeyboard API 가 알려 주는 키보드 높이 — 안드로이드 크롬(전체화면이어도 알려 줌)
+   *   kbGuess 어림값 — 위 둘이 아무 말도 없을 때. **전체화면 안드로이드는 키보드가 떠도 화면 크기가 안 바뀌어서**
+   *           첫 방식(kbVv)만으로는 키보드를 알아채지 못했습니다. 터치 기기에서 입력칸을 누르면 키보드가
+   *           떴다고 보고 화면 높이의 절반(세로 화면은 42%)을 비워 둡니다. 실제보다 조금 넉넉해도 밀 여유가 늘 뿐입니다.
+   */
+  let kbVv = 0
+  let kbVk = 0
+  let kbGuess = 0
+  const kbNow = () => Math.max(kbVv, kbVk, kbGuess)
+  const isField = (el: Element | null): el is HTMLInputElement | HTMLTextAreaElement =>
+    el instanceof HTMLTextAreaElement ||
+    (el instanceof HTMLInputElement && !['checkbox', 'radio', 'button', 'submit', 'range', 'file'].includes(el.type))
+  const touch = () => window.matchMedia?.('(pointer: coarse)').matches ?? false
+
   /** 지금 누른 입력칸을 키보드 위 보이는 자리로 — 그 칸이 든 스크롤 상자만 움직입니다 */
   const revealFocused = () => {
     const el = document.activeElement
-    if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return
+    if (!isField(el)) return
     const box = el.closest<HTMLElement>('[data-scroll], [data-scroll-screen]')
     if (!box) return
     const seen = vv?.height ?? window.innerHeight
     const top = Math.max(vv?.offsetTop ?? 0, box.getBoundingClientRect().top)
-    const bottom = (vv?.offsetTop ?? 0) + seen
+    // 보이는 아래쪽 끝 — 보이는 높이가 줄었으면 그 끝, 아니면 화면 높이에서 키보드 높이를 뺀 곳
+    const bottom = Math.min((vv?.offsetTop ?? 0) + seen, window.innerHeight - Math.max(kbVk, kbGuess))
     const r = el.getBoundingClientRect()
     // 이미 잘 보이면 건드리지 않습니다(위로는 이름표 한 줄, 아래로는 여유 조금)
     if (r.top - 36 >= top && r.bottom + 20 <= bottom) return
@@ -74,21 +92,62 @@ export function installKiosk() {
     box.scrollTo({ top: Math.max(0, box.scrollTop + (r.top - want)), behavior: 'smooth' })
   }
 
+  /** 키보드가 가린 높이를 --kb-h 에 — 입력칸이 있는 스크롤 상자가 이만큼 아래 여백을 둡니다(index.css) */
+  const applyKb = () => {
+    document.documentElement.style.setProperty('--kb-h', `${Math.round(kbNow())}px`)
+    if (kbNow() > 0) window.setTimeout(revealFocused, 60)
+  }
+
   const measure = () => {
     const h = vv?.height ?? window.innerHeight
     if (h > full * 0.75) full = Math.max(full, h)
     const keyboard = full > 0 && h < full * 0.75
-    const root = document.documentElement
-    root.style.setProperty('--app-h', `${Math.round(keyboard ? full : h)}px`)
-    // 키보드가 가린 높이 — 입력칸이 있는 스크롤 상자가 이만큼 아래 여백을 둡니다
-    root.style.setProperty('--kb-h', `${keyboard ? Math.max(0, Math.round(full - h)) : 0}px`)
-    if (keyboard) window.setTimeout(revealFocused, 60)
+    document.documentElement.style.setProperty('--app-h', `${Math.round(keyboard ? full : h)}px`)
+    kbVv = keyboard ? Math.max(0, full - h) : 0
+    if (kbVv > 0) kbGuess = 0
+    applyKb()
   }
 
   measure()
-  // 입력칸을 누르면(키보드가 이미 떠 있어도) 그 칸이 보이게 — 키보드가 올라오는 동안 몇 번 더 맞춥니다
-  document.addEventListener('focusin', () => {
-    ;[80, 300, 600].forEach((ms) => window.setTimeout(revealFocused, ms))
+
+  // 안드로이드 크롬: 키보드 높이를 직접 물어봅니다. overlaysContent 를 켜면 키보드가 화면을 '덮기만' 하고
+  // 화면 크기는 건드리지 않습니다 — 우리가 원래 원하던 동작(배치 유지)과 같습니다.
+  type VK = EventTarget & { overlaysContent: boolean; boundingRect: DOMRect }
+  const vk = (navigator as Navigator & { virtualKeyboard?: VK }).virtualKeyboard
+  if (vk) {
+    try {
+      vk.overlaysContent = true
+      vk.addEventListener('geometrychange', () => {
+        kbVk = Math.max(0, vk.boundingRect?.height ?? 0)
+        if (kbVk > 0) kbGuess = 0
+        applyKb()
+      })
+    } catch {
+      // 못 쓰는 기기는 아래 어림값으로 넘어갑니다
+    }
+  }
+
+  // 입력칸을 누르면 그 칸이 보이게 — 키보드가 올라오는 동안 몇 번 더 맞춥니다
+  document.addEventListener('focusin', (e) => {
+    if (!isField(e.target as Element)) return
+    // 0.35초가 지나도 키보드 높이를 알려 주는 신호가 없으면(전체화면 안드로이드) 어림값으로 자리를 비웁니다
+    window.setTimeout(() => {
+      if (kbVv > 0 || kbVk > 0 || !touch() || !isField(document.activeElement)) return
+      const landscape = window.innerWidth > window.innerHeight
+      kbGuess = Math.round(window.innerHeight * (landscape ? 0.5 : 0.42))
+      applyKb()
+    }, 350)
+    ;[80, 450, 800].forEach((ms) => window.setTimeout(revealFocused, ms))
+  })
+  document.addEventListener('focusout', () => {
+    // 다음 칸으로 옮겨 간 것이면 그대로 두고, 입력을 끝낸 것이면 여백을 거둡니다
+    window.setTimeout(() => {
+      if (isField(document.activeElement)) return
+      if (kbGuess > 0) {
+        kbGuess = 0
+        applyKb()
+      }
+    }, 200)
   })
   vv?.addEventListener('resize', measure)
   window.addEventListener('resize', measure)

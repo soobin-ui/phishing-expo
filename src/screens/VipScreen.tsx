@@ -485,15 +485,46 @@ function useForm(fields: Field[]) {
   return { raw, setField, complete }
 }
 
-/** 직접 입력하는 입력칸 */
-function InputField({ field, value, onChange }: { field: Field; value: string; onChange: (v: string) => void }) {
+/**
+ * 다음 입력칸으로 — 같은 화면의 다음 칸에 커서를 옮기고, 마지막 칸이면 키보드를 내립니다.
+ * ★ 한글을 조합하는 중(이름)에 바로 옮기면 마지막 글자가 다음 칸에 딸려 가는 브라우저가 있어,
+ *   먼저 지금 칸을 놓아 글자를 확정한 뒤 옮깁니다.
+ */
+function focusNext(el: HTMLInputElement) {
+  const all = [...document.querySelectorAll<HTMLInputElement>('input[data-role^="vip-field-"]')]
+  const next = all[all.indexOf(el) + 1]
+  el.blur()
+  if (next) window.setTimeout(() => next.focus(), 40)
+}
+
+/**
+ * 직접 입력하는 입력칸.
+ * ★ 칸을 다 채우면 저절로 다음 칸으로 넘어갑니다(2026-09-28 현장 피드백 — 태블릿에서 칸마다 다시 누르기 번거로움).
+ *   - 자릿수가 정해진 칸(휴대전화 11 · 주민번호 앞 6 · 카드 16 · 유효기간 4 · 비밀번호 2): 다 치는 순간
+ *   - 이름처럼 길이가 정해지지 않은 칸: 키보드의 [다음](Enter)을 누를 때
+ *   - 마지막 칸을 다 채우면 키보드가 내려가 아래 버튼이 보입니다
+ */
+function InputField({ field, value, onChange, last = false }: { field: Field; value: string; onChange: (v: string) => void; last?: boolean }) {
   return (
     <div>
       <p className="mb-1.5 text-[0.95rem] font-bold text-[#3a4256]">{field.label}</p>
       <input
         data-role={`vip-field-${field.id}`}
         value={display(field.id, value)}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => {
+          const el = e.currentTarget
+          const before = value.length
+          const now = clean(field.id, el.value).length
+          onChange(el.value)
+          const max = MAXD[field.id]
+          if (max && now >= max && before < max) focusNext(el)
+        }}
+        onKeyDown={(e) => {
+          if (e.key !== 'Enter') return
+          e.preventDefault()
+          focusNext(e.currentTarget)
+        }}
+        enterKeyHint={last ? 'done' : 'next'}
         inputMode={field.id === 'name' ? 'text' : 'numeric'}
         placeholder={field.ph}
         autoComplete="off"
@@ -552,7 +583,7 @@ function Verify({ name, onNext }: { name: string; onNext: () => void }) {
       <p className="mt-1.5 text-[1rem] text-[#5a6377]">{fill(v.body, { name })}</p>
       <div className="mt-[clamp(0.6rem,2dvh,1rem)] flex flex-col gap-[clamp(0.5rem,1.7dvh,0.875rem)]">
         {v.fields.map((f: Field) => (
-          <InputField key={f.id} field={f} value={raw[f.id] ?? ''} onChange={(val) => setField(f.id, val)} />
+          <InputField key={f.id} field={f} value={raw[f.id] ?? ''} onChange={(val) => setField(f.id, val)} last={f.id === v.fields[v.fields.length - 1].id} />
         ))}
       </div>
       <p className="mt-[clamp(0.4rem,1.4dvh,0.75rem)] text-[0.82rem] leading-snug text-[#8a93a6]">{vip.site.demoNote}</p>
@@ -622,7 +653,7 @@ function Pay({ onPay }: { onPay: () => void }) {
       <div className="mt-3.5 grid grid-cols-2 gap-3">
         {p.fields.map((f: Field, i: number) => (
           <div key={f.id} className={i === 0 ? 'col-span-2' : i === 3 ? 'col-span-2' : ''}>
-            <InputField field={f} value={raw[f.id] ?? ''} onChange={(val) => setField(f.id, val)} />
+            <InputField field={f} value={raw[f.id] ?? ''} onChange={(val) => setField(f.id, val)} last={i === p.fields.length - 1} />
           </div>
         ))}
       </div>
