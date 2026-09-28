@@ -363,8 +363,10 @@ export function DefenseCard({
                   <button
                     type="button"
                     data-role="next-trick"
+                    data-blink={allSeen ? undefined : 'on'}
                     onClick={() => setTrick((v) => (v + 1) % flags.length)}
-                    className="rounded-full bg-[#2fa8ff] px-[1.1em] py-[0.4em] font-display text-[0.75em] font-bold text-[#050a18] active:bg-[#1d8ede]"
+                    // 아직 안 본 수법이 남아 있으면 반짝 — 다 보면 꺼지고 [이렇게 예방하세요]가 반짝입니다
+                    className={`${allSeen ? '' : 'trick-blink '}rounded-full bg-[#2fa8ff] px-[1.1em] py-[0.4em] font-display text-[0.75em] font-bold text-[#050a18] active:bg-[#1d8ede]`}
                   >
                     {t.card.nextTrick}
                   </button>
@@ -431,14 +433,20 @@ export function DefenseCard({
             data-role="flip-card"
             style={split ? { flex: `0 0 ${cardW}px` } : undefined}
             onClick={() => setFlipped((v) => !v)}
-            animate={{
-              boxShadow: [
-                '0 0 0.5rem rgba(47,168,255,0.45)',
-                '0 0 1.5rem rgba(47,168,255,0.9)',
-                '0 0 0.5rem rgba(47,168,255,0.45)',
-              ],
-            }}
-            transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+            // 앞면에서는 [카드 뒷면 보기]가 빛나며 뒤집기를 권합니다.
+            // 뒤집은 뒤에는 끕니다 — 그때부터는 [다음] → [이렇게 예방하세요] 순서로 하나만 반짝여야 눈이 갑니다
+            animate={
+              flipped
+                ? { boxShadow: '0 0 0.4rem rgba(47,168,255,0.35)' }
+                : {
+                    boxShadow: [
+                      '0 0 0.5rem rgba(47,168,255,0.45)',
+                      '0 0 1.5rem rgba(47,168,255,0.9)',
+                      '0 0 0.5rem rgba(47,168,255,0.45)',
+                    ],
+                  }
+            }
+            transition={flipped ? { duration: 0.3 } : { duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
             className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#7fd4ff] bg-[#1668c4] px-3 py-3 font-display text-[clamp(0.95rem,2.4dvh,1.1rem)] font-bold whitespace-nowrap text-white active:bg-[#12539e] [&>svg]:shrink-0"
           >
             <Flip />
