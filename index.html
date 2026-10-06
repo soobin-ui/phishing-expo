@@ -1,24 +1,159 @@
 <!doctype html>
 <html lang="ko">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content"
-    />
-    <meta name="theme-color" content="#0e1633" />
-    <meta name="color-scheme" content="light" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <!-- 탭 아이콘. 선언이 없으면 브라우저가 /favicon.ico 를 스스로 찾다가 404 를 남깁니다(2026-09-22). -->
-    <link rel="icon" href="./favicon.ico" sizes="any" />
-    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-    <title>2026 산학연협력 EXPO 안전체험관 · 온라인 피싱 체험존</title>
-    <script type="module" crossorigin src="./assets/index-C2dvUfLF.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-CLHYzjlu.css">
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content" />
+<meta name="theme-color" content="#0e1633" />
+<meta name="color-scheme" content="light" />
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<link rel="icon" href="./favicon.ico" sizes="any" />
+<link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+<title>온라인 피싱 체험존 · 잠금</title>
+<style>
+  @font-face{font-family:"Gmarket Sans";font-weight:700;font-display:swap;src:url("/phishing-expo/assets/GmarketSansBold.subset-C6o9itU-.woff2") format("woff2");}
+  @font-face{font-family:"Gmarket Sans";font-weight:500;font-display:swap;src:url("/phishing-expo/assets/GmarketSansMedium.subset-Cm6MDECE.woff2") format("woff2");}
+  :root{--navy:#0e1633;--navy2:#13224a;--gold:#FECA36;--gold2:#e9b21c;--sky:#a9d6fd;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;}
+  html{overscroll-behavior:none;touch-action:manipulation;-webkit-text-size-adjust:100%;}
+  body{background:var(--navy);color:#fff;font-family:"Gmarket Sans",system-ui,-apple-system,"Malgun Gothic",sans-serif;
+    -webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;
+    display:flex;align-items:center;justify-content:center;min-height:100%;overflow:hidden;}
+  #gate{width:min(92vw,25rem);text-align:center;padding:1.5rem;}
+  .eyebrow{display:inline-block;background:#1a3f6b;color:var(--sky);font-weight:700;letter-spacing:.14em;
+    font-size:.72rem;padding:.45em 1.1em;border-radius:999px;margin-bottom:1.1rem;}
+  .lock{width:3.4rem;height:3.4rem;margin:0 auto 1rem;display:block;}
+  h1{font-size:1.45rem;font-weight:700;margin:.2rem 0 .5rem;line-height:1.3;}
+  p.sub{font-size:.92rem;color:#9fb4d8;line-height:1.55;margin:0 0 1.4rem;}
+  form{display:flex;flex-direction:column;gap:.7rem;}
+  input{width:100%;font-size:1.05rem;font-family:inherit;text-align:center;letter-spacing:.1em;
+    padding:.85rem 1rem;border-radius:.9rem;border:2px solid #2a3c6e;background:#0b1430;color:#fff;outline:none;
+    user-select:text;-webkit-user-select:text;}
+  input:focus{border-color:var(--gold);}
+  button{font-family:inherit;font-weight:700;font-size:1.1rem;color:var(--navy);background:var(--gold);
+    border:none;border-radius:.9rem;padding:.9rem 1rem;cursor:pointer;
+    box-shadow:0 .3rem 0 var(--gold2);transition:transform .1s,box-shadow .1s;}
+  button:active{transform:translateY(.2rem);box-shadow:0 .1rem 0 var(--gold2);}
+  button:disabled{opacity:.5;cursor:default;}
+  .err{min-height:1.2rem;color:#ff8a8a;font-size:.88rem;font-weight:500;}
+  .stamp{position:fixed;left:0;right:0;bottom:.6rem;text-align:center;color:#3c4f7e;font-size:.68rem;letter-spacing:.05em;}
+  #cover{position:fixed;inset:0;background:var(--navy);display:none;align-items:center;justify-content:center;
+    z-index:99999;color:#6f93c4;font-size:.9rem;}
+  #cover.on{display:flex;}
+</style>
+</head>
+<body>
+<noscript><div style="padding:2rem;text-align:center">자바스크립트를 켜 주세요.</div></noscript>
+<div id="gate">
+  <span class="eyebrow">온라인 피싱 체험존</span>
+  <svg class="lock" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="4" y="10" width="16" height="11" rx="2.4" fill="#13224a" stroke="#FECA36" stroke-width="1.6"/>
+    <path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="#FECA36" stroke-width="1.6" stroke-linecap="round"/>
+    <circle cx="12" cy="15.5" r="1.8" fill="#FECA36"/>
+  </svg>
+  <h1>잠긴 체험존입니다</h1>
+  <p class="sub">이 프로그램은 유니크플랜의 작품입니다.<br/>열람하려면 비밀번호를 입력하세요.</p>
+  <form id="f" autocomplete="off">
+    <input id="pw" type="password" inputmode="text" placeholder="비밀번호" autocomplete="off"
+      autocapitalize="off" autocorrect="off" spellcheck="false" />
+    <button id="go" type="submit">열기</button>
+    <div class="err" id="err" aria-live="polite"></div>
+  </form>
+</div>
+<div class="stamp">잠금 버전 · 10-06 13:29</div>
+<div id="cover">화면이 가려졌습니다 — 체험존으로 돌아오면 다시 보입니다</div>
+<script>
+(function(){
+  "use strict";
+  // ── 방어: 복사·우클릭·드래그·캡처/개발자도구 단축키 억제 ───────────────────
+  var stop = function(e){ e.preventDefault(); e.stopPropagation(); return false; };
+  document.addEventListener('contextmenu', stop);
+  document.addEventListener('dragstart', stop);
+  ['copy','cut'].forEach(function(t){
+    document.addEventListener(t, function(e){
+      // 비밀번호 칸에서의 입력은 막지 않되, 본문 복사는 막고 클립보드를 비웁니다.
+      if (e.target && e.target.id === 'pw') return;
+      try{ e.clipboardData && e.clipboardData.setData('text/plain',''); }catch(_){}
+      e.preventDefault();
+    });
+  });
+  document.addEventListener('selectstart', function(e){
+    if (e.target && e.target.id === 'pw') return; stop(e);
+  });
+  document.addEventListener('gesturestart', stop);
+  window.addEventListener('keydown', function(e){
+    var k = (e.key||'').toLowerCase();
+    if (e.key === 'F12') return stop(e);                               // 개발자도구
+    if (e.key === 'PrintScreen'){ try{navigator.clipboard&&navigator.clipboard.writeText('');}catch(_){} return; }
+    var mod = e.ctrlKey || e.metaKey;
+    if (mod && e.shiftKey && (k==='i'||k==='j'||k==='c')) return stop(e); // 개발자도구
+    if (mod && (k==='u'||k==='s'||k==='p')) return stop(e);             // 소스보기·저장·인쇄
+    if (mod && (k==='c'||k==='x'||k==='a')) {                          // 복사·잘라내기·전체선택(입력칸 제외)
+      if (document.activeElement && document.activeElement.id === 'pw') return;
+      return stop(e);
+    }
+  }, true);
+  // 화면을 벗어나면(탭 전환·녹화 도구 포커스) 내용을 가려 캡처를 억제
+  var cover = document.getElementById('cover');
+  var hide = function(){ cover.classList.add('on'); };
+  var show = function(){ cover.classList.remove('on'); };
+  document.addEventListener('visibilitychange', function(){ document.hidden ? hide() : show(); });
+  window.addEventListener('blur', hide);
+  window.addEventListener('focus', show);
+
+  // ── 복호화 ───────────────────────────────────────────────────────────────
+  var dec = new TextDecoder(), enc = new TextEncoder();
+  var b2u = function(b64){ var s=atob(b64), a=new Uint8Array(s.length); for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i); return a; };
+  var started = false;
+  var form = document.getElementById('f'), pw = document.getElementById('pw'),
+      go = document.getElementById('go'), err = document.getElementById('err');
+
+  form.addEventListener('submit', function(e){ e.preventDefault(); unlock(); });
+
+  async function unlock(){
+    if (started) return;
+    var password = pw.value || '';
+    if (password.length < 1){ err.textContent = '비밀번호를 입력하세요.'; return; }
+    go.disabled = true; err.textContent = '여는 중…';
+    try{
+      var res = await fetch('./app.enc', { cache: 'no-store' });
+      if(!res.ok) throw new Error('enc');
+      var blob = await res.json();
+      var km = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']);
+      var key = await crypto.subtle.deriveKey(
+        { name:'PBKDF2', salt:b2u(blob.salt), iterations:blob.iter, hash:'SHA-256' },
+        km, { name:'AES-GCM', length:256 }, false, ['decrypt']);
+      var plain;
+      try{
+        plain = await crypto.subtle.decrypt({ name:'AES-GCM', iv:b2u(blob.iv) }, key, b2u(blob.data));
+      }catch(_){ throw new Error('badpw'); }   // 인증태그 불일치 = 비번 틀림
+      var app = JSON.parse(dec.decode(plain));
+      boot(app);
+    }catch(ex){
+      go.disabled = false;
+      err.textContent = (ex && ex.message === 'badpw') ? '비밀번호가 올바르지 않습니다.' : '여는 데 실패했습니다. 다시 시도해 주세요.';
+      pw.value=''; pw.focus();
+    }
+  }
+
+  function boot(app){
+    started = true;
+    // 잠금 화면 제거
+    var gate = document.getElementById('gate'); if(gate) gate.remove();
+    var st = document.querySelector('.stamp'); if(st) st.remove();
+    // 앱 루트
+    var root = document.createElement('div'); root.id = 'root'; document.body.appendChild(root);
+    document.body.style.overflow = 'hidden';
+    // CSS 주입
+    var style = document.createElement('style'); style.textContent = app.css; document.head.appendChild(style);
+    // JS 주입(모듈로 실행). 자산 경로는 빌드 때 절대경로로 박혀 있어 바로 열립니다.
+    var s = document.createElement('script'); s.type = 'module'; s.textContent = app.js; document.body.appendChild(s);
+  }
+
+  pw.focus();
+})();
+</script>
+</body>
 </html>
